@@ -129,8 +129,8 @@ In the existing project → **Settings → Git** → connect `ArnoSahakyan/wande
 
 ## 6. Clean up
 
-- **Old GitHub repositories:** archive `travel-back` and `travel-front` (Settings → Archive) once both deployments build from `wanderluxe`.
-- **Old Render resources:** delete the old Render database and service after step 0 and the smoke test.
+- **Old GitHub repositories:** done 2026-11-17. `travel-back` and `travel-front` were deleted once both deployments built from `wanderluxe`. Their full git history lives on in this repository and in the local `.backup/*.bundle` files.
+- **Old Render resources:** done 2026-11-17. The old database had already expired; the old web service was deleted.
 - **Production secrets:** rotate any that were shared — the Supabase service-role key, the SMTP password, the old database password.
 
 ## Ongoing

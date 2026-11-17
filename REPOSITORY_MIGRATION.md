@@ -96,7 +96,9 @@ git blame archive/travel-front-main -- src/App.tsx  # blame as of the old layout
 ## Remotes
 
 - `origin` is `git@github.com:ArnoSahakyan/wanderluxe.git`.
-- The old `travel-back` / `travel-front` repositories are untouched. Archive them (rather than delete) once Render and Vercel deploy from the new repository (DEPLOYMENT.md §6).
+- The old `travel-back` / `travel-front` GitHub repositories were **deleted** on 2026-11-17, after Vercel and Render were deploying from `wanderluxe`.
+  - Every commit survives here (see the `archive/*` tags) and in `.backup/travel-back.bundle` / `.backup/travel-front.bundle`.
+  - What did not survive is GitHub-only data: the discussions on their merged pull requests (4 and 16).
 
 ## Package manager
 
