@@ -49,6 +49,7 @@ export const InfoForm = () => {
             Full Name
           </label>
           <input
+            id='full_name'
             {...registerPersonalInfo('full_name')}
             className='form-input'
             placeholder='Enter your full name'
@@ -63,6 +64,7 @@ export const InfoForm = () => {
             Email
           </label>
           <input
+            id='email'
             {...registerPersonalInfo('email')}
             type='email'
             className='form-input'
@@ -78,6 +80,7 @@ export const InfoForm = () => {
             Phone Number (Optional)
           </label>
           <input
+            id='phone_number'
             {...registerPersonalInfo('phone_number')}
             type='tel'
             className='form-input'
