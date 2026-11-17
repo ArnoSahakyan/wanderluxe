@@ -11,7 +11,7 @@
 
 Putting the dump on a new machine: copy it to `database/dump/wanderluxe.sql`, then run `npm run db:import`.
 
-> **Decision for the owner:** the dump is kept out of git because it contains personal data. If this repository stays private and you want the dump versioned anyway, remove the `database/dump/*.sql` line from `.gitignore`.
+> **Decision (2026-11-17):** the dump stays out of git because it contains personal data (real e-mails and password hashes). Share it with developers through a private channel. Anyone without it gets a working app from `schema/baseline.sql`.
 
 ## Compatibility
 
