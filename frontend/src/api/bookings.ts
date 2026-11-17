@@ -29,12 +29,7 @@ export const confirmBooking = async (booking_id: number) => {
 };
 
 export type AdminBookingStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'cancelled'
-  | 'completed'
-  | 'no_show'
-  | 'refunded';
+  'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show' | 'refunded';
 
 /** Booking as returned by the admin list (GET /booking): nested User and Tour. */
 export interface AdminBooking {

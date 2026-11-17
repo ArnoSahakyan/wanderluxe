@@ -58,7 +58,9 @@ const BlogPage = () => {
           <>
             {/* Blog Cards */}
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
-              {data?.posts.map((post) => <BlogCard key={post.post_id} post={post} />)}
+              {data?.posts.map((post) => (
+                <BlogCard key={post.post_id} post={post} />
+              ))}
             </div>
 
             {totalPages > 1 && (
