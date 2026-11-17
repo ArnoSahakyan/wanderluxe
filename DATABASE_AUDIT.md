@@ -65,7 +65,7 @@ So every constraint below could be added **without changing any row**.
 | sequelize-cli | `.sequelizerc` pointed to a git-ignored, missing `config.cjs`, so migrations couldn't run. Now restored as an env-driven file with no secrets. |
 | Seeders | Seeders insert without explicit ids, so they are fine on an empty DB. They duplicate the dump and must not be run on top of it. |
 | Connection pool | Sequelize defaults (max 5). Now configurable (`DB_POOL_MAX`), with an idle timeout. Connections are released by Sequelize; there was no manual client checkout to leak. |
-| Transactions | None were used. Now used for booking create/cancel, cover swap, tour delete and newsletter verification. |
+| Transactions | None were used. Now used for booking create/cancel, tour creation with images, cover swap, image deletion and newsletter verification. |
 | N+1 | None found. Includes are eager. `GET /destinations` uses two correlated subqueries per row (count and min price), which is fine for this data size, and they are now backed by the `tours(destination_id)` index. |
 
 ## 4. Migrations added (all reversible, all idempotent, no data deleted)
@@ -80,7 +80,17 @@ So every constraint below could be added **without changing any row**.
 
 ## 5. Index verification (EXPLAIN)
 
-The dataset is tiny, so the planner prefers sequential scans regardless. Plans were checked with `SET enable_seqscan = off` to confirm the new indexes can be used. Query: `SELECT * FROM bookings WHERE user_id = $1 ORDER BY booking_date DESC`. The before/after plans are recorded in FINAL_AUDIT_REPORT.md §Database.
+The dataset is tiny, so the planner prefers sequential scans regardless. Plans were checked with `SET enable_seqscan = off` to confirm the new indexes can be used. Plans after migration (`enable_seqscan = off`):
+
+| Query | Plan |
+|---|---|
+| `bookings WHERE user_id = ? ORDER BY booking_date DESC LIMIT 10` | Index Scan using `bookings_booking_date_idx` (plus filter). With real data volume the planner will choose between this and `bookings_user_id_idx`. |
+| `reviews WHERE tour_id = ? ORDER BY created_at DESC LIMIT 4` | Bitmap Index Scan on `reviews_tour_id_created_at_idx` |
+| `count(*) FROM tours WHERE destination_id = ?` (destination list subquery) | Index Only Scan using `tours_destination_id_idx` |
+| `users WHERE lower(email) = ?` (sign-in) | Index Scan using `users_email_lower_key` |
+| `users WHERE reset_password_token = ?` | Index Scan using `users_reset_password_token_idx` |
+
+Before the migration, every one of these was a sequential scan.
 
 ## 6. Applying these migrations to production (manual, not done here)
 
