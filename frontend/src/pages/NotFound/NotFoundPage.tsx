@@ -15,7 +15,7 @@ const NotFoundPage = () => {
         <div className='mt-10 flex items-center justify-center gap-x-6'>
           <Link
             to={ROUTES.HOME} // Using your routes constant
-            className='rounded-md bg-primary-light dark:bg-primary-dark px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-light dark:focus-visible:outline-primary-dark transition-colors'
+            className='rounded-md bg-primary-light dark:bg-primary-dark px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-light dark:focus-visible:outline-primary-dark transition-colors'
           >
             Go back home
           </Link>

@@ -39,7 +39,7 @@ const BookingsPage = () => {
               action={
                 <Link
                   to={ROUTES.TOURS}
-                  className='mt-4 inline-block rounded-md bg-primary-light dark:bg-primary-dark px-6 py-3 text-sm font-medium text-white hover:bg-opacity-90 transition-colors'
+                  className='mt-4 inline-block rounded-md bg-primary-light dark:bg-primary-dark px-6 py-3 text-sm font-medium text-white hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 transition-colors'
                 >
                   Browse Tours
                 </Link>

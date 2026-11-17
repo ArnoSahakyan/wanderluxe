@@ -36,7 +36,7 @@ export const BlogAdminCard: FC<BlogAdminCardProps> = ({ post }) => {
         <div className='mt-auto'>
           <Link
             to={`${ROUTES.ADMIN_BLOG}/${post.slug}`}
-            className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-background-light focus-visible:ring-opacity-75 transition-colors'
+            className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-background-light/75 transition-colors'
           >
             Edit Post
           </Link>

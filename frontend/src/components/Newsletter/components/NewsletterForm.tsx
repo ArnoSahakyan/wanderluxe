@@ -39,7 +39,7 @@ export const NewsletterForm = () => {
         </div>
         <button
           type='submit'
-          className='flex-none rounded-md bg-background-light px-3.5 py-2.5 text-sm font-semibold text-primary-light shadow-sm hover:bg-opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors'
+          className='flex-none rounded-md bg-background-light px-3.5 py-2.5 text-sm font-semibold text-primary-light shadow-sm hover:bg-background-light/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors'
           disabled={isPending}
         >
           {isPending ? 'Subscribing...' : 'Subscribe'}

@@ -24,25 +24,25 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
   const statusConfig = {
     confirmed: {
       color:
-        'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/40 dark:text-green-300 dark:ring-green-900/50',
+        'bg-green-50/95 text-green-700 ring-green-600/20 dark:bg-green-900/40 dark:text-green-300 dark:ring-green-900/50',
       icon: CheckCircleIcon,
       label: 'Confirmed',
     },
     pending: {
       color:
-        'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/40 dark:text-yellow-300 dark:ring-yellow-900/50',
+        'bg-yellow-50/95 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/40 dark:text-yellow-300 dark:ring-yellow-900/50',
       icon: ClockIcon,
       label: 'Pending',
     },
     cancelled: {
       color:
-        'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/40 dark:text-red-300 dark:ring-red-900/50',
+        'bg-red-50/95 text-red-700 ring-red-600/20 dark:bg-red-900/40 dark:text-red-300 dark:ring-red-900/50',
       icon: XCircleIcon,
       label: 'Cancelled',
     },
     completed: {
       color:
-        'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/40 dark:text-blue-300 dark:ring-blue-900/50',
+        'bg-blue-50/95 text-blue-700 ring-blue-600/20 dark:bg-blue-900/40 dark:text-blue-300 dark:ring-blue-900/50',
       icon: CheckCircleIcon,
       label: 'Completed',
     },
@@ -50,7 +50,7 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
 
   const status = booking.status as keyof typeof statusConfig;
   const config = statusConfig[status] || {
-    color: 'bg-gray-50 text-gray-600 ring-gray-500/10 dark:bg-gray-800 dark:text-gray-300',
+    color: 'bg-gray-50/95 text-gray-600 ring-gray-500/10 dark:bg-gray-800 dark:text-gray-300',
     icon: ClockIcon,
     label: booking.status
       ? booking.status.charAt(0).toUpperCase() + booking.status.slice(1)
@@ -72,7 +72,7 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
           }}
         />
         <span
-          className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset shadow-sm backdrop-blur-md bg-opacity-95 ${config.color}`}
+          className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset shadow-sm backdrop-blur-md ${config.color}`}
         >
           <StatusIcon className='h-4 w-4' aria-hidden='true' />
           {config.label}
@@ -109,7 +109,7 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
           </div>
           <Link
             to={`${ROUTES.PROFILE_BOOKINGS}/${booking.booking_id}`}
-            className='rounded-md bg-primary-light dark:bg-primary-dark px-3 py-1.5 text-sm font-medium text-white hover:bg-opacity-90 transition-colors'
+            className='rounded-md bg-primary-light dark:bg-primary-dark px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 transition-colors'
           >
             View Details
           </Link>

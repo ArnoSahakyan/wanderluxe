@@ -127,7 +127,7 @@ const SignUpPage = () => {
               I agree to the{' '}
               <Link
                 to={ROUTES.LEGAL}
-                className='font-medium text-primary-light dark:text-primary-dark hover:text-opacity-80'
+                className='font-medium text-primary-light dark:text-primary-dark hover:text-primary-light/80 dark:hover:text-primary-dark/80'
               >
                 Terms of Service & Privacy Policy
               </Link>
@@ -148,7 +148,7 @@ const SignUpPage = () => {
           Already have an account?{' '}
           <Link
             to={ROUTES.AUTH + ROUTES.SIGNIN}
-            className='font-semibold text-primary-light dark:text-primary-dark hover:text-opacity-80 transition-colors'
+            className='font-semibold text-primary-light dark:text-primary-dark hover:text-primary-light/80 dark:hover:text-primary-dark/80 transition-colors'
           >
             Sign in
           </Link>

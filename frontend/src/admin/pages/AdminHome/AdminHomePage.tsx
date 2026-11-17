@@ -86,7 +86,7 @@ const AdminHomePage = () => {
         <h2 className='text-lg font-medium leading-6 text-primary-light dark:text-text-dark'>
           Recent Bookings
         </h2>
-        <div className='mt-4 overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg'>
+        <div className='mt-4 overflow-hidden shadow ring-1 ring-black/5 sm:rounded-lg'>
           <table className='min-w-full divide-y divide-gray-300 dark:divide-gray-700'>
             <thead className='bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700'>
               <tr>

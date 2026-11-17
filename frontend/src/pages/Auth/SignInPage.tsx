@@ -69,7 +69,7 @@ const SignInPage = () => {
               <div className='text-sm'>
                 <Link
                   to={ROUTES.AUTH + ROUTES.FORGOT_PASSWORD}
-                  className='font-medium text-primary-light dark:text-primary-dark hover:text-opacity-80'
+                  className='font-medium text-primary-light dark:text-primary-dark hover:text-primary-light/80 dark:hover:text-primary-dark/80'
                 >
                   Forgot password?
                 </Link>
@@ -98,7 +98,7 @@ const SignInPage = () => {
           Don't have an account?{' '}
           <Link
             to={ROUTES.AUTH + ROUTES.SIGNUP}
-            className='font-semibold text-primary-light dark:text-primary-dark hover:text-opacity-80 transition-colors'
+            className='font-semibold text-primary-light dark:text-primary-dark hover:text-primary-light/80 dark:hover:text-primary-dark/80 transition-colors'
           >
             Create now
           </Link>
