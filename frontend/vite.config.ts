@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src'),
+        '@': path.resolve(import.meta.dirname, 'src'),
       },
     },
     server: {
@@ -51,12 +51,15 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       sourcemap: false,
-      rollupOptions: {
+      rolldownOptions: {
         output: {
-          manualChunks: {
-            react: ['react', 'react-dom', 'react-router-dom'],
-            query: ['@tanstack/react-query', 'axios', 'zustand'],
-            markdown: ['react-markdown'],
+          // Long-lived vendor chunks: they change far less often than app code,
+          // so browsers keep them cached across deploys.
+          codeSplitting: {
+            groups: [
+              { name: 'react', test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/, priority: 3 },
+              { name: 'query', test: /node_modules[\\/](@tanstack|axios|zustand)[\\/]/, priority: 2 },
+            ],
           },
         },
       },
