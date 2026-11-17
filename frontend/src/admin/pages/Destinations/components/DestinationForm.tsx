@@ -137,6 +137,7 @@ export const DestinationForm = ({ destinationId }: DestinationFormProps) => {
             Destination Name
           </label>
           <input
+            id='name'
             {...register('name')}
             className='form-input'
             placeholder='Enter destination name'
@@ -149,6 +150,7 @@ export const DestinationForm = ({ destinationId }: DestinationFormProps) => {
             Description
           </label>
           <textarea
+            id='description'
             {...register('description')}
             className='form-input min-h-[120px]'
             placeholder='Tell travelers about this destination...'

@@ -48,6 +48,7 @@ export const PasswordChangeForm = () => {
             Current Password
           </label>
           <input
+            id='current_password'
             {...registerPassword('current_password')}
             type='password'
             className='form-input'
@@ -64,6 +65,7 @@ export const PasswordChangeForm = () => {
               New Password
             </label>
             <input
+              id='new_password'
               {...registerPassword('new_password')}
               type='password'
               className='form-input'
@@ -79,6 +81,7 @@ export const PasswordChangeForm = () => {
               Confirm New Password
             </label>
             <input
+              id='confirm_password'
               {...registerPassword('confirm_password')}
               type='password'
               className='form-input'
