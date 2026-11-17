@@ -136,6 +136,9 @@ In the existing project → **Settings → Git** → connect `ArnoSahakyan/wande
 ## Ongoing
 
 - **Code changes:** pushing to `main` redeploys the API on Render (only when backend files change) and the frontend on Vercel.
+  - **Render waits for CI:** `render.yaml` sets `autoDeployTrigger: checksPass`, so the API is redeployed only after the GitHub Actions CI run for that commit passes. A red CI run leaves the previous version live.
+  - Render applies `render.yaml` changes only to services created from the Blueprint. If the service was created by hand, set the same thing in the dashboard: Settings → Build & Deploy → Auto-Deploy → **After CI Checks Pass**.
+  - **Vercel still deploys every push.** A failing frontend build stops that deploy; a failing test does not.
 - **Schema changes:** new migrations are **not** run automatically. Run step 2b against Supabase *before* pushing code that depends on them.
 - **Rollback:** see DATABASE_AUDIT.md §6. Supabase's daily backups (paid plans) or a `pg_dump` before each migration give you a way back.
 

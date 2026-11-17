@@ -13,7 +13,8 @@ services:
     buildCommand: npm ci --include=dev && npm run build -w backend
     startCommand: npm start -w backend
     healthCheckPath: /health
-    autoDeploy: true
+    # Deploy only after GitHub Actions CI (.github/workflows/ci.yml) passes on the commit.
+    autoDeployTrigger: checksPass
     # Only redeploy when backend code or shared tooling changes.
     buildFilter:
       paths:
