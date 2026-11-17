@@ -7,13 +7,17 @@ import {
     TourImage,
 } from '../db/models';
 import {
-    addSupabaseUrl,
-    deleteFromSupabase,
+    toPublicImageUrl,
     formatDate,
     uploadAndProcessImages,
     NotFoundError,
-    BadRequestError
+    BadRequestError,
+    containsPattern,
+    getPagination,
+    totalPages,
 } from '../utils';
+import { removeQuietly } from '../lib/storage';
+import { sequelize } from '../db/models';
 import { TOURS_BUCKET } from '../constants';
 import {
     AuthenticatedRequest,
@@ -48,35 +52,36 @@ export const createTour = async (
         throw new BadRequestError('No files uploaded');
     }
 
-    const startDate = new Date(start_date);
-    const endDate = new Date(end_date);
-
-    const tour = await Tour.create({
-        name,
-        description,
-        price,
-        available_spots,
-        start_date: startDate,
-        end_date: endDate,
-        category_id,
-        destination_id,
-    });
-
-    if (files.length > 0) {
-        const imagePaths = await uploadAndProcessImages(
-            files,
-            TOURS_BUCKET,
-            tour.tour_id.toString()
+    // Images are uploaded after the row exists (their folder is the tour id);
+    // if storage fails, the transaction rolls the tour back.
+    const tour = await sequelize.transaction(async (transaction) => {
+        const created = await Tour.create(
+            {
+                name,
+                description,
+                price,
+                available_spots,
+                start_date: new Date(start_date),
+                end_date: new Date(end_date),
+                category_id: category_id ?? undefined,
+                destination_id: destination_id ?? undefined,
+            },
+            { transaction },
         );
 
-        const imageRecords = imagePaths.map((path, index) => ({
-            tour_id: tour.tour_id,
-            image_url: path,
-            is_cover: index === 0,
-        }));
-
-        await TourImage.bulkCreate(imageRecords);
-    }
+        if (files.length === 0) return created;
+        const imagePaths = await uploadAndProcessImages(files, TOURS_BUCKET, created.tour_id);
+        try {
+            await TourImage.bulkCreate(
+                imagePaths.map((path, index) => ({ tour_id: created.tour_id, image_url: path, is_cover: index === 0 })),
+                { transaction },
+            );
+        } catch (err) {
+            await removeQuietly(TOURS_BUCKET, imagePaths);
+            throw err;
+        }
+        return created;
+    });
 
     res.status(201).json(tour);
 };
@@ -86,9 +91,8 @@ export const getFilteredTours = async (
     req: TypedRequest<{}, {}, {}, GetFilteredToursQuery>,
     res: Response
 ): Promise<void> => {
-    const { category_id, destination_id, page = 1, limit = 10, search } = req.query;
-
-    const offset = (page - 1) * limit;
+    const { category_id, destination_id, search } = req.query;
+    const { page, limit, offset } = getPagination(req.query);
 
     const baseCondition: WhereOptions = {};
 
@@ -103,8 +107,8 @@ export const getFilteredTours = async (
     const searchCondition: WhereOptions | undefined = search
         ? {
             [Op.or]: [
-                { name: { [Op.iLike]: `%${search}%` } },
-                { description: { [Op.iLike]: `%${search}%` } },
+                { name: { [Op.iLike]: containsPattern(search) } },
+                { description: { [Op.iLike]: containsPattern(search) } },
             ],
         }
         : undefined;
@@ -117,6 +121,8 @@ export const getFilteredTours = async (
         where: whereCondition,
         limit,
         offset,
+        distinct: true,
+        order: [['tour_id', 'ASC']],
         include: [
             {
                 model: TourImage,
@@ -138,7 +144,7 @@ export const getFilteredTours = async (
 
         return {
             ...tourJson,
-            image: coverImage ? addSupabaseUrl(coverImage, TOURS_BUCKET) : null,
+            image: coverImage ? toPublicImageUrl(coverImage, TOURS_BUCKET) : null,
             TourImages: undefined,
         };
     });
@@ -146,18 +152,20 @@ export const getFilteredTours = async (
     res.json({
         total: count,
         currentPage: page,
-        totalPages: Math.ceil(count / limit),
+        totalPages: totalPages(count, limit),
         tours,
     });
 };
 
 // Get a single Tour by ID (Public)
 export const getTourById = async (
-    req: TypedRequest<GetTourByIdParams, {}, {}, GetTourByIdQuery>,
+    req: AuthenticatedRequest<GetTourByIdParams, {}, {}, GetTourByIdQuery>,
     res: Response
 ): Promise<void> => {
     const id = req.params.id;
-    const user_id = req.query.user_id;
+    // Prefer the authenticated user; the legacy ?user_id= is only a fallback
+    // (it reveals nothing that the public review list does not already show).
+    const user_id = req.user_id ?? req.query.user_id;
 
     const tour = await Tour.findByPk(id, {
         include: [
@@ -176,11 +184,11 @@ export const getTourById = async (
     const images = plainTour.TourImages?.map((img) => ({
         image_id: img.image_id,
         is_cover: img.is_cover,
-        image_url: addSupabaseUrl(img.image_url, TOURS_BUCKET),
+        image_url: toPublicImageUrl(img.image_url, TOURS_BUCKET),
     }));
 
     let hasReviewed = false;
-    if (user_id && !isNaN(user_id)) {
+    if (user_id) {
         const existingReview = await Review.findOne({
             where: {
                 tour_id: id,
@@ -212,7 +220,7 @@ export const updateTour = async (
     req: AuthenticatedRequest<TourParams, any, UpdateTourBody>,
     res: Response
 ): Promise<void> => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const {
         name,
         description,
@@ -239,8 +247,8 @@ export const updateTour = async (
         available_spots,
         start_date: startDate,
         end_date: endDate,
-        category_id,
-        destination_id,
+        category_id: category_id ?? undefined,
+        destination_id: destination_id ?? undefined,
     });
 
     res.json(tour);
@@ -261,17 +269,12 @@ export const deleteTour = async (
         throw new NotFoundError('Tour not found.');
     }
 
-    if (tour.TourImages && tour.TourImages.length > 0) {
-        for (const image of tour.TourImages) {
-            if (image.image_url) {
-                await deleteFromSupabase(image.image_url, TOURS_BUCKET);
-            }
-        }
+    const imageKeys = (tour.TourImages ?? []).map((image) => image.image_url);
 
-        await TourImage.destroy({ where: { tour_id: id } });
-    }
-
+    // Delete the rows first (images cascade); remove files only after commit,
+    // so a storage hiccup can never leave a tour without its images.
     await tour.destroy();
+    await removeQuietly(TOURS_BUCKET, imageKeys);
 
     res.json({ message: 'Tour deleted successfully.' });
 };

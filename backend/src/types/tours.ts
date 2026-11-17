@@ -1,32 +1,17 @@
-import {IPaginationQuery} from "./pagination";
+import type { z } from 'zod';
+import type { tourBody, tourListQuery, tourByIdQuery } from '../validators';
 
-export interface CreateTourBody {
-    name: string;
-    description: string;
-    price: number;
-    available_spots: number;
-    start_date: string;
-    end_date: string;
-    category_id: number;
-    destination_id: number;
-}
-
-export interface UpdateTourBody extends CreateTourBody {}
+export type CreateTourBody = z.infer<typeof tourBody>;
+export type UpdateTourBody = CreateTourBody;
 
 export interface TourParams {
     id: number;
 }
 
-export interface GetFilteredToursQuery extends IPaginationQuery {
-    category_id?: number;
-    destination_id?: number;
-    search?: string;
-}
+export type GetFilteredToursQuery = z.infer<typeof tourListQuery>;
 
 export interface GetTourByIdParams {
     id: number;
 }
 
-export interface GetTourByIdQuery {
-    user_id?: number;
-}
+export type GetTourByIdQuery = z.infer<typeof tourByIdQuery>;

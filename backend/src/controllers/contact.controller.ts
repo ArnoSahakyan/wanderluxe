@@ -1,5 +1,7 @@
 import { Response } from 'express';
-import { sendEmail, BadRequestError, NotFoundError } from '../utils';
+import { sendEmail, NotFoundError, getPagination, totalPages } from '../utils';
+import { config } from '../config/env';
+import { logger } from '../lib/logger';
 import { IPaginationQuery, TypedRequest } from '../types';
 import { generateContactMessageEmail } from "../emails";
 import { Contact } from '../db/models';
@@ -25,10 +27,6 @@ export const sendMessage = async (
 ) => {
     const { full_name, email, phone_number, message } = req.body;
 
-    if (!full_name || !email || !phone_number || !message) {
-        throw new BadRequestError('All fields are required.');
-    }
-
     // Save to database
     await Contact.create({
         full_name,
@@ -44,11 +42,16 @@ export const sendMessage = async (
         message,
     });
 
-    await sendEmail({
-        to: 'sahakyan.arno@gmail.com',
-        subject: 'New Customer Message',
-        html,
-    });
+    // The message is already stored (admin inbox), so a mail outage is logged, not fatal.
+    if (config.mail.contactRecipient) {
+        try {
+            await sendEmail({ to: config.mail.contactRecipient, subject: 'New Customer Message', html });
+        } catch (err) {
+            logger.error('Contact notification e-mail failed', { err });
+        }
+    } else {
+        logger.warn('CONTACT_RECIPIENT_EMAIL is not set; contact message stored without notification.');
+    }
 
     res.status(200).json({ message: 'Message sent successfully.' });
 };
@@ -57,9 +60,7 @@ export const getAllMessages = async (
     req: TypedRequest<{}, {}, {}, IPaginationQuery>,
     res: Response
 ): Promise<void> => {
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 10;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = getPagination(req.query);
 
     const { count, rows } = await Contact.findAndCountAll({
         order: [['created_at', 'DESC']],
@@ -70,7 +71,7 @@ export const getAllMessages = async (
     res.status(200).json({
         total: count,
         page,
-        totalPages: Math.ceil(count / limit),
+        totalPages: totalPages(count, limit),
         messages: rows,
     });
 };
@@ -93,10 +94,6 @@ export const updateMessageStatus = async (
     res: Response
 ): Promise<void> => {
     const { status } = req.body;
-
-    if (!['unread', 'read', 'replied'].includes(status)) {
-        throw new BadRequestError('Invalid status');
-    }
 
     const contact = await Contact.findByPk(req.params.contact_id);
 

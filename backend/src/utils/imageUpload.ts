@@ -1,53 +1,49 @@
+import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
-import { supabase } from './supabase';
-import { v4 as uuid } from 'uuid';
+import { storage } from '../lib/storage';
+import { BadRequestError } from './errors';
 
-const SUPABASE_STORAGE_URL = process.env.SUPABASE_PUBLIC_URL || '';
+/** Folder-safe identifier: "South Africa" → "South_Africa". */
+export const toStorageSegment = (value: string | number): string => {
+    const segment = String(value)
+        .normalize('NFKD')
+        .replace(/[^\w\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '_')
+        .slice(0, 80);
+    return segment || 'item';
+};
 
+/**
+ * Re-encodes every upload to WebP (max 1500px wide) and stores it.
+ * Decoding with sharp also proves the file really is an image — the
+ * client-supplied MIME type alone is not trusted.
+ * Returns the storage keys in the same order as the input files.
+ */
 export const uploadAndProcessImages = async (
     files: Express.Multer.File[],
     bucket: string,
-    identifier: string | number
+    identifier: string | number,
 ): Promise<string[]> => {
-    const uploadedPaths: string[] = [];
+    const folder = toStorageSegment(identifier);
+    const keys: string[] = [];
 
     for (const file of files) {
-        const filename = `${identifier}_${uuid()}.webp`;
-        const folder = `${identifier}`;
-        const fullPath = `${folder}/${filename}`;
+        let buffer: Buffer;
+        try {
+            buffer = await sharp(file.buffer, { limitInputPixels: 40_000_000 })
+                .rotate()
+                .resize({ width: 1500, withoutEnlargement: true })
+                .webp({ quality: 85 })
+                .toBuffer();
+        } catch {
+            throw new BadRequestError(`"${file.originalname}" is not a valid image.`);
+        }
 
-        const buffer = await sharp(file.buffer)
-            .resize({ width: 1500 })
-            .webp({ quality: 90 })
-            .toBuffer();
-
-        const { error } = await supabase.storage
-            .from(bucket)
-            .upload(fullPath, buffer, {
-                contentType: 'image/webp',
-                upsert: false,
-            });
-
-        if (error) throw new Error(`Supabase upload failed: ${error.message}`);
-
-        uploadedPaths.push(fullPath);
+        const key = `${folder}/${folder}_${randomUUID()}.webp`;
+        await storage.put(bucket, key, buffer, 'image/webp');
+        keys.push(key);
     }
 
-    return uploadedPaths;
-};
-
-export const addSupabaseUrl = (path: string, bucket: string): string => {
-    return `${SUPABASE_STORAGE_URL}/${bucket}/${path}`;
-};
-
-export const deleteFromSupabase = async (
-    filePath: string,
-    bucketName: string
-): Promise<void> => {
-    const { error } = await supabase.storage.from(bucketName).remove([filePath]);
-
-    if (error) {
-        console.error('Supabase Image Deletion Error:', error);
-        throw new Error('Failed to delete old image.');
-    }
+    return keys;
 };

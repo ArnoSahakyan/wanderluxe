@@ -1,81 +1,48 @@
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import dotenv from 'dotenv';
-import { RequestHandler, Response, NextFunction } from 'express';
-import { AuthenticatedRequest } from '../types';
+import type { NextFunction, RequestHandler, Response } from 'express';
+import type { AuthenticatedRequest } from '../types';
+import { verifyAccessToken } from '../utils/generateTokens';
 
-dotenv.config();
+const bearerToken = (req: AuthenticatedRequest): string | undefined => {
+    const header = req.headers.authorization;
+    if (!header?.startsWith('Bearer ')) return undefined;
+    return header.slice('Bearer '.length).trim() || undefined;
+};
 
-interface CustomJwtPayload extends JwtPayload {
-    user_id: number;
-    role: 'customer' | 'admin';
-    iat: number;
-    exp: number;
-}
-
-export const verifyToken: RequestHandler = (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-) => {
-    const authHeader = req.headers['authorization'];
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        res.status(403).json({ message: 'No token provided!' });
+/** Requires a valid access token. 401 tells the SPA to try its refresh token. */
+export const verifyToken: RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const token = bearerToken(req);
+    if (!token) {
+        res.status(401).json({ message: 'No token provided!' });
         return;
     }
 
-    const token = authHeader.split(' ')[1];
-
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded) => {
-        if (err || typeof decoded !== 'object' || !('user_id' in decoded)) {
-            res.status(401).json({ message: 'Unauthorized!' });
-            return;
-        }
-
-        req.user_id = (decoded as CustomJwtPayload).user_id;
-        req.user_role = (decoded as CustomJwtPayload).role;
-        next();
-    });
-};
-
-export const isAdmin: RequestHandler = async (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-) => {
-    try {
-        if (req.user_role === 'admin') {
-            next();
-            return;
-        }
-
-        res.status(403).json({ message: 'Admin access required.' });
-    } catch (error) {
-        res.status(500).json({ message: 'Internal server error.' });
-    }
-};
-
-export const optionalAuth: RequestHandler = (
-    req: AuthenticatedRequest,
-    _res: Response,
-    next: NextFunction
-) => {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader?.startsWith('Bearer ')) {
-        // no token, just continue
-        return next();
+    const payload = verifyAccessToken(token);
+    if (!payload) {
+        res.status(401).json({ message: 'Unauthorized!' });
+        return;
     }
 
-    const token = authHeader.split(' ')[1];
+    req.user_id = payload.user_id;
+    req.user_role = payload.role;
+    next();
+};
 
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded) => {
-        if (err || typeof decoded !== 'object' || !('user_id' in decoded)) {
-            // invalid token, treat as guest
-            return next();
-        }
-
-        req.user_id = (decoded as CustomJwtPayload).user_id;
-        req.user_role = (decoded as CustomJwtPayload).role;
+/** Must run after verifyToken. Role comes from the signed token, never from the client. */
+export const isAdmin: RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (req.user_role === 'admin') {
         next();
-    });
+        return;
+    }
+    res.status(403).json({ message: 'Admin access required.' });
+};
+
+/** Attaches the user when a valid token is present; otherwise continues as a guest. */
+export const optionalAuth: RequestHandler = (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
+    const token = bearerToken(req);
+    const payload = token ? verifyAccessToken(token) : null;
+    if (payload) {
+        req.user_id = payload.user_id;
+        req.user_role = payload.role;
+    }
+    next();
 };

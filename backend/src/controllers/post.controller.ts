@@ -1,59 +1,61 @@
-import { Response } from 'express';
-import {
-    addSupabaseUrl,
-    deleteFromSupabase,
-    uploadAndProcessImages,
-    generateUniqueSlug,
-    NotFoundError
-} from '../utils';
+import type { Response } from 'express';
+import { Op, type WhereOptions } from 'sequelize';
+import type { z } from 'zod';
 import { BLOGS_BUCKET } from '../constants';
 import { Post } from '../db/models';
-import { AuthenticatedRequest, IPaginationQuery } from '../types';
-import { Op, WhereOptions } from "sequelize";
+import { removeQuietly } from '../lib/storage';
+import type { AuthenticatedRequest } from '../types';
+import {
+    AppError,
+    NotFoundError,
+    containsPattern,
+    generateSlug,
+    generateUniqueSlug,
+    getPagination,
+    toPublicImageUrl,
+    totalPages,
+    uploadAndProcessImages,
+} from '../utils';
+import type * as v from '../validators';
 
-// --- Types for request bodies, params and queries ---
-interface PostParams { id: string }
-interface SlugParams { slug: string }
-interface PostBody {
-    title: string;
-    slug?: string;
-    excerpt: string;
-    content: string;
-    is_published: boolean;
+interface PostParams {
+    id: number;
+}
+interface SlugParams {
+    slug: string;
 }
 
-interface GetFilteredTPostsQuery extends IPaginationQuery {
-    search?: string;
-}
+const withImageUrl = (post: Post) => {
+    const raw = post.get({ plain: true });
+    return { ...raw, image: raw.image ? toPublicImageUrl(raw.image, BLOGS_BUCKET) : null };
+};
 
-// --- GET /posts?page=&limit= ---
+// --- GET /blog?page=&limit=&search= ---
 export const getAllPosts = async (
-    req: AuthenticatedRequest<{}, {}, {}, GetFilteredTPostsQuery>,
-    res: Response
+    req: AuthenticatedRequest<{}, {}, {}, z.infer<typeof v.searchablePagination>>,
+    res: Response,
 ): Promise<void> => {
-    const { page = 1, limit = 10, search } = req.query;
-    const offset = (page - 1) * limit;
+    const { search } = req.query;
+    const { page, limit, offset } = getPagination(req.query);
 
     const baseCondition: WhereOptions = {};
-
-    if (!req.user_role || req.user_role !== 'admin') {
+    if (req.user_role !== 'admin') {
         // guests & customers → only published
         baseCondition.is_published = true;
     }
 
-    const searchCondition: WhereOptions | undefined = search
+    const whereCondition: WhereOptions = search
         ? {
-            [Op.or]: [
-                { title: { [Op.iLike]: `%${search}%` } },
-                { excerpt: { [Op.iLike]: `%${search}%` } },
-            ],
-        }
-        : undefined;
-
-    const whereCondition: WhereOptions = searchCondition
-        ? {
-            [Op.and]: [baseCondition, searchCondition],
-        }
+              [Op.and]: [
+                  baseCondition,
+                  {
+                      [Op.or]: [
+                          { title: { [Op.iLike]: containsPattern(search) } },
+                          { excerpt: { [Op.iLike]: containsPattern(search) } },
+                      ],
+                  },
+              ],
+          }
         : baseCondition;
 
     const { count, rows } = await Post.findAndCountAll({
@@ -64,134 +66,123 @@ export const getAllPosts = async (
         attributes: { exclude: ['content'] },
     });
 
-    const posts = rows.map((post) => {
-        const raw = post.get({ plain: true });
-        return {
-            ...raw,
-            image: raw.image ? addSupabaseUrl(raw.image, BLOGS_BUCKET) : null,
-        };
-    });
-
     res.json({
         total: count,
         currentPage: page,
-        totalPages: Math.ceil(count / limit),
-        posts,
+        totalPages: totalPages(count, limit),
+        posts: rows.map(withImageUrl),
     });
 };
 
-
-// --- GET /posts/:slug ---
-export const getPostBySlug = async (
-    req: AuthenticatedRequest<SlugParams>,
-    res: Response
-): Promise<void> => {
+// --- GET /blog/:slug ---
+export const getPostBySlug = async (req: AuthenticatedRequest<SlugParams>, res: Response): Promise<void> => {
     const whereCondition: WhereOptions = { slug: req.params.slug };
-
-    if (!req.user_role || req.user_role !== 'admin') {
+    if (req.user_role !== 'admin') {
         whereCondition.is_published = true;
     }
 
     const post = await Post.findOne({ where: whereCondition });
-
     if (!post) {
         throw new NotFoundError('Post not found');
     }
 
-    const raw = post.get({ plain: true });
-
-    res.json({
-        ...raw,
-        image: raw.image ? addSupabaseUrl(raw.image, BLOGS_BUCKET) : null,
-    });
+    res.json(withImageUrl(post));
 };
 
-// --- POST /posts ---
+// --- POST /blog ---
 export const createPost = async (
-    req: AuthenticatedRequest<{}, {}, PostBody>,
-    res: Response
+    req: AuthenticatedRequest<{}, {}, z.infer<typeof v.createPostBody>>,
+    res: Response,
 ): Promise<void> => {
     const { title, slug, excerpt, content, is_published } = req.body;
     const files = req.files as Express.Multer.File[] | undefined;
+
+    // A requested slug is normalised; collisions are a 409, auto slugs get a suffix.
+    let finalSlug: string;
+    if (slug) {
+        finalSlug = generateSlug(slug);
+        if (await Post.findOne({ where: { slug: finalSlug } })) {
+            throw new AppError(409, 'A post with this slug already exists.');
+        }
+    } else {
+        finalSlug = await generateUniqueSlug(title);
+    }
 
     let coverImagePath: string | undefined;
-    const finalSlug = slug || (await generateUniqueSlug(title));
-
     if (files && files.length > 0) {
-        const uploaded = await uploadAndProcessImages(files, BLOGS_BUCKET, finalSlug);
-        coverImagePath = uploaded[0];
+        [coverImagePath] = await uploadAndProcessImages(files.slice(0, 1), BLOGS_BUCKET, finalSlug);
     }
 
-    const newPost = await Post.create({
-        title,
-        slug: finalSlug,
-        excerpt,
-        content,
-        image: coverImagePath,
-        is_published,
-    });
-
-    res.status(201).json(newPost);
+    try {
+        const newPost = await Post.create({
+            title,
+            slug: finalSlug,
+            excerpt,
+            content,
+            image: coverImagePath,
+            is_published: is_published ?? false,
+        });
+        res.status(201).json(newPost);
+    } catch (err) {
+        await removeQuietly(BLOGS_BUCKET, [coverImagePath]);
+        throw err;
+    }
 };
 
-// --- PUT /posts/:id ---
+// --- PUT /blog/:slug ---
 export const updatePost = async (
-    req: AuthenticatedRequest<SlugParams, {}, Partial<PostBody>>,
-    res: Response
+    req: AuthenticatedRequest<SlugParams, {}, z.infer<typeof v.updatePostBody>>,
+    res: Response,
 ): Promise<void> => {
-    const { slug: initialSlug } = req.params;
     const { title, slug, excerpt, content, is_published } = req.body;
     const files = req.files as Express.Multer.File[] | undefined;
 
-    const post = await Post.findOne({ where: { slug: initialSlug } });
+    const post = await Post.findOne({ where: { slug: req.params.slug } });
     if (!post) {
         throw new NotFoundError('Post not found');
     }
 
-    let coverImagePath = post.image;
-
-    if (files && files.length > 0) {
-        if (coverImagePath) {
-            await deleteFromSupabase(coverImagePath, BLOGS_BUCKET);
+    let nextSlug = post.slug;
+    if (slug && generateSlug(slug) !== post.slug) {
+        nextSlug = generateSlug(slug);
+        if (await Post.findOne({ where: { slug: nextSlug, post_id: { [Op.ne]: post.post_id } } })) {
+            throw new AppError(409, 'A post with this slug already exists.');
         }
-        const newSlug = slug?.replace(/\s+/g, '_') || post.slug;
-        const uploaded = await uploadAndProcessImages(files, BLOGS_BUCKET, newSlug);
-        coverImagePath = uploaded[0];
     }
 
-    await Post.update(
-        {
-            title,
-            slug,
-            excerpt,
-            content,
-            is_published,
-            image: coverImagePath,
-        },
-        { where: { slug: initialSlug } }
-    );
+    const previousImage = post.image;
+    let coverImagePath = previousImage;
+    if (files && files.length > 0) {
+        [coverImagePath] = await uploadAndProcessImages(files.slice(0, 1), BLOGS_BUCKET, nextSlug);
+    }
 
-    const updatedPost = await Post.findOne({ where: { slug: initialSlug } });
-    res.json(updatedPost);
+    await post.update({
+        title: title ?? post.title,
+        slug: nextSlug,
+        excerpt: excerpt ?? post.excerpt,
+        content: content ?? post.content,
+        is_published: is_published ?? post.is_published,
+        image: coverImagePath,
+    });
+
+    if (coverImagePath !== previousImage) {
+        await removeQuietly(BLOGS_BUCKET, [previousImage]);
+    }
+
+    // Previously re-fetched by the *old* slug, which returned null after a slug change.
+    res.json(post);
 };
 
-// --- DELETE /posts/:id ---
-export const deletePost = async (
-    req: AuthenticatedRequest<PostParams>,
-    res: Response
-): Promise<void> => {
-    const { id } = req.params;
-    const post = await Post.findByPk(id);
-
+// --- DELETE /blog/:id ---
+export const deletePost = async (req: AuthenticatedRequest<PostParams>, res: Response): Promise<void> => {
+    const post = await Post.findByPk(req.params.id);
     if (!post) {
         throw new NotFoundError('Post not found');
     }
 
-    if (post.image) {
-        await deleteFromSupabase(post.image, BLOGS_BUCKET);
-    }
-
-    await Post.destroy({ where: { post_id: id } });
+    const imageKey = post.image;
+    await post.destroy();
+    await removeQuietly(BLOGS_BUCKET, [imageKey]);
 
     res.json({ message: 'Post deleted' });
 };

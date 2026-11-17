@@ -1,3 +1,5 @@
+import { escapeHtml } from '../utils/security';
+
 interface ContactMessageParams {
     full_name: string;
     email: string;
@@ -90,11 +92,11 @@ export const generateContactMessageEmail = ({
           <h2>You've received a new message!</h2>
           
           <div class="message-box">
-            <p><strong>Full Name:</strong> ${full_name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Phone Number:</strong> ${phone_number}</p>
+            <p><strong>Full Name:</strong> ${escapeHtml(full_name)}</p>
+            <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+            <p><strong>Phone Number:</strong> ${escapeHtml(phone_number)}</p>
             <p><strong>Message:</strong></p>
-            <p>${message.replace(/\n/g, '<br>')}</p>
+            <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
           </div>
         </div>
         

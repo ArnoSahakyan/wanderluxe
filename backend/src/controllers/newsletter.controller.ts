@@ -1,11 +1,20 @@
 import { Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
 import {
     NewsletterSubscriber,
     NewsletterVerification,
     User,
 } from '../db/models';
-import { sendEmail, BadRequestError, NotFoundError, UnauthorizedError } from '../utils';
+import {
+    sendEmail,
+    BadRequestError,
+    NotFoundError,
+    UnauthorizedError,
+    generateOpaqueToken,
+    hashToken,
+    getPagination,
+    totalPages,
+} from '../utils';
+import { sequelize } from '../db/models';
 import { generateNewsletterConfirmationEmail } from '../emails';
 import { TypedRequest, AuthenticatedRequest, IPaginationQuery } from '../types';
 import { EXPIRATION_TIME } from "../constants";
@@ -21,10 +30,6 @@ export const requestNewsletterSubscription = async (
     res: Response
 ) => {
     const { email } = req.body;
-
-    if (!email) {
-        throw new BadRequestError('Email is required.');
-    }
 
     const existingSubscriber = await NewsletterSubscriber.findOne({
         where: { email },
@@ -42,12 +47,13 @@ export const requestNewsletterSubscription = async (
         await existingVerification.destroy();
     }
 
-    const token = uuidv4();
+    // Only a hash of the token is stored; the e-mail carries the token itself.
+    const token = generateOpaqueToken();
     const expiresAt = new Date(Date.now() + EXPIRATION_TIME);
 
     await NewsletterVerification.create({
         email,
-        token,
+        token: hashToken(token),
         expires_at: expiresAt,
     });
 
@@ -65,14 +71,8 @@ export const verifyNewsletterSubscription = async (
     req: TypedRequest<{}, {}, {}, TokenQuery>,
     res: Response
 ) => {
-    const { token } = req.query;
-
-    if (!token) {
-        throw new BadRequestError('Token is required.');
-    }
-
     const verification = await NewsletterVerification.findOne({
-        where: { token },
+        where: { token: hashToken(req.query.token!) },
     });
 
     if (!verification) {
@@ -84,8 +84,11 @@ export const verifyNewsletterSubscription = async (
         throw new BadRequestError('Token has expired.');
     }
 
-    await NewsletterSubscriber.create({ email: verification.email });
-    await verification.destroy();
+    await sequelize.transaction(async (transaction) => {
+        // findOrCreate: confirming twice (or racing) must not fail on the unique e-mail.
+        await NewsletterSubscriber.findOrCreate({ where: { email: verification.email }, transaction });
+        await verification.destroy({ transaction });
+    });
 
     res.status(200).json({ message: 'Subscription confirmed!' });
 };
@@ -153,8 +156,7 @@ export const checkSubscriptionStatus = async (
 
 // ───── Admin: Get all subscribers ─────
 export const getAllSubscribers = async (req: TypedRequest<{}, {}, {}, IPaginationQuery>, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = getPagination(req.query);
 
     const { count, rows } = await NewsletterSubscriber.findAndCountAll({
         limit,
@@ -165,7 +167,7 @@ export const getAllSubscribers = async (req: TypedRequest<{}, {}, {}, IPaginatio
     res.json({
         total: count,
         currentPage: page,
-        totalPages: Math.ceil(count / limit),
+        totalPages: totalPages(count, limit),
         subscribers: rows,
     });
 };

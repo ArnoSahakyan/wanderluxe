@@ -19,7 +19,7 @@ export const getAllCategories = async (
     _req: TypedRequest,
     res: Response
 ): Promise<void> => {
-    const categories = await Category.findAll();
+    const categories = await Category.findAll({ order: [['category_id', 'ASC']] });
     res.json(categories);
 };
 

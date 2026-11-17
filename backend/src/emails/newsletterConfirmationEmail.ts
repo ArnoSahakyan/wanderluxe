@@ -1,5 +1,6 @@
+import { config } from '../config/env';
 export const generateNewsletterConfirmationEmail = ({ token }: { token: string }) => {
-    const verificationLink = `${process.env.CORS}/newsletter/verify?token=${token}`;
+    const verificationLink = `${config.appUrl}/newsletter/verify?token=${token}`;
 
     return `
     <!DOCTYPE html>

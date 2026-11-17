@@ -4,17 +4,27 @@ import {
     getAllMessages,
     getMessageById,
     updateMessageStatus,
-    deleteMessage
-} from "../controllers/contact.controller";
-import {asHandler} from "../utils";
-import {isAdmin, verifyToken} from "../middlewares/auth.middleware";
+    deleteMessage,
+} from '../controllers/contact.controller';
+import { isAdmin, verifyToken } from '../middlewares/auth.middleware';
+import { formLimiter } from '../middlewares/rateLimit.middleware';
+import { validate } from '../middlewares/validate.middleware';
+import { asHandler } from '../utils';
+import * as v from '../validators';
 
 const router = express.Router();
+const contactId = validate({ params: v.idParam('contact_id') });
 
-router.post('/', asHandler(sendMessage));
-router.get('/', verifyToken, isAdmin, asHandler(getAllMessages));
-router.get('/:contact_id', verifyToken, isAdmin, asHandler(getMessageById));
-router.put('/:contact_id/status', verifyToken, isAdmin, asHandler(updateMessageStatus));
-router.delete('/:contact_id', verifyToken, isAdmin, asHandler(deleteMessage));
+router.post('/', formLimiter, validate({ body: v.contactBody }), asHandler(sendMessage));
+router.get('/', verifyToken, isAdmin, validate({ query: v.pagination }), asHandler(getAllMessages));
+router.get('/:contact_id', verifyToken, isAdmin, contactId, asHandler(getMessageById));
+router.put(
+    '/:contact_id/status',
+    verifyToken,
+    isAdmin,
+    validate({ params: v.idParam('contact_id'), body: v.contactStatusBody }),
+    asHandler(updateMessageStatus),
+);
+router.delete('/:contact_id', verifyToken, isAdmin, contactId, asHandler(deleteMessage));
 
 export default router;

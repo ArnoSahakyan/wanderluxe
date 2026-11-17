@@ -1,32 +1,27 @@
-import { Response } from 'express';
-import { uploadAndProcessImages, deleteFromSupabase, BadRequestError, NotFoundError } from '../utils';
+import type { Response } from 'express';
 import { TOURS_BUCKET } from '../constants';
-import { Tour, TourImage } from '../db/models';
-import { AuthenticatedRequest, TypedRequest } from '../types';
+import { Tour, TourImage, sequelize } from '../db/models';
+import { removeQuietly } from '../lib/storage';
+import type { AuthenticatedRequest, TypedRequest } from '../types';
+import { BadRequestError, NotFoundError, uploadAndProcessImages } from '../utils';
 
-// Route param types
+const MAX_IMAGES_PER_TOUR = 10;
+
 interface TourIdParam {
     tour_id: number;
 }
 
-interface ImageParamAndBody {
+interface TourImageIds {
     tour_id: number;
-    image_id: string;
+    image_id: number;
 }
 
 // Add images (Admin)
-export const addImagesToTour = async (
-    req: AuthenticatedRequest<TourIdParam>,
-    res: Response
-): Promise<void> => {
-    const tour_id = req.params.tour_id;
+export const addImagesToTour = async (req: AuthenticatedRequest<TourIdParam>, res: Response): Promise<void> => {
+    const { tour_id } = req.params;
     const files = req.files;
 
-    if (isNaN(tour_id)) {
-        throw new BadRequestError('Invalid tour ID.');
-    }
-
-    if (!files || !Array.isArray(files)) {
+    if (!files || !Array.isArray(files) || files.length === 0) {
         throw new BadRequestError('No files uploaded');
     }
 
@@ -36,83 +31,83 @@ export const addImagesToTour = async (
     }
 
     const existingImageCount = await TourImage.count({ where: { tour_id } });
-    if (existingImageCount + files.length > 10) {
-        throw new BadRequestError('A tour can have a maximum of 10 images.');
+    if (existingImageCount + files.length > MAX_IMAGES_PER_TOUR) {
+        throw new BadRequestError(`A tour can have a maximum of ${MAX_IMAGES_PER_TOUR} images.`);
     }
 
-    const imagePaths = await uploadAndProcessImages(files, TOURS_BUCKET, tour_id.toString());
+    const imagePaths = await uploadAndProcessImages(files, TOURS_BUCKET, tour_id);
 
-    const newImages = await TourImage.bulkCreate(
-        imagePaths.map((path) => ({
-            tour_id,
-            image_url: path,
-            is_cover: false,
-        }))
-    );
-
-    res.status(201).json(newImages);
+    try {
+        const newImages = await TourImage.bulkCreate(
+            imagePaths.map((path, index) => ({
+                tour_id,
+                image_url: path,
+                // A tour that had no images gets its first upload as cover.
+                is_cover: existingImageCount === 0 && index === 0,
+            })),
+        );
+        res.status(201).json(newImages);
+    } catch (err) {
+        await removeQuietly(TOURS_BUCKET, imagePaths);
+        throw err;
+    }
 };
 
 // Get images (Public)
-export const getImagesForTour = async (
-    req: TypedRequest<TourIdParam>,
-    res: Response
-): Promise<void> => {
-    const { tour_id } = req.params;
-
-    const images = await TourImage.findAll({ where: { tour_id } });
+export const getImagesForTour = async (req: TypedRequest<TourIdParam>, res: Response): Promise<void> => {
+    const images = await TourImage.findAll({ where: { tour_id: req.params.tour_id }, order: [['image_id', 'ASC']] });
     res.json(images);
 };
 
 // Set cover (Admin)
 export const setCoverImage = async (
-    req: AuthenticatedRequest<{}, {}, ImageParamAndBody>,
-    res: Response
+    req: AuthenticatedRequest<{}, {}, TourImageIds>,
+    res: Response,
 ): Promise<void> => {
     const { tour_id, image_id } = req.body;
 
-    await TourImage.update({ is_cover: false }, { where: { tour_id } });
-    await TourImage.update({ is_cover: true }, { where: { image_id } });
+    await sequelize.transaction(async (transaction) => {
+        const image = await TourImage.findOne({ where: { image_id, tour_id }, transaction });
+        if (!image) {
+            throw new NotFoundError('Image not found for this tour.');
+        }
+        await TourImage.update({ is_cover: false }, { where: { tour_id }, transaction });
+        await image.update({ is_cover: true }, { transaction });
+    });
+
     res.json({ message: 'Cover image updated.' });
 };
 
 // Delete image (Admin)
-export const deleteImageForTour = async (
-    req: TypedRequest<ImageParamAndBody>,
-    res: Response
-): Promise<void> => {
+export const deleteImageForTour = async (req: TypedRequest<TourImageIds>, res: Response): Promise<void> => {
     const { tour_id, image_id } = req.params;
 
-    const image = await TourImage.findOne({
-        where: { tour_id, image_id },
+    const imageKey = await sequelize.transaction(async (transaction) => {
+        const image = await TourImage.findOne({ where: { tour_id, image_id }, transaction });
+        if (!image) {
+            throw new NotFoundError('Image not found.');
+        }
+
+        const imageCount = await TourImage.count({ where: { tour_id }, transaction });
+        if (imageCount <= 1) {
+            throw new BadRequestError('At least one image must remain for this tour.');
+        }
+
+        const wasCover = image.is_cover;
+        await image.destroy({ transaction });
+
+        // If the deleted image was the cover, promote the oldest remaining one.
+        if (wasCover) {
+            const otherImage = await TourImage.findOne({
+                where: { tour_id },
+                order: [['image_id', 'ASC']],
+                transaction,
+            });
+            await otherImage?.update({ is_cover: true }, { transaction });
+        }
+        return image.image_url;
     });
 
-    if (!image) {
-        throw new NotFoundError('Image not found.');
-    }
-
-    // 🔎 Count how many images exist for this tour
-    const imageCount = await TourImage.count({ where: { tour_id } });
-    if (imageCount <= 1) {
-        throw new BadRequestError('At least one image must remain for this tour.');
-    }
-
-    const wasCover = image.is_cover;
-
-    await deleteFromSupabase(image.image_url, TOURS_BUCKET);
-    await image.destroy();
-
-    // If deleted image was cover, assign cover to another
-    if (wasCover) {
-        const otherImage = await TourImage.findOne({
-            where: { tour_id },
-            order: [['image_id', 'ASC']],
-        });
-
-        if (otherImage) {
-            await otherImage.update({ is_cover: true });
-        }
-    }
-
+    await removeQuietly(TOURS_BUCKET, [imageKey]);
     res.json({ message: 'Image deleted successfully.' });
 };

@@ -1,6 +1,6 @@
-import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv';
-dotenv.config();
+import { Sequelize, type Options } from 'sequelize';
+import { config } from '../../config/env';
+import { logger } from '../../lib/logger';
 
 // Import model initializers and class exports
 import initUserModel, { User } from './user.model';
@@ -19,14 +19,24 @@ import initContactModel, { Contact } from './contact.model';
 import {DbModels} from "../../types";
 
 // Setup Sequelize instance
-export const sequelize = new Sequelize({
-  database: process.env.DB_NAME!,
-  username: process.env.DB_USER!,
-  password: process.env.DB_PASSWORD!,
-  host: process.env.DB_HOST!,
+const options: Options = {
   dialect: 'postgres',
-  logging: false,
-});
+  logging: config.db.logSql ? (sql: string) => logger.debug(sql) : false,
+  pool: { max: config.db.poolMax, min: 0, idle: 10_000, acquire: 30_000 },
+  dialectOptions: config.db.ssl ? { ssl: { require: true, rejectUnauthorized: true } } : {},
+  timezone: '+00:00',
+};
+
+export const sequelize = config.db.url
+  ? new Sequelize(config.db.url, options)
+  : new Sequelize({
+      ...options,
+      database: config.db.name,
+      username: config.db.user,
+      password: config.db.password,
+      host: config.db.host,
+      port: config.db.port,
+    });
 
 // Initialize models
 initUserModel(sequelize);

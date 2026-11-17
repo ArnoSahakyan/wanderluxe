@@ -1,5 +1,6 @@
+import { config } from '../config/env';
 export const generateResetPasswordEmail = ({ token }: { token: string }) => {
-    const link = `${process.env.CORS}/auth/reset-password?token=${token}`;
+    const link = `${config.appUrl}/auth/reset-password?token=${token}`;
     return `
     <!DOCTYPE html>
     <html lang="en">

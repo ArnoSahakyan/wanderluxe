@@ -1,0 +1,40 @@
+{
+  "name": "wanderluxe",
+  "private": true,
+  "description": "WanderLuxe travel agency — React + Vite frontend, Express API, PostgreSQL",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "setup": "node scripts/setup-env.mjs",
+    "dev": "concurrently -k -n api,web -c cyan,magenta \"npm:dev -w backend\" \"npm:dev -w frontend\"",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "start": "npm run start -w backend",
+    "lint": "npm run lint -w backend && npm run lint -w frontend",
+    "typecheck": "npm run typecheck -w backend && npm run typecheck -w frontend",
+    "test": "npm run test -w backend && npm run test -w frontend",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:import": "database/scripts/db.sh import",
+    "db:import:test": "database/scripts/db.sh import --test --file database/schema/baseline.sql",
+    "db:reset": "database/scripts/db.sh reset",
+    "db:psql": "database/scripts/db.sh psql",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:migrate:test": "npm run db:migrate:test -w backend",
+    "db:dev-users": "npm run db:dev-users -w backend",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "sharp": true
+  }
+}

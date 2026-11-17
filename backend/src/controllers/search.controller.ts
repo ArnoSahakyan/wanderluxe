@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { Op } from 'sequelize';
 import { Destination, Tour, Post } from '../db/models';
-import { addSupabaseUrl, BadRequestError } from '../utils';
+import { toPublicImageUrl, containsPattern } from '../utils';
 import { DESTINATIONS_BUCKET, TOURS_BUCKET, BLOGS_BUCKET } from '../constants';
 import { TourImage } from "../db/models";
 import { TypedRequest } from "../types";
@@ -13,17 +13,14 @@ interface GetFilteredTPostsQuery {
 
 export const globalSearch = async (req: TypedRequest<{}, {}, {}, GetFilteredTPostsQuery>, res: Response) => {
     const { query, limit } = req.query;
-
-    if (!query) {
-        throw new BadRequestError('Query parameter is required.');
-    }
+    const pattern = containsPattern(query);
 
     const [destinations, tours, posts] = await Promise.all([
         Destination.findAll({
             where: {
                 [Op.or]: [
-                    { name: { [Op.iLike]: `%${query}%` } },
-                    { description: { [Op.iLike]: `%${query}%` } },
+                    { name: { [Op.iLike]: pattern } },
+                    { description: { [Op.iLike]: pattern } },
                 ],
             },
             limit,
@@ -31,8 +28,8 @@ export const globalSearch = async (req: TypedRequest<{}, {}, {}, GetFilteredTPos
         Tour.findAll({
             where: {
                 [Op.or]: [
-                    { name: { [Op.iLike]: `%${query}%` } },
-                    { description: { [Op.iLike]: `%${query}%` } },
+                    { name: { [Op.iLike]: pattern } },
+                    { description: { [Op.iLike]: pattern } },
                 ],
             },
             limit,
@@ -50,8 +47,8 @@ export const globalSearch = async (req: TypedRequest<{}, {}, {}, GetFilteredTPos
             where: {
                 is_published: true,
                 [Op.or]: [
-                    { title: { [Op.iLike]: `%${query}%` } },
-                    { excerpt: { [Op.iLike]: `%${query}%` } },
+                    { title: { [Op.iLike]: pattern } },
+                    { excerpt: { [Op.iLike]: pattern } },
                 ],
             },
             limit,
@@ -63,7 +60,7 @@ export const globalSearch = async (req: TypedRequest<{}, {}, {}, GetFilteredTPos
         destinations: destinations.map((d) => ({
             id: d.destination_id,
             name: d.name,
-            image: d.image ? addSupabaseUrl(d.image, DESTINATIONS_BUCKET) : undefined,
+            image: d.image ? toPublicImageUrl(d.image, DESTINATIONS_BUCKET) : undefined,
             description: d.description,
             type: 'destination',
         })),
@@ -71,7 +68,7 @@ export const globalSearch = async (req: TypedRequest<{}, {}, {}, GetFilteredTPos
             id: t.tour_id,
             name: t.name,
             image: t.TourImages?.[0]?.image_url
-                ? addSupabaseUrl(t.TourImages[0].image_url, TOURS_BUCKET)
+                ? toPublicImageUrl(t.TourImages[0].image_url, TOURS_BUCKET)
                 : null,
             description: t.description,
             type: 'tour',
@@ -79,7 +76,7 @@ export const globalSearch = async (req: TypedRequest<{}, {}, {}, GetFilteredTPos
         posts: posts.map((p) => ({
             id: p.post_id,
             name: p.title,
-            image: p.image ? addSupabaseUrl(p.image, BLOGS_BUCKET) : null,
+            image: p.image ? toPublicImageUrl(p.image, BLOGS_BUCKET) : null,
             slug: p.slug,
             excerpt: p.excerpt,
             type: 'post',

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Op, Sequelize, WhereOptions } from 'sequelize';
-import { addSupabaseUrl, deleteFromSupabase, uploadAndProcessImages, NotFoundError } from '../utils';
+import { toPublicImageUrl, uploadAndProcessImages, NotFoundError, containsPattern, getPagination, totalPages } from '../utils';
+import { removeQuietly } from '../lib/storage';
 import { DESTINATIONS_BUCKET } from '../constants';
 import { Destination } from '../db/models';
 import { AuthenticatedRequest, IPaginationQuery, TypedRequest } from '../types';
@@ -34,15 +35,17 @@ export const createDestination = async (
     let imagePath: string | undefined;
 
     if (files && files.length > 0) {
-        const uploaded = await uploadAndProcessImages(files, DESTINATIONS_BUCKET, name.replace(/\s+/g, '_'));
+        const uploaded = await uploadAndProcessImages(files.slice(0, 1), DESTINATIONS_BUCKET, name);
         imagePath = uploaded[0];
     }
 
-    const destination = await Destination.create({
-        name,
-        description,
-        image: imagePath,
-    });
+    let destination: Destination;
+    try {
+        destination = await Destination.create({ name, description, image: imagePath });
+    } catch (err) {
+        await removeQuietly(DESTINATIONS_BUCKET, [imagePath]);
+        throw err;
+    }
 
     res.status(201).json(destination);
 };
@@ -62,14 +65,11 @@ export const updateDestination = async (
         throw new NotFoundError('Destination not found.');
     }
 
-    let imagePath = destination.image;
+    const previousImage = destination.image;
+    let imagePath = previousImage;
 
     if (files && files.length > 0) {
-        if (imagePath) {
-            await deleteFromSupabase(imagePath, DESTINATIONS_BUCKET);
-        }
-
-        const uploaded = await uploadAndProcessImages(files, DESTINATIONS_BUCKET, id.toString());
+        const uploaded = await uploadAndProcessImages(files.slice(0, 1), DESTINATIONS_BUCKET, id);
         imagePath = uploaded[0];
     }
 
@@ -79,6 +79,11 @@ export const updateDestination = async (
         image: imagePath,
     });
 
+    // Old file is removed only once the new one is saved and referenced.
+    if (imagePath !== previousImage) {
+        await removeQuietly(DESTINATIONS_BUCKET, [previousImage]);
+    }
+
     res.json(destination);
 };
 
@@ -87,16 +92,16 @@ export const getAllDestinations = async (
     req: TypedRequest<{}, {}, {}, GetFilteredTDestinationsQuery>,
     res: Response
 ) => {
-    const { page = 1, limit = 10, search } = req.query;
-    const offset = (page - 1) * limit;
+    const { search } = req.query;
+    const { page, limit, offset } = getPagination(req.query);
 
     const baseCondition: WhereOptions = {};
 
     const searchCondition: WhereOptions | undefined = search
         ? {
             [Op.or]: [
-                { name: { [Op.iLike]: `%${search}%` } },
-                { description: { [Op.iLike]: `%${search}%` } },
+                { name: { [Op.iLike]: containsPattern(search) } },
+                { description: { [Op.iLike]: containsPattern(search) } },
             ],
         }
         : undefined;
@@ -136,14 +141,14 @@ export const getAllDestinations = async (
         const raw = destination.get({ plain: true }) as any;
         return {
             ...raw,
-            image: addSupabaseUrl(raw.image ?? '', DESTINATIONS_BUCKET),
+            image: raw.image ? toPublicImageUrl(raw.image, DESTINATIONS_BUCKET) : null,
         };
     });
 
     res.json({
         total: count,
         currentPage: page,
-        totalPages: Math.ceil(count / limit),
+        totalPages: totalPages(count, limit),
         destinations,
     });
 };
@@ -165,7 +170,7 @@ export const getDestinationById = async (
 
     res.json({
         ...plainDestination,
-        image: addSupabaseUrl(plainDestination.image ?? '', DESTINATIONS_BUCKET),
+        image: plainDestination.image ? toPublicImageUrl(plainDestination.image, DESTINATIONS_BUCKET) : null,
     });
 };
 
@@ -182,11 +187,9 @@ export const deleteDestination = async (
         throw new NotFoundError('Destination not found.');
     }
 
-    if (destination.image) {
-        await deleteFromSupabase(destination.image, DESTINATIONS_BUCKET);
-    }
-
+    const imageKey = destination.image;
     await destination.destroy();
+    await removeQuietly(DESTINATIONS_BUCKET, [imageKey]);
 
     res.json({ message: 'Destination deleted successfully.' });
 };

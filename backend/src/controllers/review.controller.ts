@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthenticatedRequest, IPaginationQuery, TypedRequest } from '../types';
 import { Review, User, Tour, sequelize } from '../db/models';
-import { UnauthorizedError, BadRequestError, AppError, NotFoundError } from '../utils';
+import { AppError, ForbiddenError, NotFoundError, getPagination, totalPages } from '../utils';
 
 // --- Types ---
 type CreateReviewBody = {
@@ -22,15 +22,12 @@ export const createReview = async (
     req: AuthenticatedRequest<{}, {}, CreateReviewBody>,
     res: Response
 ): Promise<void> => {
-    const user_id = req.user_id;
-    if (!user_id) {
-        throw new UnauthorizedError('Unauthorized: Missing user ID');
-    }
-
+    const user_id = req.user_id!;
     const { tour_id, rating, comment } = req.body;
 
-    if (!tour_id || !rating) {
-        throw new BadRequestError('tour_id and rating are required');
+    const tour = await Tour.findByPk(tour_id, { attributes: ['tour_id'] });
+    if (!tour) {
+        throw new NotFoundError('Tour not found');
     }
 
     const existingReview = await Review.findOne({
@@ -55,9 +52,7 @@ export const getAllReviews = async (
     req: TypedRequest<{}, {}, {}, IPaginationQuery>,
     res: Response
 ): Promise<void> => {
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 4;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = getPagination(req.query, 4);
 
     const { count, rows } = await Review.findAndCountAll({
         include: [
@@ -89,7 +84,7 @@ export const getAllReviews = async (
     res.status(200).json({
         total: count,
         page,
-        totalPages: Math.ceil(count / limit),
+        totalPages: totalPages(count, limit),
         reviews,
     });
 };
@@ -100,9 +95,7 @@ export const getReviewsForTour = async (
 ): Promise<void> => {
     const tour_id = req.params.tour_id;
 
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 4;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = getPagination(req.query, 4);
 
     const { count, rows } = await Review.findAndCountAll({
         where: { tour_id },
@@ -135,22 +128,26 @@ export const getReviewsForTour = async (
     res.status(200).json({
         total: count,
         page,
-        totalPages: Math.ceil(count / limit),
+        totalPages: totalPages(count, limit),
         reviews,
     });
 };
 
+/** Admins may delete any review; customers only their own (as the profile UI offers). */
 export const deleteReview = async (
-    req: TypedRequest<ReviewIdParam>,
+    req: AuthenticatedRequest<ReviewIdParam>,
     res: Response
 ): Promise<void> => {
-    const review_id = req.params.review_id;
+    const review = await Review.findByPk(req.params.review_id);
 
-    const deleted = await Review.destroy({ where: { review_id } });
-
-    if (!deleted) {
+    if (!review) {
         throw new NotFoundError('Review not found');
     }
+    if (req.user_role !== 'admin' && review.user_id !== req.user_id) {
+        throw new ForbiddenError('You can only delete your own reviews.');
+    }
+
+    await review.destroy();
 
     res.status(200).json({ message: 'Review deleted successfully' });
 };
@@ -161,9 +158,7 @@ export const getUserReviews = async (
 ): Promise<void> => {
     const user_id = req.user_id;
 
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 10;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = getPagination(req.query, 10);
 
     const { count, rows } = await Review.findAndCountAll({
         where: { user_id },
@@ -190,7 +185,7 @@ export const getUserReviews = async (
     res.status(200).json({
         total: count,
         page,
-        totalPages: Math.ceil(count / limit),
+        totalPages: totalPages(count, limit),
         reviews,
     });
 };

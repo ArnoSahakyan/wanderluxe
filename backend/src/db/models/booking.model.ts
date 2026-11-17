@@ -12,7 +12,7 @@ import { Tour } from './tour.model';
 import { User } from './user.model';
 import {DbModels} from "../../types";
 
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show' | 'refunded';
 
 export class Booking
     extends Model<InferAttributes<Booking>, InferCreationAttributes<Booking>>

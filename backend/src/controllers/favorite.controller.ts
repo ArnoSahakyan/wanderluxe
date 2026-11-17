@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { Favorite, Tour, TourImage } from '../db/models';
 import { TOURS_BUCKET } from '../constants';
-import { addSupabaseUrl, UnauthorizedError, BadRequestError, NotFoundError, AppError } from '../utils';
+import { toPublicImageUrl, NotFoundError, AppError, getPagination, totalPages } from '../utils';
 import { AuthenticatedRequest, IPaginationQuery } from '../types';
 
 // --- Types ---
@@ -12,15 +12,11 @@ export const addToFavorites = async (
     req: AuthenticatedRequest<{}, any, TourIdParams>,
     res: Response
 ): Promise<void> => {
-    const user_id = req.user_id;
+    const user_id = req.user_id!;
     const { tour_id } = req.body;
 
-    if (!user_id) {
-        throw new UnauthorizedError('Unauthorized: Missing user ID');
-    }
-
-    if (!tour_id) {
-        throw new BadRequestError('Tour ID is required');
+    if (!(await Tour.findByPk(tour_id, { attributes: ['tour_id'] }))) {
+        throw new NotFoundError('Tour not found');
     }
 
     const existing = await Favorite.findOne({ where: { user_id, tour_id } });
@@ -58,9 +54,7 @@ export const getUserFavorites = async (
     res: Response
 ): Promise<void> => {
     const user_id = req.user_id;
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 10;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = getPagination(req.query, 10);
 
     const { count, rows } = await Favorite.findAndCountAll({
         where: { user_id },
@@ -81,6 +75,7 @@ export const getUserFavorites = async (
         order: [['created_at', 'DESC']],
         limit,
         offset,
+        distinct: true,
     });
 
     const favorites = rows.map((favoriteItem) => {
@@ -101,7 +96,7 @@ export const getUserFavorites = async (
                 end_date: tour?.end_date,
                 available_spots: tour?.available_spots,
                 image: tour?.TourImages?.[0]?.image_url
-                    ? addSupabaseUrl(tour.TourImages[0].image_url, TOURS_BUCKET)
+                    ? toPublicImageUrl(tour.TourImages[0].image_url, TOURS_BUCKET)
                     : null,
             },
         };
@@ -110,7 +105,7 @@ export const getUserFavorites = async (
     res.status(200).json({
         total: count,
         page,
-        totalPages: Math.ceil(count / limit),
+        totalPages: totalPages(count, limit),
         favorites,
     });
 };
