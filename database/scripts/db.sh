@@ -11,6 +11,9 @@
 #   database/scripts/db.sh psql [--test]
 #       Open an interactive psql shell as the owner role.
 #
+#   --db <name>
+#       Target another LOCAL database instead of $POSTGRES_DB (e.g. the e2e
+#       database, wanderluxe_e2e). Takes precedence over --test.
 #   --url 'postgresql://user:pass@host:port/db?sslmode=require'
 #       import / psql against a REMOTE database (e.g. Supabase) instead of the
 #       local container. Uses psql from the postgres:17 docker image, so no local
@@ -36,12 +39,14 @@ DB_EXEC="${DB_EXEC:-docker}"
 
 cmd="${1:-}"; shift || true
 target_db="$POSTGRES_DB"
+db_override=""
 file=""
 url=""
 assume_yes=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --test) target_db="${POSTGRES_DB}_test" ;;
+    --db) db_override="$2"; shift ;;
     --file) file="$2"; shift ;;
     --yes|-y) assume_yes=true ;;
     --url) url="$2"; shift ;;
@@ -49,6 +54,7 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+[[ -n "$db_override" ]] && target_db="$db_override"
 
 if [[ -n "$url" ]]; then
   DB_EXEC=url
@@ -170,5 +176,5 @@ SQL
     ;;
 
   *)
-    sed -n '2,27p' "$0"; exit 2 ;;
+    sed -n '2,30p' "$0"; exit 2 ;;
 esac
