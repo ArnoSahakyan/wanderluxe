@@ -6,7 +6,16 @@ import { sequelize } from './db/models';
 const startServer = async (): Promise<void> => {
     try {
         await sequelize.authenticate();
-        logger.info('Database connected', { database: config.db.name ?? '(DATABASE_URL)' });
+        const target = config.db.url
+            ? (() => {
+                  const u = new URL(config.db.url);
+                  return { host: u.hostname, database: u.pathname.slice(1) };
+              })()
+            : { host: config.db.host, database: config.db.name };
+        logger.info('Database connected', { ...target, ssl: Boolean(config.db.ssl) });
+        if (config.isProduction && !config.db.ssl && !['localhost', '127.0.0.1'].includes(target.host ?? '')) {
+            logger.warn('DB_SSL is off for a remote database: connections are not encrypted.');
+        }
     } catch (err) {
         logger.error('Unable to connect to the database — is PostgreSQL running? (npm run db:up)', { err });
         process.exit(1);

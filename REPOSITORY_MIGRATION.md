@@ -27,7 +27,6 @@ All in `.backup/` (git-ignored, mode 700):
 |---|---|---|
 | `travel-back.bundle`, `travel-front.bundle` | Complete repos (`git bundle --all`): every branch, remote-tracking ref and object. Verified with `git bundle verify`. | `git clone travel-back.bundle restored-back` |
 | `original-folders.tar.gz` | Both folders as they were (without `node_modules`), plus the dump and `.idea/` | `tar -xzf …` |
-| `original-repos/travel-back`, `original-repos/travel-front` | The original working copies, **including their `.git` directories and remotes**, moved here after the merge was verified | can still `git pull` / `git push` from them if ever needed |
 | `env/travel-back.env`, `env/travel-front.env` | The original production `.env` files, unmodified, mode 600 | production configuration reference |
 | `wanderluxe.sql.sha256` | Checksum of the supplied dump | `cd database/dump && sha256sum -c ../../.backup/wanderluxe.sql.sha256` |
 
@@ -67,6 +66,7 @@ Verification:
 - 118 commits are reachable: 34 + 81 imported, 1 root commit, 2 merge commits.
 - Authors and dates of historical commits are unchanged (`Arno` / `ArnoSahakyan <sahakyan.arno@gmail.com>`).
 - After verification, the original folders were moved to `.backup/original-repos/`. `find . -name .git` now finds only `./.git`.
+- 2026-11-17, later: the new repository was pushed to `git@github.com:ArnoSahakyan/wanderluxe.git` (`main` and both archive tags verified on the remote). `.backup/original-repos/` was then deleted. The bundles and `original-folders.tar.gz` still hold every ref and file it contained.
 
 ## Resulting layout
 
@@ -95,14 +95,8 @@ git blame archive/travel-front-main -- src/App.tsx  # blame as of the old layout
 
 ## Remotes
 
-- The new repository has **no remote**. Nothing was pushed, and the two GitHub repositories are untouched.
-- When you're ready, create a new GitHub repository and push:
-
-  ```bash
-  git remote add origin git@github.com:ArnoSahakyan/wanderluxe.git
-  git push -u origin main --follow-tags
-  ```
-- Optionally, archive `travel-back` / `travel-front` on GitHub with a README link to the new repository. Don't delete them until the new one is published.
+- `origin` is `git@github.com:ArnoSahakyan/wanderluxe.git`.
+- The old `travel-back` / `travel-front` repositories are untouched. Archive them (rather than delete) once Render and Vercel deploy from the new repository (DEPLOYMENT.md §6).
 
 ## Package manager
 

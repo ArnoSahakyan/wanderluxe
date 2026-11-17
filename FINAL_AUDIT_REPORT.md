@@ -186,7 +186,7 @@ None can be fixed without a major-version change of the parent package. See §6.
    - Old variable names still work.
    - Existing sessions keep working; reset links sent before the deploy stop working.
 2. **Rotate secrets** if the old `.env` files were ever shared.
-3. **Publish the repository:** add a remote and push (REPOSITORY_MIGRATION.md).
+3. **Redeploy from the new repository:** database to Supabase, API to Render, frontend to Vercel. See [DEPLOYMENT.md](DEPLOYMENT.md); the database steps were rehearsed locally.
 4. **SQL dump:** decided to keep it out of git because it contains personal data. Share it privately with developers who need real data (database/README.md).
 5. **Missing production image:** the cover of "Family Fun in Gold Coast" (tour 4) no longer exists in the Supabase bucket. Re-upload it via the admin UI.
 

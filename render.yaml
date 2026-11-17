@@ -1,0 +1,85 @@
+# Render Blueprint for the WanderLuxe API (Dashboard → New → Blueprint → this repo).
+# The database is NOT created here: it lives on Supabase (see DEPLOYMENT.md).
+# Values marked `sync: false` are prompted for when the Blueprint is created.
+services:
+  - type: web
+    name: wanderluxe-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    # npm workspaces: install from the repo root. --include=dev because the
+    # TypeScript compiler is a dev dependency and NODE_ENV=production here.
+    buildCommand: npm ci --include=dev && npm run build -w backend
+    startCommand: npm start -w backend
+    healthCheckPath: /health
+    autoDeploy: true
+    # Only redeploy when backend code or shared tooling changes.
+    buildFilter:
+      paths:
+        - backend/**
+        - package.json
+        - package-lock.json
+        - render.yaml
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: LOG_LEVEL
+        value: info
+
+      # Frontend URL(s): e-mail links and CORS allow-list (comma-separated)
+      - key: APP_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+      # Supabase PostgreSQL — Session pooler URL, user wanderluxe_app.<project-ref>
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: DB_SSL_CA
+        sync: false
+      - key: DB_POOL_MAX
+        value: "5"
+
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: CONTACT_RECIPIENT_EMAIL
+        sync: false
+
+      - key: STORAGE_DRIVER
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: STORAGE_PUBLIC_URL
+        sync: false
+      - key: SUPABASE_BUCKET_TOURS
+        sync: false
+      - key: SUPABASE_BUCKET_DESTINATIONS
+        sync: false
+      - key: SUPABASE_BUCKET_BLOGS
+        sync: false

@@ -113,17 +113,14 @@ The API suite rebuilds the dedicated `wanderluxe_test` database before every run
   2. Make small commits (`feat:`, `fix:`, `chore:`, `docs:` prefixes).
   3. Run `npm run check`.
   4. Open a PR.
-- No remote is configured yet. To publish:
-  ```bash
-  git remote add origin <url>
-  git push -u origin main
-  ```
+- Remote: `git@github.com:ArnoSahakyan/wanderluxe.git`. Pushing to `main` redeploys on Render and Vercel ([DEPLOYMENT.md](DEPLOYMENT.md)).
 
 ## Documentation
 
 | Document | Contents |
 |---|---|
 | [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) | Setup in detail, env var reference, images, e-mail, troubleshooting |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Supabase (database) + Render (API) + Vercel (frontend), step by step |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the pieces fit, request lifecycle, auth flow, conventions |
 | [docs/TESTING.md](docs/TESTING.md) | Test strategy, how to run and write tests |
 | [database/README.md](database/README.md) | Dump handling, import/restore, migrations, roles |

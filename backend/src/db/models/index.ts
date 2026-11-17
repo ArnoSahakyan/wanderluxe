@@ -23,7 +23,7 @@ const options: Options = {
   dialect: 'postgres',
   logging: config.db.logSql ? (sql: string) => logger.debug(sql) : false,
   pool: { max: config.db.poolMax, min: 0, idle: 10_000, acquire: 30_000 },
-  dialectOptions: config.db.ssl ? { ssl: { require: true, rejectUnauthorized: true } } : {},
+  dialectOptions: config.db.ssl ? { ssl: config.db.ssl } : {},
   timezone: '+00:00',
 };
 

@@ -18,9 +18,21 @@ const base = {
   logging: false,
 };
 
+// Mirrors src/config/env.ts: DB_SSL, DB_SSL_CA, DB_SSL_REJECT_UNAUTHORIZED.
+const ssl =
+  process.env.DB_SSL === 'true'
+    ? {
+        ssl: {
+          require: true,
+          rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+          ...(process.env.DB_SSL_CA ? { ca: process.env.DB_SSL_CA.replace(/\\n/g, '\n') } : {}),
+        },
+      }
+    : {};
+
 const fromEnv = (dbName) => {
   if (process.env.DB_MIGRATION_URL) {
-    return { ...base, url: process.env.DB_MIGRATION_URL };
+    return { ...base, url: process.env.DB_MIGRATION_URL, dialectOptions: ssl };
   }
   return {
     ...base,
@@ -29,7 +41,7 @@ const fromEnv = (dbName) => {
     database: dbName,
     username: process.env.DB_MIGRATION_USER || process.env.DB_USER,
     password: process.env.DB_MIGRATION_PASSWORD || process.env.DB_PASSWORD,
-    dialectOptions: process.env.DB_SSL === 'true' ? { ssl: { require: true, rejectUnauthorized: true } } : {},
+    dialectOptions: ssl,
   };
 };
 

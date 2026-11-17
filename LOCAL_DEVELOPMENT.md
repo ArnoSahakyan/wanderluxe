@@ -105,7 +105,8 @@ All variables are declared and validated in `backend/src/config/env.ts`.
 | `TRUST_PROXY` | false | client IP for rate limiting behind a proxy |
 | `DATABASE_URL` or `DB_HOST/PORT/NAME/USER/PASSWORD` | – | `src/db/models/index.ts` (app role) |
 | `DB_MIGRATION_USER/PASSWORD` (or `DB_MIGRATION_URL`) | app creds | `src/db/config/config.cjs` (sequelize-cli) |
-| `DB_SSL`, `DB_POOL_MAX`, `DB_LOG_SQL` | false, 10, false | Sequelize options |
+| `DB_SSL`, `DB_SSL_CA`, `DB_SSL_REJECT_UNAUTHORIZED` | false, –, true | TLS to remote databases (Supabase). Also honoured by sequelize-cli. |
+| `DB_POOL_MAX`, `DB_LOG_SQL` | 10, false | Sequelize options |
 | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | – | token signing. Must differ; ≥ 32 chars in production. Legacy names: `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`. |
 | `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN` | 15m, 7d | `src/utils/generateTokens.ts` |
 | `BCRYPT_ROUNDS` | 12 | password hashing |

@@ -55,6 +55,10 @@ const schema = z
         DB_USER: optionalString,
         DB_PASSWORD: optionalString,
         DB_SSL: bool(false),
+        /** PEM of the server's CA (e.g. Supabase's root certificate). "\n" escapes are accepted. */
+        DB_SSL_CA: optionalString,
+        /** Only set to false if you cannot supply DB_SSL_CA: traffic stays encrypted but the server is not verified. */
+        DB_SSL_REJECT_UNAUTHORIZED: bool(true),
         DB_POOL_MAX: z.coerce.number().int().positive().default(10),
         DB_LOG_SQL: bool(false),
 
@@ -163,7 +167,13 @@ export const config = {
         name: env.DB_NAME,
         user: env.DB_USER,
         password: env.DB_PASSWORD,
-        ssl: env.DB_SSL,
+        ssl: env.DB_SSL
+            ? {
+                  require: true,
+                  rejectUnauthorized: env.DB_SSL_REJECT_UNAUTHORIZED,
+                  ...(env.DB_SSL_CA ? { ca: env.DB_SSL_CA.replace(/\\n/g, '\n') } : {}),
+              }
+            : undefined,
         poolMax: env.DB_POOL_MAX,
         logSql: env.DB_LOG_SQL,
     },
