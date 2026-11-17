@@ -32,7 +32,8 @@ const TourDetailsPage = () => {
     handleRemoveFromFavorites,
   } = useFavorite(id);
 
-  const hasStarted = tour ? new Date(tour.start_date).getTime() <= Date.now() : false;
+  const [now] = useState(Date.now);
+  const hasStarted = tour ? new Date(tour.start_date).getTime() <= now : false;
   const isSoldOut = tour ? tour.available_spots < 1 : false;
   const canBook = !hasStarted && !isSoldOut;
 

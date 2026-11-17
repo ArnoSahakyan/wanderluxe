@@ -43,6 +43,6 @@ export const sendEmail = async ({ to, subject, html }: SendEmailParams): Promise
         if (!config.mail.host) logger.info('E-mail (not sent, no SMTP configured)', { to, subject });
     } catch (err) {
         logger.error('E-mail sending failed', { err, subject });
-        throw new Error('Failed to send email');
+        throw new Error('Failed to send email', { cause: err });
     }
 };

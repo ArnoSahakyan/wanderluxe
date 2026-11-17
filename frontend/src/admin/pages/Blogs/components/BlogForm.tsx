@@ -1,5 +1,5 @@
 import { ChangeEvent, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   useCreateBlog,
@@ -34,11 +34,12 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
   const deleteMutation = useDeleteBlog();
   const { data: blogData, isPending } = useBlog(blogSlug || '', true);
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  useRevokeOnChange(imagePreview);
+  // undefined: untouched (show the saved image); null: removed; string: newly picked file.
+  const [pickedPreview, setPickedPreview] = useState<string | null>();
+  useRevokeOnChange(pickedPreview);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const { register, handleSubmit, formState, reset, setValue, watch } = useForm<BlogPayload>({
+  const { register, handleSubmit, formState, reset, setValue, control } = useForm<BlogPayload>({
     resolver: zodResolver(blogSlug ? updateBlogSchema : createBlogSchema),
     defaultValues: {
       title: '',
@@ -49,8 +50,11 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
       image: undefined,
     },
   });
+  const content = useWatch({ control, name: 'content' });
 
   const { errors, isDirty } = formState;
+
+  const imagePreview = pickedPreview === undefined ? (blogData?.image ?? null) : pickedPreview;
 
   // Prefill form when editing
   useEffect(() => {
@@ -63,9 +67,6 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
         is_published: blogData.is_published,
         image: undefined,
       });
-      if (blogData.image) {
-        setImagePreview(blogData.image);
-      }
     }
   }, [blogData, reset]);
 
@@ -81,12 +82,12 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
     const file = e.target.files?.[0];
     setValue('image', file, { shouldDirty: true });
     if (file) {
-      setImagePreview(URL.createObjectURL(file));
+      setPickedPreview(URL.createObjectURL(file));
     }
   };
 
   const removeImage = () => {
-    setImagePreview(null);
+    setPickedPreview(null);
     setValue('image', undefined, { shouldDirty: true });
   };
 
@@ -190,7 +191,7 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
           </span>
 
           <MdEditor
-            value={watch('content') || ''}
+            value={content || ''}
             style={{ height: '400px' }}
             renderHTML={(text) => <ReactMarkdown>{text}</ReactMarkdown>}
             onChange={({ text }) => setValue('content', text, { shouldDirty: true })}

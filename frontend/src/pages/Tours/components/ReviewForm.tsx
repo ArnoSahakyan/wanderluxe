@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useCreateReview } from '../../../hooks';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ReviewFormData, reviewSchema } from '../../../shared';
 import { StarRating } from './StarRating.tsx';
@@ -15,7 +15,7 @@ export const ReviewForm: FC<ReviewFormProps> = ({ tourId, onReviewSubmitted }) =
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     formState: { errors },
   } = useForm<ReviewFormData>({
@@ -26,7 +26,7 @@ export const ReviewForm: FC<ReviewFormProps> = ({ tourId, onReviewSubmitted }) =
     },
   });
 
-  const ratingValue = watch('rating');
+  const ratingValue = useWatch({ control, name: 'rating' });
   const { handleCreateReview, isPending } = useCreateReview({
     onSuccess: () => {
       reset();

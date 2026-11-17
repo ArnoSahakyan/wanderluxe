@@ -56,7 +56,8 @@ export const TourForm = ({ tourId }: TourFormProps) => {
   const { data: categoriesData } = useCategories();
   const { data: destinationsData } = useDestinations({ limit: 100 });
 
-  const [imagePreviews, setImagePreviews] = useState<ITourImage[]>([]);
+  // Existing images come straight from the server copy of the tour.
+  const imagePreviews: ITourImage[] = tourData?.images ?? [];
   const [newImages, setNewImages] = useState<File[]>([]);
 
   const { register, handleSubmit, formState, reset, setValue } = useForm<TourFormData>({
@@ -101,10 +102,6 @@ export const TourForm = ({ tourId }: TourFormProps) => {
         destination_id: tourData.destination_id,
         images: [],
       });
-
-      if (tourData.images?.length) {
-        setImagePreviews(tourData.images);
-      }
     }
   }, [tourData, categoriesData, reset]);
 

@@ -34,6 +34,7 @@ export default async function setup() {
     } catch (err) {
         throw new Error(
             `Cannot connect to test database "${database}". Start PostgreSQL with \`npm run db:up\`.\n${(err as Error).message}`,
+            { cause: err },
         );
     }
 

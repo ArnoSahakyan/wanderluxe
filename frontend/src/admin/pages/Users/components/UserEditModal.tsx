@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState } from 'react';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import { AdminUser, UpdateUserAdminPayload } from '../../../../api';
 
@@ -21,7 +21,10 @@ export const UserEditModal: FC<UserEditModalProps> = ({ isOpen, onClose, user, o
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
+  // Refill the form when a different user is opened (React's "adjusting state when a prop changes").
+  const [shownUser, setShownUser] = useState<AdminUser | null>(null);
+  if (user !== shownUser) {
+    setShownUser(user);
     if (user) {
       setFormData({
         full_name: user.full_name,
@@ -30,7 +33,7 @@ export const UserEditModal: FC<UserEditModalProps> = ({ isOpen, onClose, user, o
         role_id: user.role_id || ROLE_USER,
       });
     }
-  }, [user]);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

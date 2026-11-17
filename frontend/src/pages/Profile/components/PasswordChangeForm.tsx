@@ -1,5 +1,5 @@
 import { useAccount } from '../../../hooks';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PasswordChangeFormData, passwordChangeSchema } from '../../../shared';
 
@@ -11,7 +11,7 @@ export const PasswordChangeForm = () => {
     handleSubmit: handlePasswordSubmit,
     formState: { errors: passwordErrors, isDirty: isPasswordDirty },
     reset: resetPasswordForm,
-    watch,
+    control,
   } = useForm({
     resolver: zodResolver(passwordChangeSchema),
     defaultValues: {
@@ -21,8 +21,11 @@ export const PasswordChangeForm = () => {
     },
   });
 
-  const showPasswordFields =
-    watch('current_password') || watch('new_password') || watch('confirm_password');
+  const [currentPassword, newPassword, confirmPassword] = useWatch({
+    control,
+    name: ['current_password', 'new_password', 'confirm_password'],
+  });
+  const showPasswordFields = currentPassword || newPassword || confirmPassword;
 
   const onPasswordSubmit = (data: PasswordChangeFormData) => {
     const { current_password, new_password } = data;

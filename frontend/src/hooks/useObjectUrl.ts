@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 export const useObjectUrl = (file: File | Blob | null | undefined): string | undefined => {
   const [url, setUrl] = useState<string>();
 
+  // Creating/revoking a blob URL is an external side effect, so it belongs in an effect
+  // (creating it during render would leak URLs under StrictMode's double render).
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!file) {
       setUrl(undefined);
@@ -13,6 +16,7 @@ export const useObjectUrl = (file: File | Blob | null | undefined): string | und
     setUrl(objectUrl);
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return url;
 };

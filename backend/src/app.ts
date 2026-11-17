@@ -60,11 +60,11 @@ if (config.storage.driver === 'local') {
         (req: Request, res: Response) => {
             const key = decodeURIComponent(req.path.replace(/^\/+/, ''));
             const [bucket, ...rest] = key.split('/');
-            let safe = false;
+            let safe: boolean;
             try {
                 safe = Boolean(bucket && rest.length && resolveLocalPath(bucket, rest.join('/')));
             } catch {
-                safe = false;
+                safe = false; // path traversal attempt
             }
             if (safe && config.storage.fallbackUrl && !fs.existsSync(path.join(config.storage.uploadsDir, key))) {
                 res.redirect(302, `${config.storage.fallbackUrl}/${key.split('/').map(encodeURIComponent).join('/')}`);

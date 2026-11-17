@@ -31,8 +31,11 @@ export const DestinationForm = ({ destinationId }: DestinationFormProps) => {
   const deleteMutation = useDeleteDestination();
   const { data: destinationData, isPending } = useDestination(destinationId || 0);
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  useRevokeOnChange(imagePreview);
+  // undefined: untouched (show the saved image); null: removed; string: newly picked file.
+  const [pickedPreview, setPickedPreview] = useState<string | null>();
+  useRevokeOnChange(pickedPreview);
+  const imagePreview =
+    pickedPreview === undefined ? (destinationData?.image ?? null) : pickedPreview;
 
   const { register, handleSubmit, formState, reset, setValue } = useForm<DestinationPayload>({
     resolver: zodResolver(destinationId ? updateDestinationSchema : createDestinationSchema),
@@ -53,9 +56,6 @@ export const DestinationForm = ({ destinationId }: DestinationFormProps) => {
         description: destinationData.description || '',
         images: [],
       });
-      if (destinationData.image) {
-        setImagePreview(destinationData.image);
-      }
     }
   }, [destinationData, reset]);
 
@@ -71,12 +71,12 @@ export const DestinationForm = ({ destinationId }: DestinationFormProps) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
     setValue('images', files, { shouldDirty: true });
     if (files[0]) {
-      setImagePreview(URL.createObjectURL(files[0]));
+      setPickedPreview(URL.createObjectURL(files[0]));
     }
   };
 
   const removeImage = () => {
-    setImagePreview(null);
+    setPickedPreview(null);
     setValue('images', [], { shouldDirty: true });
   };
 
