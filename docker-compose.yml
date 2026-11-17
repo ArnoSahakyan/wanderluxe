@@ -1,0 +1,50 @@
+# Local development services for WanderLuxe.
+#
+#   docker compose up -d        # start PostgreSQL + Mailpit
+#   docker compose down         # stop (data is kept in the named volume)
+#   docker compose down -v      # stop AND delete the local database volume
+#
+# The Node apps (backend/frontend) run on the host via `npm run dev` for fast
+# hot-reload; only stateful/infra services live here. Ports are bound to
+# 127.0.0.1 so nothing is exposed to the local network.
+#
+# Values come from the root .env file (copy .env.example → .env).
+
+name: wanderluxe
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wanderluxe}
+      POSTGRES_USER: ${POSTGRES_USER:-wanderluxe_owner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
+      # Least-privilege role the Express app connects with (created by docker/initdb)
+      APP_DB_USER: ${APP_DB_USER:-wanderluxe_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in the root .env file}
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/docker/initdb:/docker-entrypoint-initdb.d:ro
+      - ./database:/database:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Catches every e-mail the backend sends (password reset, newsletter
+  # confirmation, contact form) — open http://localhost:8025 to read them.
+  mail:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+
+volumes:
+  pgdata:
