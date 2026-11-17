@@ -71,6 +71,7 @@ Step-by-step details, running without Docker, and troubleshooting are in **[LOCA
 | `npm start` | Runs the compiled API (`NODE_ENV=production`) |
 | `npm run lint` / `typecheck` / `test` | Across both workspaces |
 | `npm run check` | lint + typecheck + test + build: run this before pushing |
+| `npm run test:e2e` | Playwright browser tests against the local stack (needs `npm run db:up`; see docs/TESTING.md) |
 | `npm run db:up` / `db:down` | Start / stop the docker services (data is kept) |
 | `npm run db:import` | Import the dump into an empty database (refuses otherwise) |
 | `npm run db:migrate` | Apply pending migrations (`db:migrate:test` for the test DB) |

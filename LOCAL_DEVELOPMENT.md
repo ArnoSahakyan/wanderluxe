@@ -136,6 +136,7 @@ The original production `.env` files were moved out of the source folders during
 ```bash
 npm run check                 # what CI should run: lint, typecheck, tests, build
 npm test -w backend           # API tests only
+npm run test:e2e              # Playwright browser tests (own DB wanderluxe_e2e, ports 3100/5180)
 npm run test:watch -w frontend
 npm run db:migrate:status -w backend
 npx sequelize-cli migration:generate --name add-something   # run inside backend/

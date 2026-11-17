@@ -198,15 +198,25 @@ export const TourForm = ({ tourId }: TourFormProps) => {
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
           {/* Name */}
           <div className='sm:col-span-2'>
-            <label className='form-label mb-2'>Tour Name</label>
-            <input {...register('name')} className='form-input' placeholder='Enter tour name' />
+            <label htmlFor='tour-name' className='form-label mb-2'>
+              Tour Name
+            </label>
+            <input
+              id='tour-name'
+              {...register('name')}
+              className='form-input'
+              placeholder='Enter tour name'
+            />
             {errors.name && <p className='form-error'>{errors.name.message}</p>}
           </div>
 
           {/* Description */}
           <div className='sm:col-span-2'>
-            <label className='form-label mb-2'>Description</label>
+            <label htmlFor='tour-description' className='form-label mb-2'>
+              Description
+            </label>
             <textarea
+              id='tour-description'
               {...register('description')}
               className='form-input min-h-[120px]'
               placeholder='Describe this tour...'
@@ -217,8 +227,11 @@ export const TourForm = ({ tourId }: TourFormProps) => {
 
           {/* Price */}
           <div>
-            <label className='form-label mb-2'>Price</label>
+            <label htmlFor='tour-price' className='form-label mb-2'>
+              Price
+            </label>
             <input
+              id='tour-price'
               type='number'
               step='.01'
               {...register('price', { valueAsNumber: true })}
@@ -230,8 +243,11 @@ export const TourForm = ({ tourId }: TourFormProps) => {
 
           {/* Available spots */}
           <div>
-            <label className='form-label mb-2'>Available Spots</label>
+            <label htmlFor='tour-spots' className='form-label mb-2'>
+              Available Spots
+            </label>
             <input
+              id='tour-spots'
               type='number'
               {...register('available_spots', { valueAsNumber: true })}
               className='form-input'
@@ -244,22 +260,37 @@ export const TourForm = ({ tourId }: TourFormProps) => {
 
           {/* Start date */}
           <div>
-            <label className='form-label mb-2'>Start Date</label>
-            <input type='date' {...register('start_date')} className='form-date' />
+            <label htmlFor='tour-start-date' className='form-label mb-2'>
+              Start Date
+            </label>
+            <input
+              id='tour-start-date'
+              type='date'
+              {...register('start_date')}
+              className='form-date'
+            />
             {errors.start_date && <p className='form-error'>{errors.start_date.message}</p>}
           </div>
 
           {/* End date */}
           <div>
-            <label className='form-label mb-2'>End Date</label>
-            <input type='date' {...register('end_date')} className='form-date' />
+            <label htmlFor='tour-end-date' className='form-label mb-2'>
+              End Date
+            </label>
+            <input id='tour-end-date' type='date' {...register('end_date')} className='form-date' />
             {errors.end_date && <p className='form-error'>{errors.end_date.message}</p>}
           </div>
 
           {/* Category */}
           <div>
-            <label className='form-label mb-2'>Category</label>
-            <select {...register('category_id', { valueAsNumber: true })} className='form-select'>
+            <label htmlFor='tour-category' className='form-label mb-2'>
+              Category
+            </label>
+            <select
+              id='tour-category'
+              {...register('category_id', { valueAsNumber: true })}
+              className='form-select'
+            >
               <option value={0} disabled>
                 Select a category
               </option>
@@ -274,8 +305,11 @@ export const TourForm = ({ tourId }: TourFormProps) => {
 
           {/* Destination */}
           <div>
-            <label className='form-label mb-2'>Destination</label>
+            <label htmlFor='tour-destination' className='form-label mb-2'>
+              Destination
+            </label>
             <select
+              id='tour-destination'
               {...register('destination_id', { valueAsNumber: true })}
               className='form-select'
             >
