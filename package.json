@@ -1,7 +1,7 @@
 {
   "name": "wanderluxe",
   "private": true,
-  "description": "WanderLuxe travel agency — React + Vite frontend, Express API, PostgreSQL",
+  "description": "WanderLuxe travel agency \u2014 React + Vite frontend, Express API, PostgreSQL",
   "workspaces": [
     "backend",
     "frontend",
@@ -38,5 +38,20 @@
   "allowScripts": {
     "esbuild": true,
     "sharp": true
+  },
+  "overrides": {
+    "react-markdown-editor-lite": {
+      "nanoid": "^5.1.16"
+    },
+    "sequelize": {
+      "uuid": "^11.1.1"
+    },
+    "js-beautify": {
+      "glob": "^14.0.6"
+    },
+    "editorconfig": {
+      "minimatch": "^11.0.9"
+    },
+    "postcss-selector-parser": "^6.1.6"
   }
 }
