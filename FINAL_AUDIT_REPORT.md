@@ -232,5 +232,9 @@ Done on `main` as separate commits, one per step:
 | audit | npm `overrides`: nanoid 5 (markdown editor), uuid 11 (sequelize), glob 14 + minimatch 11 (sequelize-cli tooling), postcss-selector-parser 6.1.6 | 11 findings (1 high) → 0 |
 | a11y | password-change and destination form labels linked to their inputs | found by scanning every page for `label[for]` without a target |
 
-Found while verifying, not caused by the upgrade: in development only, the tour page's thumbnail carousel doesn't switch slides. React StrictMode mounts the thumbs Swiper twice. Production builds are unaffected, and it behaved the same before the upgrade.
+Follow-up cleanup, also 2026-11-17:
+- `sitemap.xml`/`robots.txt` advertised `wanderluxe.am`, a domain the project doesn't use. They now use `SITE_URL` (default `https://wanderluxe.vercel.app`) and list all public pages.
+- The last 16 `any` types in the backend are gone, so lint has 0 warnings.
+- The tour gallery's thumbnails didn't switch slides in development: React StrictMode mounts the thumbs Swiper twice. Fixed. Production had always worked.
+- Render deploys the API only after CI passes (`autoDeployTrigger: checksPass`).
 
