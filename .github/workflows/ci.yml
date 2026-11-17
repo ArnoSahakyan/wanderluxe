@@ -1,0 +1,100 @@
+# Proves the whole project still passes before anything deploys.
+#
+# Runs `npm run check` (lint, typecheck, backend + frontend tests, both builds)
+# against a throw-away PostgreSQL 17 that is set up exactly like the local
+# docker compose database: database/docker/initdb/01-roles.sh creates the
+# least-privilege app role and the wanderluxe_test database with the same
+# grants. The backend test-suite then resets wanderluxe_test from
+# database/schema/baseline.sql and runs every migration (tests/globalSetup.ts).
+#
+# Pushes to main auto-deploy to Render and Vercel, so keep this green.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        # Same image as docker-compose.yml.
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: wanderluxe
+          POSTGRES_USER: wanderluxe_owner
+          # CI-only throw-away container, reachable only from this job's runner.
+          POSTGRES_PASSWORD: ci-owner-password
+          TZ: UTC
+          PGTZ: UTC
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wanderluxe_owner -d wanderluxe"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create database roles, test database and backend/.env
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          app_password="$(openssl rand -hex 24)"
+          access_secret="$(openssl rand -hex 32)"
+          refresh_secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$app_password"
+          echo "::add-mask::$access_secret"
+          echo "::add-mask::$refresh_secret"
+
+          # The same init script docker compose runs, executed inside the
+          # service container, where POSTGRES_USER / POSTGRES_DB are already set.
+          docker exec -i \
+            -e APP_DB_USER=wanderluxe_app \
+            -e APP_DB_PASSWORD="$app_password" \
+            "$POSTGRES_CONTAINER" \
+            sh -s < database/docker/initdb/01-roles.sh
+
+          # CI-only backend/.env: owner role for migrations, app role for the API.
+          umask 077
+          cat > backend/.env <<EOF
+          DB_HOST=localhost
+          DB_PORT=5432
+          DB_NAME=wanderluxe
+          DB_NAME_TEST=wanderluxe_test
+          DB_USER=wanderluxe_app
+          DB_PASSWORD=$app_password
+          DB_MIGRATION_USER=wanderluxe_owner
+          DB_MIGRATION_PASSWORD=ci-owner-password
+          DB_SSL=false
+          JWT_ACCESS_SECRET=$access_secret
+          JWT_REFRESH_SECRET=$refresh_secret
+          SMTP_HOST=
+          EOF
+
+      - name: npm run check
+        run: npm run check
