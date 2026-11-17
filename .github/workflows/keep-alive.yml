@@ -1,0 +1,46 @@
+# Keeps the free Render web service (and the Supabase database behind it) awake.
+#
+# Render's free plan sleeps a service after ~15 minutes without traffic, and the
+# next visitor waits ~1 minute for a cold start. /health also runs `SELECT 1`, so
+# the ping counts as database activity and stops Supabase pausing the project.
+#
+# Notes:
+# - GitHub may delay scheduled runs at busy times, so an occasional cold start
+#   is still possible; an external monitor (UptimeRobot, cron-job.org) is more
+#   punctual. See DEPLOYMENT.md "Keeping the API awake".
+# - GitHub disables schedules in public repos after 60 days without commits.
+#   Re-enable under Actions → Keep API awake if that happens.
+# - A failing run (API down for ~1 minute) e-mails the repo owner.
+name: Keep API awake
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping /health
+        env:
+          # Override with a repository variable API_HEALTH_URL if the service URL changes.
+          HEALTH_URL: ${{ vars.API_HEALTH_URL || 'https://wanderluxe-api.onrender.com/health' }}
+        run: |
+          for attempt in 1 2 3; do
+            if curl --fail --silent --show-error --max-time 90 "$HEALTH_URL"; then
+              echo
+              exit 0
+            fi
+            echo "Attempt $attempt failed; retrying in 20s"
+            sleep 20
+          done
+          echo "::error::$HEALTH_URL did not report healthy after 3 attempts"
+          exit 1

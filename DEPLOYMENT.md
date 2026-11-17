@@ -149,3 +149,26 @@ In the existing project → **Settings → Git** → connect `ArnoSahakyan/wande
 | `permission denied for table …` | The table was created by a role other than `postgres`. Run migrations with the `postgres` URL (step 2b), then re-run `setup-roles.sql`. |
 | Health check fails right after deploy | The free service is waking up, or `DATABASE_URL`/`DB_SSL` is wrong. Check the Render logs: the config error lists variable names. |
 | Frontend calls `localhost` or `/api` on Vercel | `VITE_API_URL` is not set for Production. It is baked in at build time, so redeploy after setting it. The Vercel build now fails with this message instead of shipping a site whose API calls return HTML. |
+
+## Keeping the API awake
+
+Render's free web service sleeps after about 15 minutes without traffic, and the next visitor waits about a minute for it to start.
+
+**Built in: `.github/workflows/keep-alive.yml`.** It calls `GET /health` every 10 minutes.
+- **Cost:** GitHub Actions is free for public repositories.
+- **Side effect:** `/health` runs `SELECT 1`, so the same ping keeps the Supabase project from pausing after a week of inactivity.
+- **Manual run:** Actions → *Keep API awake* → *Run workflow*.
+- **Different URL:** if the service URL changes, set a repository variable `API_HEALTH_URL` (Settings → Secrets and variables → Actions → Variables).
+- **Failures:** a failed run e-mails you, which doubles as a basic downtime alert.
+
+Limits to know:
+- **Timing:** GitHub can delay scheduled runs at busy times, so an occasional cold start can still happen.
+- **Auto-disable:** in public repos GitHub disables schedules after 60 days without commits. It e-mails you first; re-enable with one click.
+- **Render free hours:** the free plan includes 750 instance hours per month per workspace. Running 24/7 uses about 720–744, so this fits only if this is your only free service that is kept awake.
+
+**More punctual alternative (no code):** create a free monitor on [UptimeRobot](https://uptimerobot.com) or [cron-job.org](https://cron-job.org):
+- **Check:** HTTP(s) monitor on `https://wanderluxe-api.onrender.com/health`
+- **Interval:** every 5 minutes
+- **Bonus:** it also e-mails you when the API is down.
+
+You can run it alongside the workflow, or instead of it. If you use only the external monitor, delete the workflow file.
