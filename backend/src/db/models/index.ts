@@ -71,9 +71,10 @@ const models: DbModels = {
 };
 
 // Run associations
-Object.values(models).forEach((model: any) => {
-  if (typeof model.associate === 'function') {
-    model.associate(models);
+Object.values(models).forEach((model) => {
+  const { associate } = model as { associate?: (all: typeof models) => void };
+  if (typeof associate === 'function') {
+    associate.call(model, models);
   }
 });
 

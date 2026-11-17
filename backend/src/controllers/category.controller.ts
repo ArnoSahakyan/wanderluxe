@@ -7,7 +7,7 @@ type CategoryParams = { id: number };
 type CreateOrUpdateCategoryBody = { name: string };
 
 export const createCategory = async (
-    req: AuthenticatedRequest<{}, any, CreateOrUpdateCategoryBody>,
+    req: AuthenticatedRequest<{}, unknown, CreateOrUpdateCategoryBody>,
     res: Response
 ): Promise<void> => {
     const { name } = req.body;
@@ -38,7 +38,7 @@ export const getCategoryById = async (
 };
 
 export const updateCategory = async (
-    req: AuthenticatedRequest<CategoryParams, any, CreateOrUpdateCategoryBody>,
+    req: AuthenticatedRequest<CategoryParams, unknown, CreateOrUpdateCategoryBody>,
     res: Response
 ): Promise<void> => {
     const { id } = req.params;

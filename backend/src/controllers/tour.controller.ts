@@ -217,7 +217,7 @@ export const getTourById = async (
 
 // Update Tour (Admin only)
 export const updateTour = async (
-    req: AuthenticatedRequest<TourParams, any, UpdateTourBody>,
+    req: AuthenticatedRequest<TourParams, unknown, UpdateTourBody>,
     res: Response
 ): Promise<void> => {
     const id = req.params.id;

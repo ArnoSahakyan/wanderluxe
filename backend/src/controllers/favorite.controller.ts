@@ -9,7 +9,7 @@ type TourIdParams = { tour_id: number };
 
 // --- Add a tour to user's favorites ---
 export const addToFavorites = async (
-    req: AuthenticatedRequest<{}, any, TourIdParams>,
+    req: AuthenticatedRequest<{}, unknown, TourIdParams>,
     res: Response
 ): Promise<void> => {
     const user_id = req.user_id!;

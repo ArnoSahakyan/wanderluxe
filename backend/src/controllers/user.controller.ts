@@ -106,7 +106,7 @@ export const getUserById = async (req: TypedRequest<UserIdParams>, res: Response
 };
 
 /** Admins cannot demote themselves (prevents locking the last admin out). */
-const assertNotSelfDemotion = async (req: AuthenticatedRequest<UserIdParams>, role: Role) => {
+const assertNotSelfDemotion = async (req: Pick<AuthenticatedRequest<UserIdParams>, 'params' | 'user_id'>, role: Role) => {
     if (req.params.user_id === req.user_id && role.name !== 'admin') {
         throw new BadRequestError('You cannot remove your own admin role.');
     }

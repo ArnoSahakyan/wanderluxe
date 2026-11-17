@@ -4,6 +4,7 @@ import { toPublicImageUrl, uploadAndProcessImages, NotFoundError, containsPatter
 import { removeQuietly } from '../lib/storage';
 import { DESTINATIONS_BUCKET } from '../constants';
 import { Destination } from '../db/models';
+import type { DestinationAttributes } from '../db/models/destination.model';
 import { AuthenticatedRequest, IPaginationQuery, TypedRequest } from '../types';
 
 interface DestinationCreateBody {
@@ -138,7 +139,7 @@ export const getAllDestinations = async (
     });
 
     const destinations = rows.map(destination => {
-        const raw = destination.get({ plain: true }) as any;
+        const raw = destination.get({ plain: true }) as DestinationAttributes & { startingPrice?: number | null };
         return {
             ...raw,
             image: raw.image ? toPublicImageUrl(raw.image, DESTINATIONS_BUCKET) : null,
@@ -166,7 +167,7 @@ export const getDestinationById = async (
         throw new NotFoundError('Destination not found.');
     }
 
-    const plainDestination = destination.get({ plain: true }) as any;
+    const plainDestination = destination.get({ plain: true });
 
     res.json({
         ...plainDestination,
