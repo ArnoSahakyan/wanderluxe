@@ -22,17 +22,17 @@ export const MarkdownComponents: Components = {
   ),
   ul: (props: HTMLAttributes<HTMLUListElement>) => (
     <ul
-      className='list-disc pl-6 mb-6 space-y-2 text-secondary-light dark:text-secondary-dark'
+      className='list-disc pl-6 mb-6 space-y-3 text-secondary-light dark:text-secondary-dark'
       {...props}
     />
   ),
   ol: (props: HTMLAttributes<HTMLOListElement>) => (
     <ol
-      className='list-decimal pl-6 mb-6 space-y-2 text-secondary-light dark:text-secondary-dark'
+      className='list-decimal pl-6 mb-6 space-y-3 text-secondary-light dark:text-secondary-dark'
       {...props}
     />
   ),
-  li: (props: HTMLAttributes<HTMLLIElement>) => <li className='mb-1' {...props} />,
+  li: (props: HTMLAttributes<HTMLLIElement>) => <li {...props} />,
   img: (props: HTMLAttributes<HTMLImageElement>) => (
     <div className='my-8'>
       <img className='rounded-lg w-full h-auto shadow-md' {...props} alt='blog image' />

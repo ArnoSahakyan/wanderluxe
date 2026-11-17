@@ -133,14 +133,14 @@ export const UserEditModal: FC<UserEditModalProps> = ({ isOpen, onClose, user, o
                 type='button'
                 onClick={onClose}
                 disabled={isLoading}
-                className='inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2'
+                className='inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2'
               >
                 Cancel
               </button>
               <button
                 type='submit'
                 disabled={isLoading}
-                className='inline-flex justify-center rounded-md border border-transparent bg-primary-light px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-light focus-visible:ring-offset-2 disabled:bg-blue-400'
+                className='inline-flex justify-center rounded-md border border-transparent bg-primary-light px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-light focus-visible:ring-offset-2 disabled:bg-blue-400'
               >
                 {isLoading ? 'Saving...' : 'Save Changes'}
               </button>

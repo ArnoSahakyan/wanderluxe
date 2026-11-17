@@ -153,7 +153,7 @@ export const TourForm = ({ tourId }: TourFormProps) => {
     uploadImageMutation.isPending
   ) {
     return (
-      <div className='space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm'>
+      <div className='space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xs'>
         <LoadingState fullPage={true} />
       </div>
     );
@@ -162,7 +162,7 @@ export const TourForm = ({ tourId }: TourFormProps) => {
   if (tourId && !tourData) return <NotFoundPage />;
 
   return (
-    <div className='space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm'>
+    <div className='space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xs'>
       <form id='tour-form' onSubmit={handleSubmit(onSubmit)}>
         <div className='flex flex-col sm:flex-row items-center sm:items-center sm:justify-between gap-4 sm:gap-0 border-b border-gray-200 dark:border-gray-700 pb-4'>
           <div className='w-full sm:w-auto flex justify-start'>
@@ -340,7 +340,7 @@ export const TourForm = ({ tourId }: TourFormProps) => {
 
       {/* IMAGE MANAGER */}
       {tourId ? (
-        <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm space-y-4'>
+        <div className='bg-white dark:bg-gray-800 rounded-xl shadow-xs space-y-4'>
           <h4 className='text-lg font-semibold text-primary-light dark:text-text-dark'>
             Tour Images
           </h4>
@@ -371,14 +371,14 @@ export const TourForm = ({ tourId }: TourFormProps) => {
                   type='button'
                   onClick={() => handleRemoveImage(img.image_id)}
                   aria-label='Delete this image'
-                  className='absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors'
+                  className='absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-xs text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors'
                 >
                   <XMarkIcon className='w-4 h-4' aria-hidden='true' />
                 </button>
                 {/* Cover button */}
                 {img.is_cover ? (
                   <div
-                    className='absolute top-2 left-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-yellow-500'
+                    className='absolute top-2 left-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-xs text-yellow-500'
                     title='Cover image'
                   >
                     <StarSolid className='w-4 h-4' aria-hidden='true' />
@@ -390,7 +390,7 @@ export const TourForm = ({ tourId }: TourFormProps) => {
                     onClick={() => handleSetCover(img.image_id)}
                     aria-label='Set as cover image'
                     title='Set as cover image'
-                    className='absolute top-2 left-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-yellow-500 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'
+                    className='absolute top-2 left-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-xs text-yellow-500 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'
                   >
                     <StarOutline className='w-4 h-4' aria-hidden='true' />
                   </button>
@@ -400,7 +400,7 @@ export const TourForm = ({ tourId }: TourFormProps) => {
           </div>
         </div>
       ) : (
-        <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm space-y-4'>
+        <div className='bg-white dark:bg-gray-800 rounded-xl shadow-xs space-y-4'>
           <h4 className='text-lg font-semibold text-primary-light dark:text-text-dark'>
             Upload Tour Images
           </h4>
@@ -431,7 +431,7 @@ export const TourForm = ({ tourId }: TourFormProps) => {
                   type='button'
                   onClick={() => handleRemoveNewImage(index)}
                   aria-label={`Remove ${file.name}`}
-                  className='absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors'
+                  className='absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-xs text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors'
                 >
                   <XMarkIcon className='w-4 h-4' aria-hidden='true' />
                 </button>

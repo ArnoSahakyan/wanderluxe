@@ -99,7 +99,7 @@ const BookingDetailsPage = () => {
       {/* Hero Section */}
       <div className='relative h-80 overflow-hidden'>
         <img src={booking.image} alt={booking.tour_name} className='w-full h-full object-cover' />
-        <div className='absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end pb-8'>
+        <div className='absolute inset-0 bg-linear-to-t from-black/70 via-black/30 to-transparent flex items-end pb-8'>
           <div className='container mx-auto px-4 lg:px-8 text-white'>
             <h1 className='text-3xl font-bold mb-1'>{booking.tour_name}</h1>
             <div className='flex items-center space-x-4 text-sm'>
@@ -189,7 +189,7 @@ const BookingDetailsPage = () => {
                     <button
                       onClick={() => setConfirmCancel(true)}
                       disabled={cancelling}
-                      className='px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2'
+                      className='px-8 py-3 bg-linear-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2'
                     >
                       {cancelling ? (
                         <>

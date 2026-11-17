@@ -59,7 +59,7 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
   const StatusIcon = config.icon;
 
   return (
-    <div className='flex h-40 w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm transition-all hover:shadow-md'>
+    <div className='flex h-40 w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xs transition-all hover:shadow-md'>
       {/* Image Section (25% width) */}
       <div className='relative w-1/4 min-w-[120px]'>
         <img
@@ -72,7 +72,7 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
           }}
         />
         <span
-          className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset shadow-sm backdrop-blur-md ${config.color}`}
+          className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset shadow-xs backdrop-blur-md ${config.color}`}
         >
           <StatusIcon className='h-4 w-4' aria-hidden='true' />
           {config.label}

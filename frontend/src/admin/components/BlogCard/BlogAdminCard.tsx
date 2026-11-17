@@ -21,7 +21,7 @@ export const BlogAdminCard: FC<BlogAdminCardProps> = ({ post }) => {
       )}
 
       {/* Content */}
-      <div className='p-4 flex flex-col flex-grow'>
+      <div className='p-4 flex flex-col grow'>
         <h3 className='text-lg font-semibold text-primary-light dark:text-text-dark mb-1 line-clamp-2'>
           {post.title}
         </h3>
@@ -36,7 +36,7 @@ export const BlogAdminCard: FC<BlogAdminCardProps> = ({ post }) => {
         <div className='mt-auto'>
           <Link
             to={`${ROUTES.ADMIN_BLOG}/${post.slug}`}
-            className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-background-light/75 transition-colors'
+            className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-background-light/75 transition-colors'
           >
             Edit Post
           </Link>

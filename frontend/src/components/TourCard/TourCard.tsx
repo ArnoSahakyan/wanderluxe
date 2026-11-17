@@ -26,12 +26,12 @@ export const TourCard: FC<ITourCardProps> = ({
         <div className='absolute top-4 right-4 bg-primary-light dark:bg-primary-dark text-background-light px-3 py-1 rounded-full font-bold text-sm shadow-md'>
           ${price.toLocaleString()}
         </div>
-        <div className='absolute flex items-center gap-1 bottom-4 left-4 bg-background-light dark:bg-background-dark text-primary-light dark:text-text-dark px-2 py-1 rounded text-xs font-medium'>
+        <div className='absolute flex items-center gap-1 bottom-4 left-4 bg-background-light dark:bg-background-dark text-primary-light dark:text-text-dark px-2 py-1 rounded-sm text-xs font-medium'>
           <ClockIcon className='block size-4' /> {duration} Days
         </div>
       </div>
 
-      <div className='p-4 flex flex-col flex-grow'>
+      <div className='p-4 flex flex-col grow'>
         <h3 className='text-lg font-semibold text-primary-light dark:text-text-dark mb-2 line-clamp-2'>
           {title}
         </h3>
@@ -43,14 +43,14 @@ export const TourCard: FC<ITourCardProps> = ({
           {mode === 'public' ? (
             <Link
               to={`${ROUTES.TOURS}/${id}`}
-              className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-background-light/75 transition-colors'
+              className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-background-light/75 transition-colors'
             >
               View Tour
             </Link>
           ) : (
             <Link
               to={`${ROUTES.ADMIN_TOURS}/${id}`}
-              className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-background-light/75 transition-colors'
+              className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-background-light/75 transition-colors'
             >
               Edit Tour
             </Link>

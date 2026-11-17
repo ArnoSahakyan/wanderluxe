@@ -33,13 +33,13 @@ export const NewsletterForm = () => {
             type='email'
             placeholder='Enter your email'
             autoComplete='email'
-            className='w-full flex-auto rounded-md bg-background-light/10 px-3.5 py-2.5 text-base text-white outline outline-1 -outline-offset-1 outline-white/20 placeholder:text-white/70 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-white sm:text-sm/6'
+            className='w-full flex-auto rounded-md bg-background-light/10 px-3.5 py-2.5 text-base text-white outline-solid outline-1 -outline-offset-1 outline-white/20 placeholder:text-white/70 focus:outline-solid focus:outline-2 focus:-outline-offset-2 focus:outline-white sm:text-sm/6'
             {...register('email')}
           />
         </div>
         <button
           type='submit'
-          className='flex-none rounded-md bg-background-light px-3.5 py-2.5 text-sm font-semibold text-primary-light shadow-sm hover:bg-background-light/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors'
+          className='flex-none rounded-md bg-background-light px-3.5 py-2.5 text-sm font-semibold text-primary-light shadow-xs hover:bg-background-light/90 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors'
           disabled={isPending}
         >
           {isPending ? 'Subscribing...' : 'Subscribe'}

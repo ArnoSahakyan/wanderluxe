@@ -60,7 +60,7 @@ const BlogDetailsPage = () => {
               />
             </PhotoView>
           </PhotoProvider>
-          <div className='absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end pb-8'>
+          <div className='absolute inset-0 bg-linear-to-t from-black/70 via-black/30 to-transparent flex items-end pb-8'>
             <div className='container mx-auto px-4 lg:px-8 text-white'>
               <div className='max-w-4xl'>
                 <Link

@@ -14,7 +14,7 @@ const AboutPage = () => {
               clipPath:
                 'polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 0.2%, 73.6% 51.7%)',
             }}
-            className='aspect-[1108/632] w-[69.25rem] flex-none bg-gradient-to-r from-primary-light to-secondary-light opacity-20 dark:opacity-25'
+            className='aspect-1108/632 w-277 flex-none bg-linear-to-r from-primary-light to-secondary-light opacity-20 dark:opacity-25'
           />
         </div>
 
@@ -88,7 +88,7 @@ const AboutPage = () => {
           <img
             alt='Travel team exploring a destination'
             src='/about.avif'
-            className='aspect-[9/4] w-full object-cover xl:rounded-3xl'
+            className='aspect-9/4 w-full object-cover xl:rounded-3xl'
           />
         </div>
 
@@ -137,7 +137,7 @@ const AboutPage = () => {
                 <img
                   alt={person.name}
                   src={person.imageUrl}
-                  className='aspect-[14/13] w-full rounded-2xl object-cover'
+                  className='aspect-14/13 w-full rounded-2xl object-cover'
                 />
                 <h3 className='mt-6 text-lg/8 font-semibold tracking-tight text-primary-light dark:text-text-dark'>
                   {person.name}

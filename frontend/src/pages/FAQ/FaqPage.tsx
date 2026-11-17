@@ -21,7 +21,7 @@ const FaqPage = () => {
                     <span className='ml-6 flex h-7 items-center'>
                       <PlusIcon
                         aria-hidden='true'
-                        className='size-6 text-primary-light dark:text-primary-dark group-data-[open]:hidden'
+                        className='size-6 text-primary-light dark:text-primary-dark group-data-open:hidden'
                       />
                       <MinusIcon
                         aria-hidden='true'

@@ -34,7 +34,7 @@ export const BlogSection = () => {
         <div className='mt-12 text-center'>
           <Link
             to={ROUTES.BLOG}
-            className='inline-flex items-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-light dark:focus-visible:outline-primary-dark transition-colors'
+            className='inline-flex items-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-light dark:focus-visible:outline-primary-dark transition-colors'
           >
             View all articles
           </Link>

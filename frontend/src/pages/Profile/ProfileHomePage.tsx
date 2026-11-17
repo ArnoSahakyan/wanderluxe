@@ -46,7 +46,7 @@ const ProfileHomePage = () => {
 
       {/* Stats Grid */}
       <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-10'>
-        <div className='bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4'>
+        <div className='bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-700 flex items-center gap-4'>
           <div className='p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600 dark:text-blue-400'>
             <TicketIcon className='w-6 h-6' />
           </div>
@@ -60,7 +60,7 @@ const ProfileHomePage = () => {
           </div>
         </div>
 
-        <div className='bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4'>
+        <div className='bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-700 flex items-center gap-4'>
           <div className='p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl text-yellow-600 dark:text-yellow-400'>
             <StarIcon className='w-6 h-6' />
           </div>
@@ -74,7 +74,7 @@ const ProfileHomePage = () => {
           </div>
         </div>
 
-        <div className='bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4'>
+        <div className='bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-700 flex items-center gap-4'>
           <div className='p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-red-600 dark:text-red-400'>
             <HeartIcon className='w-6 h-6' />
           </div>
@@ -102,7 +102,7 @@ const ProfileHomePage = () => {
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
         {/* Recent Bookings */}
         <div className='lg:col-span-2'>
-          <div className='bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden'>
+          <div className='bg-white dark:bg-gray-800 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-700 overflow-hidden'>
             <div className='p-6 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center'>
               <h2 className='text-lg font-bold text-primary-light dark:text-text-dark'>
                 Recent Activity
@@ -154,7 +154,7 @@ const ProfileHomePage = () => {
 
         {/* Quick Links / Tips */}
         <div className='space-y-6'>
-          <div className='bg-gradient-to-br from-primary-light to-primary-dark p-6 rounded-2xl text-white shadow-xl'>
+          <div className='bg-linear-to-br from-primary-light to-primary-dark p-6 rounded-2xl text-white shadow-xl'>
             <h3 className='font-bold text-lg mb-2'>Plan Your Next Adventure</h3>
             <p className='text-sm opacity-90 mb-4'>
               Discover unique destinations and handcrafted tours around the world.
@@ -167,7 +167,7 @@ const ProfileHomePage = () => {
             </Link>
           </div>
 
-          <div className='bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700'>
+          <div className='bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-700'>
             <h3 className='font-bold text-primary-light dark:text-text-dark mb-4'>
               Profile Completion
             </h3>

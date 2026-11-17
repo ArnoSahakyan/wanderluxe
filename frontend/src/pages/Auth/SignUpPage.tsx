@@ -42,7 +42,7 @@ const SignUpPage = () => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className='mt-8 space-y-6'>
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
         <div className='space-y-4'>
           <div>
             <label htmlFor='full_name' className='form-label'>

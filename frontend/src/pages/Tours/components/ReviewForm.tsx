@@ -43,7 +43,7 @@ export const ReviewForm: FC<ReviewFormProps> = ({ tourId, onReviewSubmitted }) =
   };
 
   return (
-    <div className='mt-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8'>
+    <div className='bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8'>
       <h2 className='text-2xl font-bold text-primary-light dark:text-primary-dark mb-6'>
         Leave a Review
       </h2>

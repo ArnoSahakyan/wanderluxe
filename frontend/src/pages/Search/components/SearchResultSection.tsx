@@ -46,7 +46,7 @@ export const SearchResultSection: FC<SearchResultProps> = ({
       {data.map((item) => (
         <div
           key={`${title.toLowerCase()}-${item.id}`}
-          className='bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300'
+          className='bg-white dark:bg-gray-800 rounded-lg shadow-xs hover:shadow-md transition-shadow duration-300'
         >
           <div className='flex flex-col md:flex-row'>
             <div className='lg:w-1/5 md:w-1/4'>

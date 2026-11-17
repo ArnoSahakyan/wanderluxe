@@ -12,7 +12,7 @@ export const Hero = () => {
           className='h-full w-full object-cover'
           loading='eager'
         />
-        <div className='absolute inset-0 bg-gradient-to-t from-background-dark/80 via-background-dark/30 to-transparent dark:from-background-dark/90 dark:via-background-dark/40' />
+        <div className='absolute inset-0 bg-linear-to-t from-background-dark/80 via-background-dark/30 to-transparent dark:from-background-dark/90 dark:via-background-dark/40' />
       </div>
 
       {/* Content */}
@@ -27,13 +27,13 @@ export const Hero = () => {
           <div className='mt-10 flex flex-col sm:flex-row items-center justify-center gap-6'>
             <Link
               to={ROUTES.TOURS}
-              className='rounded-md bg-primary-light px-6 py-3.5 text-lg font-semibold text-background-light shadow-sm hover:bg-primary-light/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark/90'
+              className='rounded-md bg-primary-light px-6 py-3.5 text-lg font-semibold text-background-light shadow-xs hover:bg-primary-light/90 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark/90'
             >
               Explore Tours
             </Link>
             <Link
               to={ROUTES.DESTINATIONS}
-              className='rounded-md px-6 py-3.5 text-lg font-semibold text-background-light ring-1 ring-background-light hover:bg-background-light/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
+              className='rounded-md px-6 py-3.5 text-lg font-semibold text-background-light ring-1 ring-background-light hover:bg-background-light/10 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
             >
               View Destinations <span aria-hidden='true'>→</span>
             </Link>
@@ -42,7 +42,7 @@ export const Hero = () => {
       </div>
 
       {/* Decorative elements */}
-      <div className='absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background-light to-transparent dark:from-background-dark' />
+      <div className='absolute bottom-0 left-0 right-0 h-24 bg-linear-to-t from-background-light to-transparent dark:from-background-dark' />
     </div>
   );
 };

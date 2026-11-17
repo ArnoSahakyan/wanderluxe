@@ -97,7 +97,7 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
     deleteMutation.isPending
   ) {
     return (
-      <div className='space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm'>
+      <div className='space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xs'>
         <LoadingState fullPage={true} />
       </div>
     );
@@ -108,7 +108,7 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className='space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm'
+      className='space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xs'
     >
       <ConfirmModal
         isOpen={confirmDelete}
@@ -253,7 +253,7 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
                 <button
                   type='button'
                   onClick={removeImage}
-                  className='absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors'
+                  className='absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-xs text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors'
                   aria-label='Remove image'
                 >
                   <XMarkIcon className='w-4 h-4' />

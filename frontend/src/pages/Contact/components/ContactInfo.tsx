@@ -6,7 +6,7 @@ export const ContactInfo = () => (
       <div className='absolute inset-y-0 left-0 -z-10 w-full overflow-hidden lg:w-1/2'>
         <svg
           aria-hidden='true'
-          className='absolute inset-0 size-full [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]'
+          className='absolute inset-0 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)]'
         >
           <defs>
             <pattern

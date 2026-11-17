@@ -23,7 +23,7 @@ export const Navbar = () => {
   return (
     <Disclosure
       as='nav'
-      className='fixed top-0 z-10 w-full bg-primary-light dark:bg-background-dark shadow-sm dark:border-b dark:border-secondary-dark'
+      className='fixed top-0 z-10 w-full bg-primary-light dark:bg-background-dark shadow-xs dark:border-b dark:border-secondary-dark'
     >
       <>
         <div className='mx-auto max-w-7xl px-2 sm:px-4 lg:px-8'>
@@ -45,7 +45,7 @@ export const Navbar = () => {
 
             {/* Right side - Mobile menu button and user profile */}
             <div className='flex lg:hidden'>
-              <DisclosureButton className='group relative inline-flex items-center justify-center rounded-md p-2 text-background-light hover:bg-gray-100 hover:text-primary-light focus:outline-none dark:text-secondary-dark dark:hover:bg-gray-700 dark:hover:text-primary-dark'>
+              <DisclosureButton className='group relative inline-flex items-center justify-center rounded-md p-2 text-background-light hover:bg-gray-100 hover:text-primary-light focus:outline-hidden dark:text-secondary-dark dark:hover:bg-gray-700 dark:hover:text-primary-dark'>
                 <span className='absolute -inset-0.5' />
                 <span className='sr-only'>Open main menu</span>
                 <Bars3Icon aria-hidden='true' className='block size-6 group-data-open:hidden' />

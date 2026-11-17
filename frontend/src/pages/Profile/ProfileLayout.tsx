@@ -35,12 +35,12 @@ const ProfileLayout = () => {
       <Dialog open={sidebarOpen} onClose={setSidebarOpen} className='relative z-50 lg:hidden'>
         <DialogBackdrop
           transition
-          className='fixed inset-0 bg-gray-900/80 transition-opacity duration-300 ease-linear data-[closed]:opacity-0'
+          className='fixed inset-0 bg-gray-900/80 transition-opacity duration-300 ease-linear data-closed:opacity-0'
         />
         <div className='fixed inset-0 flex'>
           <DialogPanel
             transition
-            className='relative mr-16 flex w-full max-w-xs flex-1 transform transition duration-300 ease-in-out data-[closed]:-translate-x-full'
+            className='relative mr-16 flex w-full max-w-xs flex-1 transform transition duration-300 ease-in-out data-closed:-translate-x-full'
           >
             <SidebarContent
               navigation={navigation}
@@ -57,7 +57,7 @@ const ProfileLayout = () => {
       </div>
 
       {/* Mobile top bar */}
-      <div className='sticky top-0 z-40 flex justify-between items-center gap-x-6 bg-primary-light dark:bg-background-dark dark:border-b dark:border-text-dark px-4 py-4 shadow-sm sm:px-6 lg:hidden'>
+      <div className='sticky top-0 z-40 flex justify-between items-center gap-x-6 bg-primary-light dark:bg-background-dark dark:border-b dark:border-text-dark px-4 py-4 shadow-xs sm:px-6 lg:hidden'>
         <div className='text-sm/6 font-semibold text-background-light dark:text-text-dark'>
           My Profile
         </div>

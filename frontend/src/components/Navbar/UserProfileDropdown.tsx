@@ -11,7 +11,7 @@ export const UserProfileDropdown = () => {
   return (
     <Menu as='div' className='relative shrink-0'>
       <div>
-        <MenuButton className='p-2 relative flex rounded-lg text-sm focus:outline-none text-background-light hover:text-primary-light hover:bg-background-light dark:text-background-light dark:hover:bg-secondary-light'>
+        <MenuButton className='p-2 relative flex rounded-lg text-sm focus:outline-hidden text-background-light hover:text-primary-light hover:bg-background-light dark:text-background-light dark:hover:bg-secondary-light'>
           <span className='sr-only'>Open user menu</span>
           <UserIcon className='block size-6' />
         </MenuButton>

@@ -64,7 +64,7 @@ export const ConfirmModal: FC<ConfirmModalProps> = ({
           <div className='mt-6 flex justify-end gap-3'>
             <button
               type='button'
-              className='inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2'
+              className='inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2'
               onClick={onClose}
               disabled={isLoading}
             >
@@ -72,7 +72,7 @@ export const ConfirmModal: FC<ConfirmModalProps> = ({
             </button>
             <button
               type='button'
-              className={`inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+              className={`inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 ${
                 type === 'danger'
                   ? 'bg-red-600 hover:bg-red-700 focus-visible:ring-red-500 disabled:bg-red-400'
                   : 'bg-primary-light hover:bg-primary-dark focus-visible:ring-primary-light disabled:bg-blue-400'

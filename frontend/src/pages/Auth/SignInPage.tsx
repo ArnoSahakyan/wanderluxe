@@ -43,7 +43,7 @@ const SignInPage = () => {
         </p>
       </div>
 
-      <div className='mt-10 sm:mx-auto sm:w-full sm:max-w-sm'>
+      <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
         <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
           <div>
             <label htmlFor='email' className='form-label'>

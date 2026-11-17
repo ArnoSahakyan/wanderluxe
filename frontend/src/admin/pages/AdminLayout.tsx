@@ -74,7 +74,7 @@ const AdminLayout = () => {
       </div>
 
       {/* Top bar */}
-      <div className='sticky top-0 z-40 flex justify-between items-center gap-x-6 bg-primary-light dark:bg-background-dark px-4 py-4 shadow-sm sm:px-6 lg:hidden'>
+      <div className='sticky top-0 z-40 flex justify-between items-center gap-x-6 bg-primary-light dark:bg-background-dark px-4 py-4 shadow-xs sm:px-6 lg:hidden'>
         <Link
           to={ROUTES.ADMIN}
           className='text-sm/6 font-semibold text-background-light dark:text-text-dark'

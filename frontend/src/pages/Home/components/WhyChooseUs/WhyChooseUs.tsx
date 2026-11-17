@@ -50,7 +50,7 @@ export const WhyChooseUs = () => {
           {features.map((feature) => (
             <div
               key={feature.name}
-              className='flex flex-col rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 hover:shadow-md transition-all'
+              className='flex flex-col rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-xs ring-1 ring-gray-200 dark:ring-gray-700 hover:shadow-md transition-all'
             >
               <div
                 className={`mb-6 flex h-12 w-12 items-center justify-center rounded-lg ${feature.color}`}
@@ -68,7 +68,7 @@ export const WhyChooseUs = () => {
         </div>
 
         {/* Stats section */}
-        <div className='mt-24 rounded-2xl bg-gradient-to-t from-white to-white/30 dark:from-primary-dark/20 dark:to-gray-800/30 p-8 sm:p-12'>
+        <div className='mt-24 rounded-2xl bg-linear-to-t from-white to-white/30 dark:from-primary-dark/20 dark:to-gray-800/30 p-8 sm:p-12'>
           <div className='grid grid-cols-1 gap-8 sm:grid-cols-3'>
             <div className='text-center'>
               <p className='text-4xl font-bold text-primary-light dark:text-primary-dark'>10K+</p>

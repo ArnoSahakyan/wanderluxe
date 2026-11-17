@@ -57,7 +57,7 @@ const MyReviewsPage = () => {
           {reviews.map((review) => (
             <div
               key={review.review_id}
-              className='bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:shadow-md'
+              className='bg-white dark:bg-gray-800 rounded-xl p-6 shadow-xs border border-gray-100 dark:border-gray-700 transition-all hover:shadow-md'
             >
               <div className='flex justify-between items-start mb-4'>
                 <div>

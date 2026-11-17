@@ -28,7 +28,7 @@ export const DestinationCard: FC<DestinationCardProps> = ({
           alt={name}
           className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
         />
-        <div className='absolute inset-0 bg-gradient-to-t from-background-dark/70 via-transparent to-transparent' />
+        <div className='absolute inset-0 bg-linear-to-t from-background-dark/70 via-transparent to-transparent' />
 
         {!isAdmin && startingPrice && (
           <span className='absolute top-2 right-2 bg-background-light dark:bg-background-dark text-primary-light dark:text-primary-dark px-3 py-1 rounded-full text-sm font-semibold'>
@@ -60,7 +60,7 @@ export const DestinationCard: FC<DestinationCardProps> = ({
           {isAdmin ? (
             <Link
               to={`${ROUTES.ADMIN_DESTINATIONS}/${destination_id}`}
-              className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-background-light/75 transition-colors'
+              className='w-full inline-flex justify-center rounded-md bg-primary-light dark:bg-primary-dark px-4 py-2 text-sm font-medium text-background-light hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-background-light/75 transition-colors'
             >
               Edit Destination
             </Link>
