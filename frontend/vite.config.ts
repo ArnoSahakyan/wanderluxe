@@ -5,7 +5,6 @@ import tailwindcss from '@tailwindcss/vite';
 import generateSitemap from 'vite-plugin-sitemap';
 import path from 'path';
 
-
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Non-VITE_ variables are only visible here, never in the client bundle.
@@ -27,11 +26,24 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-      generateSitemap({
-        hostname: siteUrl,
-        // Public, indexable pages (the SPA has a single index.html, so list them explicitly).
-        dynamicRoutes: ['/', '/tours', '/destinations', '/blog', '/about', '/contact', '/faq', '/terms-and-conditions'],
-      }),
+      {
+        ...generateSitemap({
+          hostname: siteUrl,
+          // Public, indexable pages (the SPA has a single index.html, so list them explicitly).
+          dynamicRoutes: [
+            '/',
+            '/tours',
+            '/destinations',
+            '/blog',
+            '/about',
+            '/contact',
+            '/faq',
+            '/terms-and-conditions',
+          ],
+        }),
+        // Only for `vite build`: under Vitest/dev its closeBundle hook writes into a dist/ that may not exist.
+        apply: 'build',
+      },
     ],
     resolve: {
       alias: {
@@ -61,8 +73,16 @@ export default defineConfig(({ mode }) => {
           // so browsers keep them cached across deploys.
           codeSplitting: {
             groups: [
-              { name: 'react', test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/, priority: 3 },
-              { name: 'query', test: /node_modules[\\/](@tanstack|axios|zustand)[\\/]/, priority: 2 },
+              {
+                name: 'react',
+                test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/,
+                priority: 3,
+              },
+              {
+                name: 'query',
+                test: /node_modules[\\/](@tanstack|axios|zustand)[\\/]/,
+                priority: 2,
+              },
             ],
           },
         },
