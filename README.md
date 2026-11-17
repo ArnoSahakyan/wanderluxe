@@ -104,6 +104,8 @@ npm test           # 37 API tests + 16 frontend tests
 
 The API suite rebuilds the dedicated `wanderluxe_test` database before every run, so it never touches your development data. See [docs/TESTING.md](docs/TESTING.md).
 
+**CI.** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `npm run check` (lint, typecheck, both test suites and both builds) against a PostgreSQL 17 service on every pull request and every push to `main`. `main` deploys automatically, so only merge when CI is green.
+
 ## Git workflow
 
 - This is a single repository. It was consolidated from the former `travel-back` and `travel-front` repositories with their full history preserved. See [REPOSITORY_MIGRATION.md](REPOSITORY_MIGRATION.md).

@@ -36,6 +36,18 @@ Run one file: `npx vitest run tests/bookings.test.ts` (inside `backend/`).
 | `axios.test.ts` | concurrent 401s trigger **one** refresh and are retried; rejected refresh logs out without looping |
 | `components.test.tsx` | Pagination accessibility and edge states; `SmartImage` fallback; `StarRating` radio-group semantics |
 
+## Continuous integration
+
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs on every pull request and on every push to `main`. A newer push to the same branch cancels the run already in progress. Pushes to `main` deploy to Render and Vercel automatically, so CI is the check that a change still passes before it ships.
+
+1. Installs with `npm ci` on the Node version in `.nvmrc`, using a cached npm download directory.
+2. Starts a `postgres:17-alpine` service container, the same image as `docker-compose.yml`.
+3. Runs `database/docker/initdb/01-roles.sh` inside that container, so CI gets the same owner role, least-privilege `wanderluxe_app` role, `wanderluxe_test` database and grants as local Docker.
+4. Writes a CI-only `backend/.env` with a random app-role password and random JWT secrets. Migrations use the owner role. The API uses the app role.
+5. Runs `npm run check`. `tests/globalSetup.ts` then rebuilds `wanderluxe_test` from the baseline and migrations, exactly as it does locally.
+
+CI needs no repository secrets. The Vercel API-URL guard in `frontend/vite.config.ts` only applies when `VERCEL` is set, so it does not run in CI. If CI fails but `npm run check` passes locally, check whether a migration or test relies on data that exists only in your local database.
+
 ## Adding tests
 
 - **API.** Use `createUser('admin' | 'customer')` and `createTour(adminAuth, {...})` from `tests/helpers.ts`. Create the data each test needs rather than relying on rows from other tests.
