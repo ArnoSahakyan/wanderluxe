@@ -6,7 +6,7 @@ npm test         # both workspaces
 npm run check    # lint + typecheck + tests + production builds
 ```
 
-## Backend — `backend/tests` (Vitest + Supertest, 37 tests)
+## Backend — `backend/tests` (Vitest + Supertest, 39 tests)
 
 - **Real database, hermetic.** `tests/globalSetup.ts` connects as the owner role and:
   1. drops the `wanderluxe_test` schema;
@@ -28,7 +28,7 @@ npm run check    # lint + typecheck + tests + production builds
 
 Run one file: `npx vitest run tests/bookings.test.ts` (inside `backend/`).
 
-## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 16 tests)
+## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 17 tests)
 
 | File | Covers |
 |---|---|

@@ -4,8 +4,8 @@ WanderLuxe is a full-stack travel-agency web app. Visitors browse destinations, 
 
 | Layer | Tech |
 |---|---|
-| Frontend | React 19, Vite 6, TypeScript, React Router 7, TanStack Query 5, Zustand, Tailwind CSS 3, Headless UI, zod |
-| Backend | Node.js (ESM), Express 5, TypeScript, Sequelize 6, zod, JWT, bcrypt, helmet, multer + sharp, nodemailer |
+| Frontend | React 19, Vite 8 (Rolldown), TypeScript 6, React Router 7, TanStack Query 5, Zustand, Tailwind CSS 4, Headless UI, zod |
+| Backend | Node.js (ESM), Express 5, TypeScript 6, Sequelize 6, zod, JWT, bcrypt, helmet, multer + sharp, nodemailer |
 | Database | PostgreSQL 17 (works with 13+) |
 | Local infra | Docker Compose: PostgreSQL + [Mailpit](https://mailpit.axllent.org/) (catches outgoing e-mail) |
 | Tests | Vitest everywhere. Supertest for the API against a real PostgreSQL test DB, Testing Library for React |
@@ -42,7 +42,7 @@ wanderluxe/
 ## Quick start
 
 Prerequisites:
-- **Node.js ≥ 20.19** (24 recommended, see `.nvmrc`) and npm 10+
+- **Node.js ≥ 22.12** (24 recommended, see `.nvmrc`; Vite 8 and Vitest 5 need it) and npm 10+
 - **Docker** with the Compose plugin, for PostgreSQL and Mailpit
 
 ```bash
@@ -100,7 +100,7 @@ The full variable reference is in `backend/.env.example` and [LOCAL_DEVELOPMENT.
 
 ```bash
 npm run db:up      # tests need PostgreSQL
-npm test           # 37 API tests + 16 frontend tests
+npm test           # 39 API tests + 17 frontend tests (npm run test:e2e: 5 browser tests)
 ```
 
 The API suite rebuilds the dedicated `wanderluxe_test` database before every run, so it never touches your development data. See [docs/TESTING.md](docs/TESTING.md).

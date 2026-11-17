@@ -142,6 +142,8 @@ Undo and redo of all five was verified. Index use was verified with EXPLAIN (DAT
 
 None can be fixed without a major-version change of the parent package. See §6.
 
+> **Update 2026-11-17 (dependency modernisation):** `npm audit` now reports **0 vulnerabilities**. Every package is on its latest major, except TypeScript (6.0, since typescript-eslint doesn't support 7 yet), `@types/node` (kept at 24 to match Node 24) and Sequelize (6; 7 is still alpha). The transitive advisories above are fixed with targeted npm `overrides` in the root `package.json`. See §8.
+
 ## 4. Environment changes
 
 | Before | After |
@@ -202,14 +204,33 @@ None can be fixed without a major-version change of the parent package. See §6.
 - **Cancelled bookings are deleted** rather than set to `cancelled`. That is the existing business rule, although the enum supports the softer option.
 - **Reviews don't require a booking.** This is existing behaviour.
 - **Tour dates in the dump are all in the past,** so locally nothing is bookable until an admin creates or edits a tour.
-- **Remaining `npm audit` items** (§3) need major upgrades: `react-markdown-editor-lite` alternatives, Tailwind 4, sequelize 7. Evaluate them separately.
+- ~~**Remaining `npm audit` items**~~ fixed on 2026-11-17 (§8).
 - **Hero headline artefacts:** the `drop-shadow` filter showed jagged artefacts in the headless preview browser only. Not reproduced elsewhere, so left as designed.
 
 ## 7. Recommendations (in priority order)
 
 1. Move the refresh token to an `httpOnly; Secure; SameSite=Strict` cookie and keep the access token in memory. This adds `/auth/logout` with server-side revocation.
-2. Add a CI workflow (GitHub Actions) that runs `npm ci && npm run check` against a PostgreSQL service container.
-3. Add Playwright end-to-end tests for sign-up → book → cancel and the admin CRUD flows.
-4. Replace `react-markdown-editor-lite` with a maintained editor, which also clears the `nanoid` advisory.
+2. ~~Add a CI workflow~~ done: `.github/workflows/ci.yml`.
+3. ~~Add Playwright end-to-end tests~~ done: `e2e/` (see docs/TESTING.md).
+4. ~~Replace `react-markdown-editor-lite`~~ not needed. It is still maintained, and its `nanoid` advisory is fixed by an override (§8).
 5. Make cancellation set `status='cancelled'` instead of deleting, if the business wants booking history and refunds. The enum already supports it.
-6. Upgrade Tailwind 3 → 4 and Sequelize 6 → 7 when convenient. These are major upgrades; each is its own change.
+6. ~~Upgrade Tailwind 3 → 4~~ done (§8). Upgrade Sequelize 6 → 7 once it leaves alpha.
+
+## 8. Dependency modernisation (2026-11-17)
+
+Done on `main` as separate commits, one per step:
+- Each step ran `npm run check` (lint, typecheck, 39 API + 17 frontend tests, both builds) and the 5 Playwright tests.
+- Before the upgrades, 46 full-page screenshots were taken: public pages, profile and admin, at desktop and mobile widths, in light and dark mode. The same pages were captured after each visual change and diffed pixel by pixel.
+
+| Step | Change | Notes |
+|---|---|---|
+| minor/patch | every package raised to its latest minor; Prettier 3.5 → 3.10 | formatting-only source changes |
+| Vite | 6.4 → 8.3 (Rolldown), `@vitejs/plugin-react` 4 → 6, sitemap plugin 0.11 | `manualChunks` → `codeSplitting` groups. JS+CSS downloaded (gzip): home 265 → 250 KiB in 10 instead of 40 files, tour page 303 → 285 KiB, sign-in 210 → 248 KiB |
+| Tailwind | 3.4 → 4.3 via `@tailwindcss/upgrade`; `@tailwindcss/vite` instead of PostCSS | Config is now in `src/index.css`. Pointer cursors, placeholder and border colours keep their v3 values. Screenshots are identical, except date inputs, which are 2px shorter |
+| lint/types | ESLint 9 → 10, TypeScript 5.9 → 6.0, react-hooks plugin 5 → 7 (React Compiler rules), react-refresh 0.5 | Fixed what the new rules found: state copied from props in effects (Tour/Destination/Blog forms, user edit modal), an impure render (tour page clock), `watch()` → `useWatch()` |
+| libraries | `@hookform/resolvers` 7, swiper 14, jsdom 31, jest-dom 7, dotenv 18, `@types/*` | Swiper thumbnails verified in a production build |
+| audit | npm `overrides`: nanoid 5 (markdown editor), uuid 11 (sequelize), glob 14 + minimatch 11 (sequelize-cli tooling), postcss-selector-parser 6.1.6 | 11 findings (1 high) → 0 |
+| a11y | password-change and destination form labels linked to their inputs | found by scanning every page for `label[for]` without a target |
+
+Found while verifying, not caused by the upgrade: in development only, the tour page's thumbnail carousel doesn't switch slides. React StrictMode mounts the thumbs Swiper twice. Production builds are unaffected, and it behaved the same before the upgrade.
+

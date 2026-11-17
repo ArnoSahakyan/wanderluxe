@@ -56,9 +56,12 @@ helmet → cors (allow-list) → json/urlencoded (size-limited) → request log
 | `shared/` | types, zod schemas (mirroring the API rules), constants |
 | `lib/queryClient.ts` | shared client: no retries on 4xx, no refetch on focus |
 
-Styling is Tailwind with design tokens in `tailwind.config.ts`:
-- Colours: `primary`, `secondary`, `accent`, `background`, `text`, each in light/dark.
-- Shared component classes in `src/index.css`: `form-input`, `form-button`, `btn-icon-primary`, etc.
+Styling is Tailwind CSS 4, configured in CSS (there is no `tailwind.config.ts`), loaded through the `@tailwindcss/vite` plugin:
+- Design tokens live in the `@theme` block of `src/index.css`. Colours are `primary`, `secondary`, `accent`, `background` and `text`, each in a light and dark shade (`bg-primary-light`, `dark:bg-primary-dark`, …).
+- Shared component classes are `@utility` blocks in the same file: `form-input`, `form-button`, `btn-icon-primary`, etc.
+- Dark mode is class-based (`@custom-variant dark`), toggled on `<html>` by `store/themeStore.ts`.
+- Opacity uses the modifier form (`bg-primary-light/90`). The v3 `bg-opacity-*` utilities no longer exist.
+- `space-y-*` puts its margin on the *previous* sibling in v4, so a child's own `mt-*` now adds to it rather than being replaced. Avoid putting `mt-*` on direct children of `space-y-*`.
 
 Light-mode tokens meet WCAG AA contrast.
 
