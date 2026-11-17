@@ -12,6 +12,15 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const apiTarget = env.API_PROXY_TARGET || 'http://localhost:3000';
 
+  // On Vercel there is no /api proxy: without an absolute API URL every request
+  // would hit the static site. Fail the build instead of shipping a broken app.
+  if (process.env.VERCEL && mode === 'production' && !env.VITE_API_URL && !env.VITE_BACK_BASE_URL) {
+    throw new Error(
+      'VITE_API_URL is not set. In Vercel → Settings → Environment Variables add ' +
+        'VITE_API_URL=https://<your-render-service>.onrender.com/api, then redeploy.',
+    );
+  }
+
   return {
     plugins: [
       react(),

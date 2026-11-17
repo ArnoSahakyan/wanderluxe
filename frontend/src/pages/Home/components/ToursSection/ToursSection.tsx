@@ -5,7 +5,7 @@ import { getDuration } from '../../../../utils';
 export const ToursSection = () => {
   const { data, isLoading, isError, error } = useTours({ page: 1, limit: 3 });
 
-  if (data?.tours.length === 0) return;
+  if (data?.tours?.length === 0) return;
   return (
     <section className='mx-auto py-10 lg:mt-20 max-w-7xl px-6 lg:px-8'>
       <div className='mb-8 text-center'>

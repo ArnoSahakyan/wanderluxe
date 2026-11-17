@@ -60,4 +60,17 @@ describe('api client token refresh', () => {
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
     expect(useAuthStore.getState().refreshToken).toBeNull();
   });
+
+  it('rejects an HTML page returned in place of JSON (misconfigured VITE_API_URL)', async () => {
+    public_api.defaults.adapter = ((config: InternalAxiosRequestConfig) =>
+      Promise.resolve({
+        data: '<!doctype html><html></html>',
+        status: 200,
+        statusText: 'OK',
+        headers: { 'content-type': 'text/html; charset=utf-8' },
+        config,
+      })) as AxiosAdapter;
+
+    await expect(public_api.get('/destinations')).rejects.toThrow(/VITE_API_URL/);
+  });
 });

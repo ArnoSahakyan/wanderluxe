@@ -13,11 +13,33 @@ const navigateHome = () => {
   }
 };
 
+/**
+ * The API always answers with JSON. An HTML page means the request hit the
+ * frontend host instead of the API (typically VITE_API_URL not set at build
+ * time, so "/api" resolved against the static site). Fail loudly instead of
+ * handing an HTML string to components that expect objects.
+ */
+const rejectHtmlResponses = (response: AxiosResponse) => {
+  const contentType = String(response.headers['content-type'] ?? '');
+  if (contentType.includes('text/html')) {
+    throw new AxiosError(
+      `The API at "${response.config.baseURL ?? ''}" returned an HTML page instead of JSON. ` +
+        'Check that VITE_API_URL points to the backend (e.g. https://<service>.onrender.com/api).',
+      AxiosError.ERR_BAD_RESPONSE,
+      response.config,
+      response.request,
+      response,
+    );
+  }
+  return response;
+};
+
 /** Client for endpoints that never need the user's token. */
 export const public_api = axios.create({
   baseURL: BACK_URL,
   headers: { 'Content-Type': 'application/json' },
 });
+public_api.interceptors.response.use(rejectHtmlResponses);
 
 /** Client that attaches the access token and transparently refreshes it once on 401. */
 export const api = axios.create({
@@ -50,34 +72,31 @@ const refreshAccessToken = (refreshToken: string): Promise<string> => {
   return refreshInFlight;
 };
 
-api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  async (error: AxiosError) => {
-    const request = error.config as RetriableConfig | undefined;
-    const status = error.response?.status;
-    const { refreshToken, logout } = useAuthStore.getState();
+api.interceptors.response.use(rejectHtmlResponses, async (error: AxiosError) => {
+  const request = error.config as RetriableConfig | undefined;
+  const status = error.response?.status;
+  const { refreshToken, logout } = useAuthStore.getState();
 
-    if (status === 401 && request && !request._retry && refreshToken) {
-      request._retry = true;
-      try {
-        const token = await refreshAccessToken(refreshToken);
-        request.headers.set('Authorization', `Bearer ${token}`);
-        return api(request);
-      } catch {
-        logout();
-        return Promise.reject(error);
-      }
-    }
-
-    if (status === 401 && !refreshToken && useAuthStore.getState().isAuthenticated) {
+  if (status === 401 && request && !request._retry && refreshToken) {
+    request._retry = true;
+    try {
+      const token = await refreshAccessToken(refreshToken);
+      request.headers.set('Authorization', `Bearer ${token}`);
+      return api(request);
+    } catch {
       logout();
+      return Promise.reject(error);
     }
+  }
 
-    // Leaving a page the user may not see; mutations just surface their error.
-    if (status === 403 && (request?.method ?? 'get').toLowerCase() === 'get') {
-      navigateHome();
-    }
+  if (status === 401 && !refreshToken && useAuthStore.getState().isAuthenticated) {
+    logout();
+  }
 
-    return Promise.reject(error);
-  },
-);
+  // Leaving a page the user may not see; mutations just surface their error.
+  if (status === 403 && (request?.method ?? 'get').toLowerCase() === 'get') {
+    navigateHome();
+  }
+
+  return Promise.reject(error);
+});

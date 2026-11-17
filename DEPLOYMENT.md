@@ -148,4 +148,4 @@ In the existing project → **Settings → Git** → connect `ArnoSahakyan/wande
 | `password authentication failed for user "wanderluxe_app"` | The pooler user must be `wanderluxe_app.<project-ref>`. Re-run `setup-roles.sql` to reset the password. |
 | `permission denied for table …` | The table was created by a role other than `postgres`. Run migrations with the `postgres` URL (step 2b), then re-run `setup-roles.sql`. |
 | Health check fails right after deploy | The free service is waking up, or `DATABASE_URL`/`DB_SSL` is wrong. Check the Render logs: the config error lists variable names. |
-| Frontend calls `localhost` or `/api` on Vercel | `VITE_API_URL` is not set for Production. It is baked in at build time, so redeploy after setting it. |
+| Frontend calls `localhost` or `/api` on Vercel | `VITE_API_URL` is not set for Production. It is baked in at build time, so redeploy after setting it. The Vercel build now fails with this message instead of shipping a site whose API calls return HTML. |

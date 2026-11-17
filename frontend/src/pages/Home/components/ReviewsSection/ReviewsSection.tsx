@@ -3,7 +3,7 @@ import { useAllReviews } from '../../../../hooks';
 
 export const ReviewsSection = () => {
   const { data, isLoading, isError, error } = useAllReviews();
-  if (data?.reviews.length === 0) return;
+  if (data?.reviews?.length === 0) return;
   return (
     <div className='bg-background-light dark:bg-background-dark py-10 sm:py-20'>
       <div className='mx-auto max-w-7xl px-6 lg:px-8'>

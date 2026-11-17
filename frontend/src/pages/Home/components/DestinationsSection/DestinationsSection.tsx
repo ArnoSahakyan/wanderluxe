@@ -4,7 +4,7 @@ import { DestinationCard, ErrorState, LoadingState } from '../../../../component
 export const DestinationsSection = () => {
   const { data, isLoading, isError, error } = useDestinations({ page: 1, limit: 4 });
 
-  if (data?.destinations.length === 0) return;
+  if (data?.destinations?.length === 0) return;
   return (
     <section className='mx-auto py-10 lg:mt-20 max-w-7xl px-6 lg:px-8'>
       <div className='mb-8 text-center'>
