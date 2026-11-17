@@ -5,13 +5,14 @@ import tailwindcss from '@tailwindcss/vite';
 import generateSitemap from 'vite-plugin-sitemap';
 import path from 'path';
 
-const SITE_URL = 'https://wanderluxe.am';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Non-VITE_ variables are only visible here, never in the client bundle.
   const env = loadEnv(mode, process.cwd(), '');
   const apiTarget = env.API_PROXY_TARGET || 'http://localhost:3000';
+  // Public address used in sitemap.xml and robots.txt (build time only).
+  const siteUrl = (env.SITE_URL || 'https://wanderluxe.vercel.app').replace(/\/+$/, '');
 
   // On Vercel there is no /api proxy: without an absolute API URL every request
   // would hit the static site. Fail the build instead of shipping a broken app.
@@ -27,8 +28,9 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       generateSitemap({
-        hostname: SITE_URL,
-        dynamicRoutes: ['/'],
+        hostname: siteUrl,
+        // Public, indexable pages (the SPA has a single index.html, so list them explicitly).
+        dynamicRoutes: ['/', '/tours', '/destinations', '/blog', '/about', '/contact', '/faq', '/terms-and-conditions'],
       }),
     ],
     resolve: {
