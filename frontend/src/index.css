@@ -1,0 +1,211 @@
+@import 'swiper/css';
+@import 'swiper/css/free-mode';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@plugin "@tailwindcss/typography";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  padding-right: 0 !important;
+  overflow: auto !important;
+}
+
+@layer components {
+  /* Input Styles */
+  .form-input {
+    @apply block w-full rounded-md bg-white dark:bg-gray-800 px-3.5 py-2 text-base
+    text-primary-light dark:text-text-dark outline outline-1 -outline-offset-1
+    outline-gray-300 dark:outline-gray-600 placeholder:text-gray-400
+    dark:placeholder:text-gray-500 focus:outline focus:outline-2
+    focus:-outline-offset-2 focus:outline-primary-light dark:focus:outline-primary-dark
+    transition-colors duration-200;
+  }
+
+  /* Disabled Input State */
+  .form-input:disabled {
+    @apply bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400
+    cursor-not-allowed outline-gray-200 dark:outline-gray-600;
+  }
+
+  /* Label Styles */
+  .form-label {
+    @apply block text-sm font-medium text-secondary-light dark:text-text-dark;
+  }
+
+  /* Disabled Label State */
+  .form-label:disabled {
+    @apply text-gray-400 dark:text-gray-500;
+  }
+
+  /* Button Styles */
+  .form-button {
+    @apply flex justify-center rounded-md bg-primary-light dark:bg-primary-dark
+    px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90
+    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+    focus-visible:outline-primary-light dark:focus-visible:outline-primary-dark
+    transition-colors duration-200 w-full;
+  }
+
+  /* Disabled Button State */
+  .form-button:disabled {
+    @apply bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300
+    cursor-not-allowed hover:bg-opacity-100 shadow-none;
+  }
+
+  /* Checkbox Styles */
+  .form-checkbox {
+    @apply appearance-none size-5 rounded border-2 border-gray-300 dark:border-gray-600
+    relative cursor-pointer transition-all duration-200 ease-in-out;
+  }
+
+  /* Checked Checkbox */
+  .form-checkbox:checked {
+    @apply bg-primary-light dark:bg-primary-dark border-primary-light dark:border-primary-dark;
+  }
+
+  /* Checkbox Checkmark */
+  .form-checkbox:checked::after {
+    @apply content-[''] absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+    w-2.5 h-1.5 border-l-2 border-b-2 border-white dark:border-gray-100
+    rotate-[-45deg];
+  }
+
+  /* Disabled Checkbox State */
+  .form-checkbox:disabled {
+    @apply bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600
+    cursor-not-allowed;
+  }
+
+  /* Error Message Styles */
+  .form-error {
+    @apply mt-1 text-sm text-red-600 dark:text-red-400;
+  }
+
+  /* Secondary Button Variant */
+  .form-button-secondary {
+    @apply form-button bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200
+    hover:bg-gray-300 dark:hover:bg-gray-600 focus-visible:outline-gray-400
+    dark:focus-visible:outline-gray-500;
+  }
+
+  /* Disabled Secondary Button */
+  .form-button-secondary:disabled {
+    @apply bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  /* Beautiful Select Input */
+  .form-select {
+    @apply form-input;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4A96A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+    appearance: none;
+  }
+  .dark .form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23DEB992'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+  }
+
+  /* Styled Date Input */
+  .form-date {
+    @apply form-input;
+  }
+  .form-date::-webkit-calendar-picker-indicator {
+    filter: invert(72%) sepia(22%) saturate(925%) hue-rotate(348deg) brightness(89%) contrast(89%);
+    cursor: pointer;
+    opacity: 0.9;
+  }
+  .dark .form-date::-webkit-calendar-picker-indicator {
+    filter: invert(80%) sepia(19%) saturate(1174%) hue-rotate(328deg) brightness(94%) contrast(89%);
+  }
+
+  /* File Input Styling */
+  .form-file {
+    @apply form-input py-1.5;
+  }
+  .form-file::file-selector-button {
+    @apply bg-primary-light dark:bg-primary-dark text-white border-0 py-1.5 px-4 mr-4 rounded-md cursor-pointer transition-colors;
+  }
+  .form-file::file-selector-button:hover {
+    @apply bg-opacity-90;
+  }
+
+  /* Radio Input Styling */
+  .form-radio {
+    @apply h-4 w-4 border-2 border-gray-300 dark:border-gray-600 cursor-pointer;
+    accent-color: #D4A96A;
+  }
+  .dark .form-radio {
+    accent-color: #DEB992;
+  }
+
+  /* Checkbox Styling */
+  .form-checkbox {
+    @apply h-4 w-4 border-2 border-gray-300 dark:border-gray-600 cursor-pointer;
+    accent-color: #D4A96A;
+  }
+  .dark .form-checkbox {
+    accent-color: #DEB992;
+  }
+
+  /* Range Input Styling */
+  .form-range {
+    @apply w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer;
+  }
+  .form-range::-webkit-slider-thumb {
+    @apply h-4 w-4 rounded-full appearance-none cursor-pointer;
+    background-color: #D4A96A;
+  }
+  .dark .form-range::-webkit-slider-thumb {
+    background-color: #DEB992;
+  }
+  .form-range::-moz-range-thumb {
+    @apply h-4 w-4 rounded-full appearance-none cursor-pointer;
+    background-color: #D4A96A;
+    border: none;
+  }
+  .dark .form-range::-moz-range-thumb {
+    background-color: #DEB992;
+  }
+}
+
+/* React Markdown Editor Styles */
+.rc-md-editor {
+    @apply bg-white text-secondary-light dark:bg-gray-900 dark:text-secondary-dark border dark:border-gray-700;
+}
+
+.rc-md-editor .rc-md-navigation {
+    @apply bg-gray-100 dark:bg-gray-800 border-b dark:border-gray-700;
+}
+
+.rc-md-editor .editor-container {
+    @apply bg-white dark:bg-gray-800 text-secondary-light dark:text-secondary-dark;
+}
+
+.rc-md-editor .editor-container .sec-md textarea {
+    @apply bg-white dark:bg-gray-800 text-secondary-light dark:text-background-light font-mono;
+}
+
+.rc-md-editor .custom-html-style {
+    @apply prose dark:prose-invert max-w-none;
+}
+
+.rc-md-editor .rc-md-navigation .button-wrap span {
+    @apply text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 dark:hover:text-gray-400;
+}
