@@ -21,6 +21,10 @@ const startServer = async (): Promise<void> => {
         process.exit(1);
     }
 
+    if (config.isProduction && config.corsOrigins.length === 0) {
+        logger.warn('CORS_ORIGIN is empty: browsers on other origins (e.g. the Vercel site) cannot call this API.');
+    }
+
     const server = app.listen(config.port, () => {
         logger.info(`API listening on http://localhost:${config.port}`, {
             env: config.env,

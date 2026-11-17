@@ -19,7 +19,8 @@ export default defineConfig({
             STORAGE_FALLBACK_URL: '',
             BCRYPT_ROUNDS: '10',
             APP_URL: 'http://localhost:5173',
-            CORS_ORIGIN: 'http://localhost:5173',
+            // trailing slash on purpose: must still match the browser's Origin header
+            CORS_ORIGIN: 'http://localhost:5173/',
             CONTACT_RECIPIENT_EMAIL: 'inbox@wanderluxe.test',
         },
     },

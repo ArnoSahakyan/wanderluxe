@@ -142,7 +142,19 @@ if (!parsed.success) {
 const env = parsed.data;
 const isProduction = env.NODE_ENV === 'production';
 const storageDriver = env.STORAGE_DRIVER ?? (isProduction ? 'supabase' : 'local');
-const corsOrigins = env.CORS_ORIGIN.length ? env.CORS_ORIGIN : env.CORS ? [env.CORS] : [];
+// Browsers send Origin as scheme://host[:port] — no path, no trailing slash, lower-case.
+// Normalise configured values the same way so "https://site.app/" still matches.
+const normaliseOrigin = (value: string): string => {
+    const trimmed = value.trim().replace(/^['"]|['"]$/g, '');
+    try {
+        return new URL(trimmed).origin;
+    } catch {
+        return trimmed.replace(/\/+$/, '').toLowerCase();
+    }
+};
+const corsOrigins = [
+    ...new Set((env.CORS_ORIGIN.length ? env.CORS_ORIGIN : env.CORS ? [env.CORS] : []).map(normaliseOrigin)),
+];
 
 const parseTrustProxy = (value?: string): boolean | number | string => {
     if (value === undefined || value === '' || value === 'false') return false;
