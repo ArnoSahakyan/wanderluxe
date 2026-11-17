@@ -40,6 +40,7 @@ export const useFavorite = (tourId: number): UseFavoritesResult => {
     onSuccess: () => {
       showSuccess('Added to favorites');
       queryClient.invalidateQueries({ queryKey: favoritesKeys.status(tourId) });
+      queryClient.invalidateQueries({ queryKey: favoritesKeys.all });
     },
   });
 
@@ -52,6 +53,7 @@ export const useFavorite = (tourId: number): UseFavoritesResult => {
     onSuccess: () => {
       showSuccess('Removed from favorites');
       queryClient.invalidateQueries({ queryKey: favoritesKeys.status(tourId) });
+      queryClient.invalidateQueries({ queryKey: favoritesKeys.all });
     },
   });
 

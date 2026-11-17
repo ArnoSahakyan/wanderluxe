@@ -4,8 +4,8 @@ export const signInSchema = z
   .object({
     email: z
       .string({
-        required_error: 'Email is required',
-        invalid_type_error: 'Email must be a string',
+        error: (issue) =>
+          issue.input === undefined ? 'Email is required' : 'Email must be a string',
       })
       .trim()
       .min(5, 'Email is too short')
@@ -17,8 +17,8 @@ export const signInSchema = z
 
     password: z
       .string({
-        required_error: 'Password is required',
-        invalid_type_error: 'Password must be a string',
+        error: (issue) =>
+          issue.input === undefined ? 'Password is required' : 'Password must be a string',
       })
       .trim()
       .min(8, 'Password must be at least 8 characters')

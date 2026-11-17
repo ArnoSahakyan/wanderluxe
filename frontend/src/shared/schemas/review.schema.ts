@@ -4,8 +4,8 @@ export const reviewSchema = z
   .object({
     rating: z
       .number({
-        required_error: 'Rating is required',
-        invalid_type_error: 'Rating must be a number',
+        error: (issue) =>
+          issue.input === undefined ? 'Rating is required' : 'Rating must be a number',
       })
       .int('Rating must be an integer')
       .min(1, 'Minimum rating is 1')
@@ -13,8 +13,8 @@ export const reviewSchema = z
 
     comment: z
       .string({
-        required_error: 'Review text is required',
-        invalid_type_error: 'Review must be a string',
+        error: (issue) =>
+          issue.input === undefined ? 'Review text is required' : 'Review must be a string',
       })
       .trim()
       .min(5, 'Review must be at least 5 characters')

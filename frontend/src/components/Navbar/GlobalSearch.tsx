@@ -35,7 +35,8 @@ export const GlobalSearch = () => {
   const debouncedQuery = useDebounce(query, 400);
   const [isFocused, setIsFocused] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  // Covers the input *and* the dropdown, so clicking back into the input keeps results open.
+  const containerRef = useRef<HTMLDivElement>(null);
   const { data, isLoading } = useGlobalSearch(debouncedQuery, GLOBAL_SEARCH_LIMIT);
   const navigate = useNavigate();
 
@@ -52,7 +53,7 @@ export const GlobalSearch = () => {
   }, []);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
       setIsDropdownOpen(false);
       setIsFocused(false);
     }
@@ -64,7 +65,20 @@ export const GlobalSearch = () => {
   }, [handleClickOutside]);
 
   return (
-    <div className='w-3/5 flex justify-center px-2 lg:ml-6 lg:justify-end relative'>
+    <div
+      ref={containerRef}
+      role='search'
+      className='w-3/5 flex justify-center px-2 lg:ml-6 lg:justify-end relative'
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          setIsDropdownOpen(false);
+        }
+        if (e.key === 'Enter' && query.trim()) {
+          setIsDropdownOpen(false);
+          handleFullSearch();
+        }
+      }}
+    >
       <SearchInput
         value={query}
         onChange={(val) => {
@@ -76,14 +90,12 @@ export const GlobalSearch = () => {
           if (query.trim().length > 0) setIsDropdownOpen(true);
         }}
         placeholder='Search...'
+        ariaLabel='Search destinations, tours and blog posts'
         debounceDelay={400}
       />
 
       {shouldShowDropdown && (
-        <div
-          ref={dropdownRef}
-          className='absolute top-12 w-full max-w-lg rounded-md bg-background-light dark:bg-background-dark border border-gray-200 dark:border-gray-700 shadow-lg z-50'
-        >
+        <div className='absolute top-12 w-full max-w-lg rounded-md bg-background-light dark:bg-background-dark border border-gray-200 dark:border-gray-700 shadow-lg z-50'>
           <div className='p-4 space-y-3'>
             {isLoading ? (
               <p className='text-sm text-secondary-light dark:text-secondary-dark'>Searching...</p>

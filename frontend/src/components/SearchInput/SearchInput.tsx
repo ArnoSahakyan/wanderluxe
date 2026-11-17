@@ -11,6 +11,8 @@ interface SearchInputProps {
   debounceDelay?: number;
   className?: string;
   onFocus?: () => void;
+  /** Accessible name (defaults to the placeholder). */
+  ariaLabel?: string;
 }
 
 export const SearchInput = ({
@@ -22,6 +24,7 @@ export const SearchInput = ({
   debounceDelay = 500,
   className = '',
   onFocus,
+  ariaLabel,
 }: SearchInputProps) => {
   const isControlled = value !== undefined;
   const [internalValue, setInternalValue] = useState(initialValue);
@@ -47,7 +50,8 @@ export const SearchInput = ({
   return (
     <div className='relative w-full'>
       <input
-        type='text'
+        type='search'
+        aria-label={ariaLabel ?? placeholder}
         value={effectiveValue}
         onChange={handleChange}
         onFocus={onFocus}

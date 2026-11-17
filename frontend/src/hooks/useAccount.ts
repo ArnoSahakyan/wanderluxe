@@ -13,10 +13,20 @@ export const useAccount = () => {
     onSuccess: (response) => {
       showSuccess('Personal information updated successfully');
 
+      // The API returns a sanitised user (no password data) including the role.
+      const current = useAuthStore.getState();
+      const updated = response.data.user;
       login({
-        user: response.data.user,
-        token: useAuthStore.getState().accessToken,
-        refreshToken: useAuthStore.getState().refreshToken,
+        user: {
+          ...current.user!,
+          full_name: updated.full_name,
+          email: updated.email,
+          phone_number: updated.phone_number ?? null,
+          phone: updated.phone_number ?? null,
+          role: updated.role ?? current.user?.role ?? 'customer',
+        },
+        token: current.accessToken,
+        refreshToken: current.refreshToken,
       });
     },
 

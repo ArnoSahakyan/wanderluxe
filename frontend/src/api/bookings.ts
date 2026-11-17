@@ -28,7 +28,42 @@ export const confirmBooking = async (booking_id: number) => {
   return response.data;
 };
 
-export const fetchAllBookings = async (page = 1, limit = 10) => {
+export type AdminBookingStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'cancelled'
+  | 'completed'
+  | 'no_show'
+  | 'refunded';
+
+/** Booking as returned by the admin list (GET /booking): nested User and Tour. */
+export interface AdminBooking {
+  booking_id: number;
+  booking_date: string;
+  number_of_people: number;
+  total_price: string;
+  status: AdminBookingStatus;
+  User: {
+    user_id: number;
+    full_name: string;
+    email: string;
+  };
+  Tour: {
+    tour_id: number;
+    name: string;
+    Destination?: { name: string };
+    Category?: { name: string };
+  };
+}
+
+export interface AdminBookingsResponse {
+  total: number;
+  page: number;
+  totalPages: number;
+  bookings: AdminBooking[];
+}
+
+export const fetchAllBookings = async (page = 1, limit = 10): Promise<AdminBookingsResponse> => {
   const response = await api.get(`/booking?page=${page}&limit=${limit}`);
   return response.data;
 };

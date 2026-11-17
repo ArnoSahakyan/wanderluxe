@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { fetchAllBookings, cancelBooking, confirmBooking } from '../../../api';
-import { Loader, Pagination, ConfirmModal } from '../../../components';
+import { useState } from 'react';
+import { Loader, Pagination, ConfirmModal, ErrorState } from '../../../components';
+import { useAdminBookings, useAdminCancelBooking, useAdminConfirmBooking } from '../../../hooks';
+import { formatAxiosError } from '../../../utils';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 import {
@@ -10,67 +11,30 @@ import {
   CheckIcon,
 } from '@heroicons/react/24/outline';
 
-interface AdminBooking {
-  booking_id: number;
-  booking_date: string;
-  number_of_people: number;
-  total_price: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  User: {
-    user_id: number;
-    full_name: string;
-    email: string;
-  };
-  Tour: {
-    tour_id: number;
-    name: string;
-    Destination?: { name: string };
-    Category?: { name: string };
-  };
-}
-
 const AdminBookingsPage = () => {
-  const [bookings, setBookings] = useState<AdminBooking[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
-  const [isCanceling, setIsCanceling] = useState(false);
   const [confirmBookingId, setConfirmBookingId] = useState<number | null>(null);
-  const [isConfirming, setIsConfirming] = useState(false);
 
-  const loadBookings = async (currentPage = 1) => {
-    try {
-      setLoading(true);
-      const res = await fetchAllBookings(currentPage, 10);
-      setBookings(res.bookings);
-      setTotalPages(res.totalPages);
-    } catch (err: any) {
-      toast.error('Failed to load bookings');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading, isError } = useAdminBookings(page);
+  const cancelMutation = useAdminCancelBooking();
+  const confirmMutation = useAdminConfirmBooking();
 
-  useEffect(() => {
-    loadBookings(page);
-  }, [page]);
+  const bookings = data?.bookings ?? [];
+  const totalPages = data?.totalPages ?? 1;
 
-  const handleCancelBooking = async (id: number) => {
+  const handleCancelBooking = (id: number) => {
     setCancelBookingId(id);
   };
 
   const confirmCancelBooking = async () => {
     if (!cancelBookingId) return;
-    setIsCanceling(true);
     try {
-      await cancelBooking(cancelBookingId);
+      await cancelMutation.mutateAsync(cancelBookingId);
       toast.success('Booking cancelled successfully');
-      loadBookings(page);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to cancel booking');
+    } catch (err) {
+      toast.error(formatAxiosError(err) || 'Failed to cancel booking');
     } finally {
-      setIsCanceling(false);
       setCancelBookingId(null);
     }
   };
@@ -81,20 +45,20 @@ const AdminBookingsPage = () => {
 
   const confirmPendingBooking = async () => {
     if (!confirmBookingId) return;
-    setIsConfirming(true);
     try {
-      await confirmBooking(confirmBookingId);
+      await confirmMutation.mutateAsync(confirmBookingId);
       toast.success('Booking confirmed successfully');
-      loadBookings(page);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to confirm booking');
+    } catch (err) {
+      toast.error(formatAxiosError(err) || 'Failed to confirm booking');
     } finally {
-      setIsConfirming(false);
       setConfirmBookingId(null);
     }
   };
 
-  if (loading && bookings.length === 0) return <Loader />;
+  if (isLoading) return <Loader />;
+  if (isError && !data) {
+    return <ErrorState title='Failed to load bookings' description='Please try again later.' />;
+  }
 
   return (
     <div className='py-8'>
@@ -256,7 +220,7 @@ const AdminBookingsPage = () => {
         title='Cancel Booking'
         message='Are you sure you want to cancel this booking? This action cannot be undone.'
         confirmText='Cancel Booking'
-        isLoading={isCanceling}
+        isLoading={cancelMutation.isPending}
       />
 
       <ConfirmModal
@@ -267,7 +231,7 @@ const AdminBookingsPage = () => {
         message='Are you sure you want to confirm this booking?'
         confirmText='Confirm Booking'
         type='info'
-        isLoading={isConfirming}
+        isLoading={confirmMutation.isPending}
       />
     </div>
   );

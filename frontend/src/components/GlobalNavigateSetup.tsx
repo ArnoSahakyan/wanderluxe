@@ -14,7 +14,7 @@ export const GlobalNavigateSetup = () => {
 
     return () => {
       // Optional: Cleanup on unmount, though typically this persists at the app root level
-      setGlobalNavigate(null as any);
+      setGlobalNavigate(null);
     };
   }, [navigate]);
 

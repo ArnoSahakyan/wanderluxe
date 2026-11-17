@@ -7,7 +7,7 @@ import { StarRating } from './StarRating.tsx';
 
 interface ReviewFormProps {
   tourId: number;
-  onReviewSubmitted: () => void;
+  onReviewSubmitted?: () => void;
 }
 
 export const ReviewForm: FC<ReviewFormProps> = ({ tourId, onReviewSubmitted }) => {
@@ -30,7 +30,7 @@ export const ReviewForm: FC<ReviewFormProps> = ({ tourId, onReviewSubmitted }) =
   const { handleCreateReview, isPending } = useCreateReview({
     onSuccess: () => {
       reset();
-      onReviewSubmitted();
+      onReviewSubmitted?.();
     },
   });
 

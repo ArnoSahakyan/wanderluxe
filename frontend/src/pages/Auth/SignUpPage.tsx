@@ -21,7 +21,7 @@ const SignUpPage = () => {
   const onSubmit = (data: SignUpFormData) => {
     signUp(data, {
       onSuccess: () => {
-        showSuccess('Successfully signed in!');
+        showSuccess('Account created! Please sign in.');
         navigate(ROUTES.AUTH + ROUTES.SIGNIN);
       },
       onError: (error: Error) => {

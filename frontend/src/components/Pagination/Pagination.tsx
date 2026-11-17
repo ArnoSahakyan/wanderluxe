@@ -15,24 +15,28 @@ export const Pagination: FC<PaginationProps> = ({
   goToNextPage,
 }) => {
   return (
-    <div className='flex justify-center items-center gap-4 mt-10'>
+    <nav aria-label='Pagination' className='flex justify-center items-center gap-4 mt-10'>
       <button
+        type='button'
         onClick={goToPrevPage}
-        disabled={page === 1}
-        className='px-4 py-2 bg-primary-light text-white rounded-md disabled:opacity-50'
+        disabled={page <= 1}
+        aria-label='Previous page'
+        className='btn-icon-primary'
       >
-        <ChevronLeftIcon className='w-5 h-5' />
+        <ChevronLeftIcon className='w-5 h-5' aria-hidden='true' />
       </button>
-      <span className='text-secondary-light dark:text-secondary-dark'>
+      <span className='text-secondary-light dark:text-secondary-dark' aria-live='polite'>
         Page {page} of {totalPages}
       </span>
       <button
+        type='button'
         onClick={() => goToNextPage(totalPages)}
-        disabled={page === totalPages}
-        className='px-4 py-2 bg-primary-light text-white rounded-md disabled:opacity-50'
+        disabled={page >= totalPages}
+        aria-label='Next page'
+        className='btn-icon-primary'
       >
-        <ChevronRightIcon className='w-5 h-5' />
+        <ChevronRightIcon className='w-5 h-5' aria-hidden='true' />
       </button>
-    </div>
+    </nav>
   );
 };

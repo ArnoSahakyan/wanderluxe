@@ -14,7 +14,7 @@ export const StarRating: FC<StarRatingProps> = ({ value, onChange, max = 5, disa
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
-    <div className='flex items-center gap-1'>
+    <div className='flex items-center gap-1' role='radiogroup' aria-label='Rating'>
       {Array.from({ length: max }, (_, i) => {
         const starValue = i + 1;
         const isActive = hovered !== null ? starValue <= hovered : starValue <= value;
@@ -28,11 +28,20 @@ export const StarRating: FC<StarRatingProps> = ({ value, onChange, max = 5, disa
             onMouseLeave={() => !disabled && setHovered(null)}
             onClick={() => !disabled && onChange(starValue)}
             disabled={disabled}
+            role='radio'
+            aria-checked={starValue === value}
+            aria-label={`${starValue} star${starValue > 1 ? 's' : ''}`}
           >
             {isActive ? (
-              <StarIcon className='w-8 h-8 text-yellow-400 transition-colors duration-150' />
+              <StarIcon
+                className='w-8 h-8 text-yellow-400 transition-colors duration-150'
+                aria-hidden='true'
+              />
             ) : (
-              <StarIconOutline className='w-8 h-8 text-yellow-400 transition-colors duration-150' />
+              <StarIconOutline
+                className='w-8 h-8 text-yellow-400 transition-colors duration-150'
+                aria-hidden='true'
+              />
             )}
           </button>
         );

@@ -105,7 +105,7 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
         {/* Bottom Row - Action Button */}
         <div className='flex items-center justify-between'>
           <div className='text-sm text-secondary-light dark:text-secondary-dark'>
-            Booked on {new Date(booking.start_date).toLocaleDateString()}
+            Booked on {new Date(booking.booking_date).toLocaleDateString()}
           </div>
           <Link
             to={`${ROUTES.PROFILE_BOOKINGS}/${booking.booking_id}`}

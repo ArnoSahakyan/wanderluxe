@@ -1,3 +1,4 @@
+import { SmartImage } from '../SmartImage/SmartImage';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../shared';
 import { FC } from 'react';
@@ -17,7 +18,11 @@ export const TourCard: FC<ITourCardProps> = ({
     <div className='relative flex flex-col rounded-xl bg-background-light dark:bg-background-dark shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 transition-transform hover:scale-[1.02] hover:shadow-lg'>
       {/* Image with price tag */}
       <div className='relative h-48 overflow-hidden'>
-        <img src={imageUrl} alt={title} className='w-full h-full object-cover' />
+        <SmartImage
+          src={imageUrl ?? undefined}
+          alt={title}
+          className='w-full h-full object-cover'
+        />
         <div className='absolute top-4 right-4 bg-primary-light dark:bg-primary-dark text-background-light px-3 py-1 rounded-full font-bold text-sm shadow-md'>
           ${price.toLocaleString()}
         </div>

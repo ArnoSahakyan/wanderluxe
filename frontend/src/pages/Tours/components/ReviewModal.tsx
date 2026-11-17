@@ -1,6 +1,6 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
-import { usePagination, useReview } from '../../../hooks';
+import { useReview } from '../../../hooks';
 import { EmptyState, ErrorState, LoadingState, Pagination, ReviewCard } from '../../../components';
 import { REVIEWS_LIMIT } from '../../../shared';
 import { XMarkIcon } from '@heroicons/react/24/outline';
@@ -13,7 +13,10 @@ interface ReviewModalProps {
 }
 
 export const ReviewModal: FC<ReviewModalProps> = ({ tourId, isOpen, onClose, totalReviews }) => {
-  const { page, goToNextPage, goToPrevPage } = usePagination();
+  // Local state: paging the modal must not change the page behind it (?page in the URL).
+  const [page, setPage] = useState(1);
+  const goToNextPage = (totalPages: number) => setPage((p) => Math.min(p + 1, totalPages));
+  const goToPrevPage = () => setPage((p) => Math.max(p - 1, 1));
   const {
     data: reviewsData,
     isLoading,
@@ -36,10 +39,12 @@ export const ReviewModal: FC<ReviewModalProps> = ({ tourId, isOpen, onClose, tot
             </DialogTitle>
 
             <button
+              type='button'
               onClick={onClose}
-              className='text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              aria-label='Close reviews'
+              className='rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             >
-              <XMarkIcon className='size-6' />
+              <XMarkIcon className='size-6' aria-hidden='true' />
             </button>
           </div>
 

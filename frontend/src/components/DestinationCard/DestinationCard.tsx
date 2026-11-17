@@ -1,3 +1,4 @@
+import { SmartImage } from '../SmartImage/SmartImage';
 import { Link } from 'react-router-dom';
 import { IDestination, ROUTES } from '../../shared';
 import { FC } from 'react';
@@ -22,8 +23,8 @@ export const DestinationCard: FC<DestinationCardProps> = ({
     <div className='relative group overflow-hidden rounded-xl bg-background-light dark:bg-background-dark shadow-md border border-gray-200 dark:border-gray-700 transition-all hover:shadow-lg'>
       {/* Image with overlay */}
       <div className='relative h-60 overflow-hidden'>
-        <img
-          src={image}
+        <SmartImage
+          src={image ?? undefined}
           alt={name}
           className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
         />

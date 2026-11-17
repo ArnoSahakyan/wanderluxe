@@ -16,19 +16,9 @@ export const signUp = async (payload: SignUpFormData) => {
   return response.data;
 };
 
-export const refreshToken = async (refreshToken: string) => {
-  const response = await api.post(`auth/refresh`, { refreshToken }, { withCredentials: true });
-  return response.data;
-};
-
 export const fetchCurrentUser = async () => {
-  try {
-    const response = await api.get('/auth/me');
-    return response.data.user;
-  } catch (error) {
-    console.error('Fetching User Data Error:', error);
-    throw new Error('Failed to fetch current user');
-  }
+  const response = await api.get('/auth/me');
+  return response.data.user;
 };
 
 export const requestPasswordReset = async (data: ForgotPasswordFormData) => {
@@ -37,8 +27,10 @@ export const requestPasswordReset = async (data: ForgotPasswordFormData) => {
 };
 
 export const resetPassword = async ({ new_password, token }: ResetPasswordRequest) => {
-  const response = await public_api.post(`/auth/reset-password?token=${token}`, {
-    new_password,
-  });
+  const response = await public_api.post(
+    '/auth/reset-password',
+    { new_password },
+    { params: { token } },
+  );
   return response.data;
 };

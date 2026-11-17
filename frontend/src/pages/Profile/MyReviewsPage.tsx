@@ -9,7 +9,7 @@ import { toast } from 'react-toastify';
 
 const MyReviewsPage = () => {
   const { page, goToNextPage, goToPrevPage } = usePagination();
-  const { data, isLoading, isError, refetch } = useUserReviews({ page, limit: 5 });
+  const { data, isLoading, isError } = useUserReviews({ page, limit: 5 });
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const deleteMutation = useDeleteReview();
@@ -22,10 +22,10 @@ const MyReviewsPage = () => {
     if (!deleteId) return;
 
     try {
+      // Owner-or-admin on the API; the hook invalidates every review list.
       await deleteMutation.mutateAsync(deleteId);
       toast.success('Review deleted successfully');
-      refetch();
-    } catch (err: any) {
+    } catch {
       toast.error('Failed to delete review');
     } finally {
       setDeleteId(null);
@@ -54,7 +54,7 @@ const MyReviewsPage = () => {
         />
       ) : (
         <div className='space-y-6'>
-          {reviews.map((review: any) => (
+          {reviews.map((review) => (
             <div
               key={review.review_id}
               className='bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:shadow-md'
@@ -65,8 +65,7 @@ const MyReviewsPage = () => {
                     {review.tour_name}
                   </h3>
                   <p className='text-xs text-secondary-light dark:text-secondary-dark'>
-                    Reviewed on{' '}
-                    {format(new Date(review.createdAt || review.created_at), 'MMMM dd, yyyy')}
+                    Reviewed on {format(new Date(review.created_at), 'MMMM dd, yyyy')}
                   </p>
                 </div>
                 <div className='flex items-center gap-1'>

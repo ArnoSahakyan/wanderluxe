@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getAdminStats, AdminStats } from '../../../api';
 import { Loader } from '../../../components';
+import { useAdminStats } from '../../../hooks';
 import { format } from 'date-fns';
 import {
   UsersIcon,
@@ -14,26 +13,14 @@ import {
 } from '@heroicons/react/24/outline';
 
 const AdminHomePage = () => {
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: stats, isLoading, isError } = useAdminStats();
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await getAdminStats();
-        setStats(data);
-      } catch (err) {
-        setError('Failed to load dashboard statistics.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
-
-  if (loading) return <Loader />;
-  if (error || !stats) return <div className='text-red-500 text-center py-10'>{error}</div>;
+  if (isLoading) return <Loader />;
+  if (isError || !stats) {
+    return (
+      <div className='text-red-500 text-center py-10'>Failed to load dashboard statistics.</div>
+    );
+  }
 
   const cards = [
     { name: 'Total Users', stat: stats.metrics.totalUsers, icon: UsersIcon },

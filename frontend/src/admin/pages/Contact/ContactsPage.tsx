@@ -1,76 +1,57 @@
-import { useState, useEffect } from 'react';
-import { api } from '../../../api';
-import { Loader, Pagination, ConfirmModal } from '../../../components';
+import { useState } from 'react';
+import { ContactStatus } from '../../../api';
+import { Loader, Pagination, ConfirmModal, ErrorState } from '../../../components';
+import {
+  useContactMessages,
+  useDeleteContactMessage,
+  useUpdateContactStatus,
+} from '../../../hooks';
 import { format } from 'date-fns';
 import { EnvelopeIcon, EnvelopeOpenIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
 
-export interface ContactMessage {
-  contact_id: number;
-  full_name: string;
-  email: string;
-  phone_number: string;
-  message: string;
-  status: 'unread' | 'read' | 'replied';
-  createdAt?: string;
-  created_at?: string;
-}
+export type { ContactMessage } from '../../../api';
 
 const ContactsPage = () => {
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [deleteMessageId, setDeleteMessageId] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchMessages = async (currentPage = 1) => {
+  const { data, isLoading, isError } = useContactMessages(page);
+  const statusMutation = useUpdateContactStatus();
+  const deleteMutation = useDeleteContactMessage();
+
+  const messages = data?.messages ?? [];
+  const totalPages = data?.totalPages ?? 1;
+
+  const updateStatus = async (id: number, newStatus: ContactStatus) => {
     try {
-      setLoading(true);
-      const res = await api.get(`/contact?page=${currentPage}&limit=10`);
-      setMessages(res.data.messages);
-      setTotalPages(res.data.totalPages);
-    } catch (err: any) {
-      toast.error('Failed to load messages');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMessages(page);
-  }, [page]);
-
-  const updateStatus = async (id: number, newStatus: 'unread' | 'read' | 'replied') => {
-    try {
-      await api.put(`/contact/${id}/status`, { status: newStatus });
+      await statusMutation.mutateAsync({ id, status: newStatus });
       toast.success(`Message marked as ${newStatus}`);
-      fetchMessages(page);
-    } catch (err: any) {
+    } catch {
       toast.error('Failed to update status');
     }
   };
 
-  const deleteMessage = async (id: number) => {
+  const deleteMessage = (id: number) => {
     setDeleteMessageId(id);
   };
 
   const confirmDeleteMessage = async () => {
     if (!deleteMessageId) return;
-    setIsDeleting(true);
     try {
-      await api.delete(`/contact/${deleteMessageId}`);
+      await deleteMutation.mutateAsync(deleteMessageId);
       toast.success('Message deleted');
-      fetchMessages(page);
-    } catch (err: any) {
+    } catch {
       toast.error('Failed to delete message');
     } finally {
-      setIsDeleting(false);
       setDeleteMessageId(null);
     }
   };
 
-  if (loading && messages.length === 0) return <Loader />;
+  if (isLoading) return <Loader />;
+  if (isError && !data) {
+    return <ErrorState title='Failed to load messages' description='Please try again later.' />;
+  }
 
   return (
     <div className='py-8'>
@@ -225,7 +206,7 @@ const ContactsPage = () => {
         title='Delete Message'
         message='Are you sure you want to delete this message? This action cannot be undone.'
         confirmText='Delete Message'
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );

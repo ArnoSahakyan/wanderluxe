@@ -1,7 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useBooking, useCancelBooking, useToast } from '../../hooks';
+import { useBooking, useCancelBooking } from '../../hooks';
 import { formatDate, getDuration } from '../../utils';
-import { useEffect } from 'react';
 import { ROUTES } from '../../shared';
 import {
   ArrowLeftIcon,
@@ -11,31 +10,19 @@ import {
   PhoneIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import { LoadingState, ErrorState } from '../../components';
+import { useState } from 'react';
+import { ConfirmModal, LoadingState, ErrorState } from '../../components';
 
 const BookingDetailsPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const id = parseInt(bookingId || '', 10);
 
   const navigate = useNavigate();
-  const { showSuccess, showError } = useToast();
 
   const { data: booking, isLoading, isError, error } = useBooking(id);
-  const {
-    mutate: cancelBooking,
-    isPending: cancelling,
-    isSuccess,
-    isError: cancelError,
-  } = useCancelBooking();
-
-  useEffect(() => {
-    if (isSuccess) {
-      showSuccess('Booking cancelled successfully.');
-      navigate(ROUTES.PROFILE_BOOKINGS);
-    } else if (cancelError) {
-      showError('Failed to cancel booking.');
-    }
-  }, [isSuccess, showSuccess, navigate, cancelError, showError]);
+  // The hook shows the success/error toasts; the page only navigates away on success.
+  const { mutate: cancelBooking, isPending: cancelling } = useCancelBooking();
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   if (isLoading) {
     return (
@@ -80,11 +67,24 @@ const BookingDetailsPage = () => {
   }
 
   const handleCancel = () => {
-    cancelBooking(booking.booking_id);
+    cancelBooking(booking.booking_id, {
+      onSuccess: () => navigate(ROUTES.PROFILE_BOOKINGS),
+      onSettled: () => setConfirmCancel(false),
+    });
   };
 
   return (
     <div className='min-h-screen bg-background-light dark:bg-background-dark'>
+      <ConfirmModal
+        isOpen={confirmCancel}
+        onClose={() => setConfirmCancel(false)}
+        onConfirm={handleCancel}
+        isLoading={cancelling}
+        title='Cancel this booking?'
+        message='Your seats will be released and this booking will be removed. This cannot be undone.'
+        confirmText='Cancel booking'
+        cancelText='Keep booking'
+      />
       {/* Back button and hero section remain the same */}
       <div className='mb-8'>
         <Link
@@ -187,7 +187,7 @@ const BookingDetailsPage = () => {
                       </p>
                     </div>
                     <button
-                      onClick={handleCancel}
+                      onClick={() => setConfirmCancel(true)}
                       disabled={cancelling}
                       className='px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2'
                     >

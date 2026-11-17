@@ -20,7 +20,8 @@ export default {
           dark: '#869BA9',
         },
         accent: {
-          light: '#E07A5F',
+          // darkened from #E07A5F so prices/badges meet WCAG AA (4.5:1) on white
+          light: '#C2553A',
           dark: '#E07A5F',
         },
         background: {
@@ -28,7 +29,8 @@ export default {
           dark: '#081521',
         },
         text: {
-          light: '#D4A96A',
+          // brand gold; darkened from #D4A96A (2.2:1) to meet WCAG AA (5.3:1) on white
+          light: '#8C6428',
           dark: '#DEB992',
         },
       },

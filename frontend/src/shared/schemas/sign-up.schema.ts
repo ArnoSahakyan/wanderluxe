@@ -4,8 +4,8 @@ export const signUpSchema = z
   .object({
     full_name: z
       .string({
-        required_error: 'Full name is required',
-        invalid_type_error: 'Full name must be a string',
+        error: (issue) =>
+          issue.input === undefined ? 'Full name is required' : 'Full name must be a string',
       })
       .trim()
       .min(2, 'Full name must be at least 2 characters')
@@ -16,8 +16,8 @@ export const signUpSchema = z
 
     email: z
       .string({
-        required_error: 'Email is required',
-        invalid_type_error: 'Email must be a string',
+        error: (issue) =>
+          issue.input === undefined ? 'Email is required' : 'Email must be a string',
       })
       .trim()
       .email('Invalid email address')
@@ -25,8 +25,8 @@ export const signUpSchema = z
 
     password: z
       .string({
-        required_error: 'Password is required',
-        invalid_type_error: 'Password must be a string',
+        error: (issue) =>
+          issue.input === undefined ? 'Password is required' : 'Password must be a string',
       })
       .trim()
       .min(8, 'Password must be at least 8 characters')
@@ -36,14 +36,10 @@ export const signUpSchema = z
       .regex(/[0-9]/, 'Password must include at least one number')
       .regex(/[^A-Za-z0-9]/, 'Password must include at least one special character'),
 
-    confirm_password: z
-      .string({
-        required_error: 'Please confirm your password',
-      })
-      .trim(),
+    confirm_password: z.string({ error: 'Please confirm your password' }).trim(),
 
     terms: z.literal(true, {
-      errorMap: () => ({ message: 'You must accept the terms and conditions' }),
+      error: 'You must accept the terms and conditions',
     }),
   })
   .strict()

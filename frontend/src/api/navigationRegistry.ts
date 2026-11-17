@@ -4,6 +4,6 @@
  */
 export let globalNavigate: ((path: string) => void) | null = null;
 
-export const setGlobalNavigate = (navigateFn: (path: string) => void) => {
+export const setGlobalNavigate = (navigateFn: ((path: string) => void) | null) => {
   globalNavigate = navigateFn;
 };

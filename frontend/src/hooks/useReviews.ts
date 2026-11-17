@@ -45,7 +45,7 @@ export const useUserReviews = (externalFilters?: Partial<IFetchFilters>) => {
   const filters = useMergedFilters(externalFilters, REVIEWS_LIMIT);
 
   return useQuery<IReviewResponse>({
-    queryKey: ['reviews', 'user', filters],
+    queryKey: [...reviewKeys.all, 'user', filters],
     queryFn: () => fetchUserReviews(filters),
     staleTime: 1000 * 60 * 5,
     placeholderData: (prev) => prev,
@@ -61,7 +61,9 @@ export const useCreateReview = (options?: { onSuccess?: () => void }) => {
   const mutation = useMutation({
     mutationFn: createReview,
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['reviews', variables.tour_id] });
+      // Every review list (tour, home page, "my reviews") plus the tour's hasReviewed flag.
+      queryClient.invalidateQueries({ queryKey: reviewKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['tour', variables.tour_id] });
       showSuccess('Review submitted successfully!');
       options?.onSuccess?.();
     },
@@ -91,8 +93,10 @@ export const useDeleteReview = () => {
 
   return useMutation({
     mutationFn: deleteReview,
-    onSuccess: (_data, _review_id, context: { tour_id: number }) => {
-      queryClient.invalidateQueries({ queryKey: reviewKeys.tour(context.tour_id) });
+    onSuccess: () => {
+      // Previously read an undefined mutation context and threw after a successful delete.
+      queryClient.invalidateQueries({ queryKey: reviewKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['tour'] });
     },
   });
 };

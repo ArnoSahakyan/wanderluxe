@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
-import { fetchAllReviews, deleteReview } from '../../../api';
-import { Loader, Pagination, ConfirmModal } from '../../../components';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAllReviews } from '../../../api';
+import { Loader, Pagination, ConfirmModal, ErrorState } from '../../../components';
+import { useDeleteReview } from '../../../hooks';
+import { reviewKeys } from '../../../queries/reviews.ts';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 import { StarIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -18,51 +21,50 @@ interface AdminReview {
   tour_name?: string;
 }
 
+interface AdminReviewsResponse {
+  total: number;
+  page: number;
+  totalPages: number;
+  reviews: AdminReview[];
+}
+
+const PAGE_SIZE = 10;
+
 const AdminReviewsPage = () => {
-  const [reviews, setReviews] = useState<AdminReview[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [deleteReviewId, setDeleteReviewId] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const loadReviews = async (currentPage = 1) => {
-    try {
-      setLoading(true);
-      const res = await fetchAllReviews({ page: currentPage, limit: 10 });
-      setReviews(res.reviews);
-      setTotalPages(res.totalPages);
-    } catch (err: any) {
-      toast.error('Failed to load reviews');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading, isError } = useQuery<AdminReviewsResponse>({
+    queryKey: [...reviewKeys.all, 'admin', { page, limit: PAGE_SIZE }],
+    queryFn: () => fetchAllReviews({ page, limit: PAGE_SIZE }),
+    placeholderData: (prev) => prev,
+  });
+  // Invalidates every review list (this one included) on success.
+  const deleteMutation = useDeleteReview();
 
-  useEffect(() => {
-    loadReviews(page);
-  }, [page]);
+  const reviews = data?.reviews ?? [];
+  const totalPages = data?.totalPages ?? 1;
 
-  const handleDeleteReview = async (id: number) => {
+  const handleDeleteReview = (id: number) => {
     setDeleteReviewId(id);
   };
 
   const confirmDeleteReview = async () => {
     if (!deleteReviewId) return;
-    setIsDeleting(true);
     try {
-      await deleteReview(deleteReviewId);
+      await deleteMutation.mutateAsync(deleteReviewId);
       toast.success('Review deleted successfully');
-      loadReviews(page);
-    } catch (err: any) {
+    } catch {
       toast.error('Failed to delete review');
     } finally {
-      setIsDeleting(false);
       setDeleteReviewId(null);
     }
   };
 
-  if (loading && reviews.length === 0) return <Loader />;
+  if (isLoading) return <Loader />;
+  if (isError && !data) {
+    return <ErrorState title='Failed to load reviews' description='Please try again later.' />;
+  }
 
   return (
     <div className='py-8'>
@@ -184,7 +186,7 @@ const AdminReviewsPage = () => {
         title='Delete Review'
         message='Are you absolutely sure you want to delete this review? This action cannot be undone.'
         confirmText='Delete Review'
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );

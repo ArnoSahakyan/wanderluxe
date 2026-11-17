@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getUserStats, UserStats } from '../../api';
-import { Loader } from '../../components';
+import { ErrorState, Loader } from '../../components';
+import { useProfileStats } from '../../hooks';
 import {
   TicketIcon,
   StarIcon,
@@ -13,25 +12,23 @@ import { ROUTES } from '../../shared';
 import { useAuthStore } from '../../store';
 
 const ProfileHomePage = () => {
-  const [data, setData] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, isError, refetch } = useProfileStats();
   const { user } = useAuthStore();
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const statsData = await getUserStats();
-        setData(statsData);
-      } catch (error) {
-        console.error('Failed to fetch profile stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
-
-  if (loading) return <Loader />;
+  if (isLoading) return <Loader />;
+  if (isError && !data) {
+    return (
+      <ErrorState
+        title='Could not load your dashboard'
+        description='Your travel statistics are temporarily unavailable.'
+        action={
+          <button type='button' onClick={() => refetch()} className='form-button'>
+            Try again
+          </button>
+        }
+      />
+    );
+  }
 
   const stats = data?.stats;
   const recentBookings = data?.recentBookings || [];
@@ -124,7 +121,7 @@ const ProfileHomePage = () => {
                 </p>
               ) : (
                 <ul className='divide-y divide-gray-100 dark:divide-gray-700'>
-                  {recentBookings.map((booking: any) => (
+                  {recentBookings.map((booking) => (
                     <li key={booking.booking_id} className='py-4 first:pt-0 last:pb-0'>
                       <div className='flex items-center justify-between'>
                         <div className='flex items-center gap-4'>

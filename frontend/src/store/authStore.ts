@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthState } from '../shared';
+import { queryClient } from '../lib/queryClient';
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -16,13 +17,17 @@ export const useAuthStore = create<AuthState>()(
           refreshToken,
           isAuthenticated: true,
         }),
-      logout: () =>
+      setAccessToken: (token) => set({ accessToken: token }),
+      logout: () => {
         set({
           user: null,
           accessToken: null,
           refreshToken: null,
           isAuthenticated: false,
-        }),
+        });
+        // Drop the previous user's bookings, favourites, etc. from memory.
+        queryClient.clear();
+      },
     }),
     {
       name: 'auth-storage',

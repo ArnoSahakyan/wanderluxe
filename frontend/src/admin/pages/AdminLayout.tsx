@@ -36,7 +36,7 @@ const adminNavigation = [
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
-  useRehydrateAuth(true);
+  useRehydrateAuth(); // re-validates the role with the server whenever the admin area mounts
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,8 +81,13 @@ const AdminLayout = () => {
         >
           Admin Panel
         </Link>
-        <button onClick={() => setSidebarOpen(true)} className='-m-2.5 p-2.5'>
-          <Bars3Icon className='size-6 text-white' />
+        <button
+          type='button'
+          onClick={() => setSidebarOpen(true)}
+          className='-m-2.5 p-2.5'
+          aria-label='Open navigation menu'
+        >
+          <Bars3Icon className='size-6 text-white' aria-hidden='true' />
         </button>
       </div>
 

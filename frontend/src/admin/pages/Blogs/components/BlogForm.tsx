@@ -1,7 +1,13 @@
 import { ChangeEvent, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCreateBlog, useUpdateBlog, useBlog, useDeleteBlog } from '../../../../hooks';
+import {
+  useCreateBlog,
+  useUpdateBlog,
+  useBlog,
+  useDeleteBlog,
+  useRevokeOnChange,
+} from '../../../../hooks';
 import {
   CreateBlogFormData,
   UpdateBlogFormData,
@@ -12,7 +18,7 @@ import {
 } from '../../../../shared';
 import { CameraIcon, ChevronLeftIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import NotFoundPage from '../../../../pages/NotFound/NotFoundPage';
-import { LoadingState } from '../../../../components';
+import { ConfirmModal, LoadingState } from '../../../../components';
 import MdEditor from 'react-markdown-editor-lite';
 import ReactMarkdown from 'react-markdown';
 import 'react-markdown-editor-lite/lib/index.css';
@@ -29,6 +35,8 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
   const { data: blogData, isPending } = useBlog(blogSlug || '', true);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  useRevokeOnChange(imagePreview);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const { register, handleSubmit, formState, reset, setValue, watch } = useForm<BlogPayload>({
     resolver: zodResolver(blogSlug ? updateBlogSchema : createBlogSchema),
@@ -102,6 +110,17 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
       onSubmit={handleSubmit(onSubmit)}
       className='space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm'
     >
+      <ConfirmModal
+        isOpen={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          setConfirmDelete(false);
+          if (blogData?.post_id) deleteMutation.mutate(blogData.post_id);
+        }}
+        title='Delete blog post'
+        message='This permanently deletes the post and its cover image. This cannot be undone.'
+        confirmText='Delete'
+      />
       <div className='flex flex-col sm:flex-row items-center sm:items-center sm:justify-between gap-4 sm:gap-0 border-b border-gray-200 dark:border-gray-700 pb-4'>
         <div className='w-full sm:w-auto flex justify-start'>
           <Link
@@ -123,7 +142,8 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
           {blogSlug && (
             <button
               type='button'
-              onClick={() => deleteMutation.mutate(blogData?.post_id || 0)}
+              onClick={() => setConfirmDelete(true)}
+              disabled={!blogData?.post_id}
               className='flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors'
             >
               <TrashIcon className='w-4 h-4' />
@@ -139,7 +159,12 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
           <label htmlFor='title' className='form-label mb-2'>
             Blog Title
           </label>
-          <input {...register('title')} className='form-input' placeholder='Enter blog title' />
+          <input
+            id='title'
+            {...register('title')}
+            className='form-input'
+            placeholder='Enter blog title'
+          />
           {errors.title && <p className='form-error'>{errors.title.message}</p>}
         </div>
 
@@ -149,6 +174,7 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
             Excerpt
           </label>
           <textarea
+            id='excerpt'
             {...register('excerpt')}
             className='form-input min-h-[100px]'
             placeholder='Short summary of your blog...'
@@ -159,9 +185,9 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
 
         {/* Content */}
         <div>
-          <label htmlFor='content' className='form-label mb-2'>
+          <span id='content-label' className='form-label mb-2'>
             Content
-          </label>
+          </span>
 
           <MdEditor
             value={watch('content') || ''}
@@ -178,7 +204,12 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
           <label htmlFor='slug' className='form-label mb-2'>
             Slug (optional)
           </label>
-          <input {...register('slug')} className='form-input' placeholder='blog-title-slug' />
+          <input
+            id='slug'
+            {...register('slug')}
+            className='form-input'
+            placeholder='blog-title-slug'
+          />
           {errors.slug && <p className='form-error'>{errors.slug.message}</p>}
         </div>
 
@@ -192,7 +223,7 @@ export const BlogForm = ({ blogSlug }: BlogFormProps) => {
 
         {/* Image upload */}
         <div>
-          <label className='form-label mb-2'>Cover Image</label>
+          <span className='form-label mb-2'>Cover Image</span>
           <div className='flex flex-col gap-4'>
             <div className='flex-1'>
               <div className='relative'>

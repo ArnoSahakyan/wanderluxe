@@ -15,3 +15,4 @@ export * from './States';
 export * from './ThemeToggle';
 export * from './TourCard';
 export * from './UnprotectedRoute';
+export * from './SmartImage/SmartImage';

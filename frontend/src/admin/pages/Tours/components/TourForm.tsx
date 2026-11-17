@@ -17,6 +17,7 @@ import {
   useDeleteTourImage,
   useSetTourCoverImage,
   useAddTourImage,
+  useObjectUrl,
 } from '../../../../hooks';
 import { useCategories, useDestinations } from '../../../../hooks';
 import {
@@ -36,6 +37,12 @@ interface TourFormProps {
 }
 
 type TourFormData = CreateTourFormData | UpdateTourFormData;
+
+/** Local preview for a not-yet-uploaded file; the blob URL is revoked on unmount. */
+const FilePreview = ({ file, className }: { file: File; className?: string }) => {
+  const url = useObjectUrl(file);
+  return url ? <img src={url} alt={`Preview of ${file.name}`} className={className} /> : null;
+};
 
 export const TourForm = ({ tourId }: TourFormProps) => {
   const createMutation = useCreateTour();
@@ -322,29 +329,36 @@ export const TourForm = ({ tourId }: TourFormProps) => {
               <div key={img.image_id} className='relative group'>
                 <img
                   src={img.image_url}
-                  alt=''
+                  alt={img.is_cover ? 'Tour cover image' : 'Tour image'}
                   className='h-56 lg:h-72 w-full object-cover rounded-lg border border-gray-200 dark:border-gray-700'
                 />
                 {/* Remove button */}
                 <button
                   type='button'
                   onClick={() => handleRemoveImage(img.image_id)}
+                  aria-label='Delete this image'
                   className='absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors'
                 >
-                  <XMarkIcon className='w-4 h-4' />
+                  <XMarkIcon className='w-4 h-4' aria-hidden='true' />
                 </button>
                 {/* Cover button */}
                 {img.is_cover ? (
-                  <div className='absolute top-2 left-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-yellow-500'>
-                    <StarSolid className='w-4 h-4' />
+                  <div
+                    className='absolute top-2 left-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-yellow-500'
+                    title='Cover image'
+                  >
+                    <StarSolid className='w-4 h-4' aria-hidden='true' />
+                    <span className='sr-only'>Cover image</span>
                   </div>
                 ) : (
                   <button
                     type='button'
                     onClick={() => handleSetCover(img.image_id)}
-                    className='absolute top-2 left-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity'
+                    aria-label='Set as cover image'
+                    title='Set as cover image'
+                    className='absolute top-2 left-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-yellow-500 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'
                   >
-                    <StarOutline className='w-4 h-4' />
+                    <StarOutline className='w-4 h-4' aria-hidden='true' />
                   </button>
                 )}
               </div>
@@ -374,18 +388,18 @@ export const TourForm = ({ tourId }: TourFormProps) => {
             {/* New image previews */}
             {newImages.map((file, index) => (
               <div key={index} className='relative group'>
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt='Preview'
+                <FilePreview
+                  file={file}
                   className='h-56 lg:h-72 w-full object-cover rounded-lg border border-gray-200 dark:border-gray-700'
                 />
                 {/* Remove button */}
                 <button
                   type='button'
                   onClick={() => handleRemoveNewImage(index)}
+                  aria-label={`Remove ${file.name}`}
                   className='absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-sm text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors'
                 >
-                  <XMarkIcon className='w-4 h-4' />
+                  <XMarkIcon className='w-4 h-4' aria-hidden='true' />
                 </button>
               </div>
             ))}

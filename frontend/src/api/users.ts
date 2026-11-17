@@ -54,6 +54,17 @@ export const updateUserAdmin = async (
   return response.data.user;
 };
 
+/** Booking row as returned inside GET /account/stats (raw Sequelize booking + tour name). */
+export interface UserRecentBooking {
+  booking_id: number;
+  booking_date: string;
+  number_of_people: number;
+  total_price: string;
+  status: string;
+  created_at: string;
+  Tour?: { tour_id: number; name: string } | null;
+}
+
 export interface UserStats {
   stats: {
     totalBookings: number;
@@ -61,7 +72,7 @@ export interface UserStats {
     totalFavorites: number;
     rank: string;
   };
-  recentBookings: any[];
+  recentBookings: UserRecentBooking[];
 }
 
 export const getUserStats = async (): Promise<UserStats> => {

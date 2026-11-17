@@ -18,13 +18,12 @@ const TourDetailsPage = () => {
 
   const { data: tour, isLoading, isError, error } = useTour(id);
   const { handleCreateBooking, isPending: bookingLoading } = useCreateBooking();
-  const { data: reviewsData, isLoading: reviewsLoading } = useReview(id, { limit: 3 });
+  const { data: reviewsData, isLoading: reviewsLoading } = useReview(id, { limit: 3, page: 1 });
   const { showError } = useToast();
 
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperClass | null>(null);
   const [guestCount, setGuestCount] = useState(1);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [reviewsUpdated, setReviewsUpdated] = useState(false);
 
   const {
     inFavorites,
@@ -32,6 +31,10 @@ const TourDetailsPage = () => {
     handleAddToFavorites,
     handleRemoveFromFavorites,
   } = useFavorite(id);
+
+  const hasStarted = tour ? new Date(tour.start_date).getTime() <= Date.now() : false;
+  const isSoldOut = tour ? tour.available_spots < 1 : false;
+  const canBook = !hasStarted && !isSoldOut;
 
   const handleBooking = () => {
     if (guestCount < 1) {
@@ -217,6 +220,17 @@ const TourDetailsPage = () => {
                   </p>
                 </div>
 
+                {!canBook && (
+                  <p
+                    role='status'
+                    className='mt-6 rounded-md bg-gray-100 dark:bg-gray-700/60 px-4 py-3 text-sm text-secondary-light dark:text-secondary-dark'
+                  >
+                    {hasStarted
+                      ? 'This tour has already departed and is no longer available for booking.'
+                      : 'This tour is fully booked.'}
+                  </p>
+                )}
+
                 <div className='mt-6 flex flex-col sm:flex-row gap-4'>
                   <div className='flex items-center gap-2'>
                     <label htmlFor='guests' className='form-label'>
@@ -228,16 +242,20 @@ const TourDetailsPage = () => {
                       min={1}
                       max={tour.available_spots}
                       value={guestCount}
-                      onChange={(e) => setGuestCount(Number(e.target.value))}
+                      disabled={!canBook}
+                      onChange={(e) =>
+                        setGuestCount(Math.max(1, Math.floor(Number(e.target.value) || 1)))
+                      }
                       className='form-input w-20'
                     />
                   </div>
                   <button
                     onClick={handleBooking}
-                    disabled={bookingLoading || guestCount < 1}
+                    type='button'
+                    disabled={bookingLoading || guestCount < 1 || !canBook}
                     className='form-button flex-1'
                   >
-                    {bookingLoading ? 'Booking...' : 'Book Now'}
+                    {bookingLoading ? 'Booking...' : canBook ? 'Book Now' : 'Unavailable'}
                   </button>
                 </div>
               </div>
@@ -305,12 +323,7 @@ const TourDetailsPage = () => {
             </div>
 
             {/* Review Form Section */}
-            {!tour?.hasReviewed && (
-              <ReviewForm
-                tourId={id}
-                onReviewSubmitted={() => setReviewsUpdated(!reviewsUpdated)}
-              />
-            )}
+            {!tour?.hasReviewed && <ReviewForm tourId={id} />}
           </div>
         </div>
       </div>

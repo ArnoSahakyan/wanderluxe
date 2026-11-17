@@ -1,12 +1,7 @@
-import { useState, useEffect } from 'react';
-import {
-  getAdminUsers,
-  deleteAdminUser,
-  updateUserAdmin,
-  AdminUser,
-  UpdateUserAdminPayload,
-} from '../../../api';
-import { Loader, Pagination, ConfirmModal } from '../../../components';
+import { useState } from 'react';
+import { AdminUser, UpdateUserAdminPayload } from '../../../api';
+import { Loader, Pagination, ConfirmModal, ErrorState } from '../../../components';
+import { useAdminUsers, useDeleteAdminUser, useUpdateAdminUser } from '../../../hooks';
 import { UserEditModal } from './components/UserEditModal';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
@@ -15,34 +10,20 @@ import { ShieldCheckIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outl
 const ROLE_ADMIN = 1;
 
 const UsersPage = () => {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   // Modal states
   const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [editUser, setEditUser] = useState<AdminUser | null>(null);
 
-  const fetchUsers = async (currentPage = 1) => {
-    try {
-      setLoading(true);
-      const res = await getAdminUsers(currentPage, 10);
-      setUsers(res.users);
-      setTotalPages(res.totalPages);
-    } catch (err: any) {
-      toast.error('Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading, isError } = useAdminUsers(page);
+  const deleteMutation = useDeleteAdminUser();
+  const updateMutation = useUpdateAdminUser();
 
-  useEffect(() => {
-    fetchUsers(page);
-  }, [page]);
+  const users = data?.users ?? [];
+  const totalPages = data?.totalPages ?? 1;
 
-  const handleRoleChange = async (userId: number) => {
+  const handleRoleChange = (userId: number) => {
     const userToEdit = users.find((u) => u.user_id === userId);
     if (userToEdit) setEditUser(userToEdit);
   };
@@ -53,32 +34,32 @@ const UsersPage = () => {
 
   const confirmDelete = async () => {
     if (!deleteUserId) return;
-    setIsDeleting(true);
     try {
-      await deleteAdminUser(deleteUserId);
+      await deleteMutation.mutateAsync(deleteUserId);
       toast.success('User deleted successfully');
-      fetchUsers(page);
-    } catch (err: any) {
+    } catch {
       toast.error('Failed to delete user');
     } finally {
-      setIsDeleting(false);
       setDeleteUserId(null);
     }
   };
 
+  // UserEditModal awaits this and keeps itself open when it rejects.
   const handleSaveUser = async (userId: number, payload: UpdateUserAdminPayload) => {
     try {
-      const updatedUser = await updateUserAdmin(userId, payload);
-      setUsers(users.map((u) => (u.user_id === userId ? updatedUser : u)));
+      await updateMutation.mutateAsync({ userId, payload });
       setEditUser(null);
       toast.success('User updated successfully');
-    } catch (err: any) {
+    } catch (err) {
       toast.error('Failed to update user');
       throw err;
     }
   };
 
-  if (loading && users.length === 0) return <Loader />;
+  if (isLoading) return <Loader />;
+  if (isError && !data) {
+    return <ErrorState title='Failed to load users' description='Please try again later.' />;
+  }
 
   return (
     <div className='py-8'>
@@ -212,7 +193,7 @@ const UsersPage = () => {
         title='Delete User'
         message='Are you absolutely sure you want to delete this user? All their bookings, reviews, and favorites will be permanently removed. This action cannot be undone.'
         confirmText='Delete User'
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
       />
 
       <UserEditModal

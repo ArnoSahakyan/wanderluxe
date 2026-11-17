@@ -6,6 +6,7 @@ import {
   useUpdateDestination,
   useDestination,
   useDeleteDestination,
+  useRevokeOnChange,
 } from '../../../../hooks';
 import {
   CreateDestinationFormData,
@@ -31,6 +32,7 @@ export const DestinationForm = ({ destinationId }: DestinationFormProps) => {
   const { data: destinationData, isPending } = useDestination(destinationId || 0);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  useRevokeOnChange(imagePreview);
 
   const { register, handleSubmit, formState, reset, setValue } = useForm<DestinationPayload>({
     resolver: zodResolver(destinationId ? updateDestinationSchema : createDestinationSchema),
