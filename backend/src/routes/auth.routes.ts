@@ -1,5 +1,7 @@
 import express from 'express';
 import {
+    demoSignIn,
+    demoStatus,
     logout,
     refreshToken,
     userInfo,
@@ -22,6 +24,8 @@ router.post('/signin', authLimiter, validate({ body: v.signInBody }), asHandler(
 // Session cookie (httpOnly, path /api/auth) — no body.
 router.post('/refresh', asHandler(refreshToken));
 router.post('/logout', asHandler(logout));
+router.get('/demo', demoStatus);
+router.post('/demo', authLimiter, validate({ body: v.demoBody }), asHandler(demoSignIn));
 router.post('/request-password-reset', authLimiter, validate({ body: v.emailBody }), asHandler(requestPasswordReset));
 router.post(
     '/reset-password',

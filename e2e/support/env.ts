@@ -45,6 +45,10 @@ export const apiEnv: Record<string, string> = {
     CORS_ORIGIN: WEB_URL,
     // Many sign-ins from one IP in a few seconds.
     RATE_LIMIT_ENABLED: 'false',
+    // "Try as customer / admin" on the sign-in page (accounts made by create-demo-users.ts).
+    DEMO_MODE: 'true',
+    DEMO_CUSTOMER_EMAIL: 'demo-customer@example.com',
+    DEMO_ADMIN_EMAIL: 'demo-admin@example.com',
     BCRYPT_ROUNDS: '10',
     // E-mail goes to Mailpit from docker compose.
     SMTP_HOST: 'localhost',

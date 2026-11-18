@@ -61,7 +61,7 @@ export interface UserRecentBooking {
   number_of_people: number;
   total_price: string;
   status: string;
-  created_at: string;
+  createdAt: string;
   Tour?: { tour_id: number; name: string } | null;
 }
 

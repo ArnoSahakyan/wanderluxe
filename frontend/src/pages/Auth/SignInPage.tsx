@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../shared';
 import { SignInFormData, signInSchema } from '../../shared';
 import { useSignIn, useToast } from '../../hooks';
-import { AxiosError } from 'axios';
+import { formatAxiosError } from '../../utils';
+import { DemoAccess } from './components';
 
 const SignInPage = () => {
   const navigate = useNavigate();
@@ -26,18 +27,19 @@ const SignInPage = () => {
         navigate(ROUTES.HOME);
       },
       onError: (error: Error) => {
-        const message = error instanceof AxiosError ? error.response?.data?.message : error.message;
-        showError(message);
+        // A network error has no response body: fall back to a readable message.
+        showError(formatAxiosError(error) || 'Sign-in failed. Please try again.');
       },
     });
   };
 
   return (
     <div className='max-w-md space-y-8 rounded-xl bg-white dark:bg-gray-800/50 p-8 shadow-lg'>
+      <title>Sign in | WanderLuxe</title>
       <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
-        <h2 className='text-center text-3xl font-semibold tracking-tight text-primary-light dark:text-text-dark'>
+        <h1 className='text-center text-3xl font-semibold tracking-tight text-primary-light dark:text-text-dark'>
           Welcome back
-        </h2>
+        </h1>
         <p className='mt-2 text-center text-sm text-secondary-light dark:text-secondary-dark'>
           Sign in to access your WanderLuxe account
         </p>
@@ -93,6 +95,8 @@ const SignInPage = () => {
             </button>
           </div>
         </form>
+
+        <DemoAccess />
 
         <p className='mt-8 text-center text-sm text-secondary-light dark:text-secondary-dark'>
           Don't have an account?{' '}

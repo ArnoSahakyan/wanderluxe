@@ -1,5 +1,12 @@
-import { useMutation } from '@tanstack/react-query';
-import { requestPasswordReset, resetPassword, signIn, signUp } from '../api';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  demoSignIn,
+  getDemoStatus,
+  requestPasswordReset,
+  resetPassword,
+  signIn,
+  signUp,
+} from '../api';
 import { useAuthStore } from '../store';
 import { useToast } from './useToast.ts';
 import { ForgotPasswordFormData, ROUTES } from '../shared';
@@ -16,6 +23,25 @@ export const useSignIn = () => {
       // short-lived access token is handed to the app (kept in memory).
       login({ user: data.user, token: data.token });
     },
+  });
+};
+
+/** Whether the API offers the demo accounts (DEMO_MODE). Hidden on any error. */
+export const useDemoStatus = () =>
+  useQuery({
+    queryKey: ['auth', 'demo'],
+    queryFn: getDemoStatus,
+    staleTime: Infinity,
+    retry: false,
+    select: (data) => data.enabled,
+  });
+
+export const useDemoSignIn = () => {
+  const login = useAuthStore((state) => state.login);
+
+  return useMutation({
+    mutationFn: demoSignIn,
+    onSuccess: (data) => login({ user: data.user, token: data.token }),
   });
 };
 

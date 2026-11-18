@@ -27,6 +27,7 @@ const ToursPage = () => {
 
   return (
     <section className='py-12 bg-background-light dark:bg-background-dark'>
+      <title>Tours | WanderLuxe</title>
       <div className='container mx-auto px-4 lg:px-8'>
         <div className='mx-auto max-w-2xl text-center mb-12'>
           <h1 className='text-4xl font-bold tracking-tight text-primary-light dark:text-text-dark sm:text-5xl'>
@@ -57,9 +58,11 @@ const ToursPage = () => {
         ) : (
           <>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8'>
-              {data?.tours?.map((tour) => (
+              {data?.tours?.map((tour, index) => (
                 <TourCard
                   key={tour.tour_id}
+                  headingLevel='h2'
+                  priority={index === 0}
                   id={tour.tour_id}
                   title={tour.name}
                   description={tour.description}

@@ -65,7 +65,7 @@ const MyReviewsPage = () => {
                     {review.tour_name}
                   </h3>
                   <p className='text-xs text-secondary-light dark:text-secondary-dark'>
-                    Reviewed on {format(new Date(review.created_at), 'MMMM dd, yyyy')}
+                    Reviewed on {format(new Date(review.createdAt), 'MMMM dd, yyyy')}
                   </p>
                 </div>
                 <div className='flex items-center gap-1'>

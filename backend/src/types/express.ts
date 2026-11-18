@@ -18,4 +18,6 @@ export interface AuthenticatedRequest<
 > extends Request<Params, ResBody, ReqBody, ReqQuery> {
     user_id?: number;
     user_role?: 'customer' | 'admin';
+    /** Signed in with a demo account (lib/demo.ts). */
+    is_demo?: boolean;
 }

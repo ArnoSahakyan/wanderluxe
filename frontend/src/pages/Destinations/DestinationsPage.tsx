@@ -26,6 +26,7 @@ const DestinationsPage = () => {
 
   return (
     <div className='bg-background-light dark:bg-background-dark py-12'>
+      <title>Destinations | WanderLuxe</title>
       <div className='container mx-auto px-4 lg:px-8'>
         {/* Page Header */}
         <div className='mx-auto max-w-2xl text-center mb-12'>
@@ -59,8 +60,13 @@ const DestinationsPage = () => {
           <>
             {/* Destination Cards Grid */}
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
-              {data?.destinations?.map((destination) => (
-                <DestinationCard key={destination.destination_id} {...destination} />
+              {data?.destinations?.map((destination, index) => (
+                <DestinationCard
+                  key={destination.destination_id}
+                  {...destination}
+                  headingLevel='h2'
+                  priority={index === 0}
+                />
               ))}
             </div>
 

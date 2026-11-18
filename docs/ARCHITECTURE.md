@@ -44,6 +44,7 @@ helmet → cors (allow-list) → json/urlencoded (size-limited) → request log
 | Same origin | The browser only talks to its own origin: `/api` is proxied by Vite in development and forwarded to Render by the rewrite in `frontend/vercel.json` in production. That keeps the cookie first-party, so `SameSite=Strict` blocks cross-site use (CSRF) and no CORS is involved. |
 | Password reset | 256-bit random token e-mailed to the user. Only its SHA-256 is stored. Valid 1 h, single use. Same response whether or not the e-mail exists. |
 | Authorization | `isAdmin` for admin routes. Resource ownership is checked in controllers (bookings, reviews, favourites) against `req.user_id` from the token. |
+| Demo accounts | `POST /auth/demo { role }` (only while `DEMO_MODE=true`) signs in as `DEMO_CUSTOMER_EMAIL` or `DEMO_ADMIN_EMAIL`, created by `npm run db:demo-users` with unusable random passwords. Their access tokens carry `demo: true`, and `verifyToken` enforces the limits (`src/lib/demo.ts`). The demo admin can make no writes, and its JSON responses have other people's names, e-mails, phones and contact messages masked. The demo customer may only write bookings, favourites and reviews, and those are removed 24 h later on the next demo sign-in. |
 | SPA | The access token is kept in memory only; `localStorage` holds just the profile and a signed-in flag for the first paint. After a reload the first API call (or `useRehydrateAuth`) exchanges the cookie for a new access token. The axios interceptor refreshes once on 401: a single in-flight refresh, sent through a client without the interceptor. A rejected session signs the user out and clears the query cache; a network error does not. Sign-out calls `/auth/logout` first. Route guards are UX only; the API enforces everything. |
 
 ## Frontend structure
@@ -58,6 +59,7 @@ helmet → cors (allow-list) → json/urlencoded (size-limited) → request log
 | `pages/`, `admin/` | screens; `components/` shared UI (cards, modals, states, pagination, `SmartImage`) |
 | `shared/` | types, zod schemas (mirroring the API rules), constants |
 | `lib/queryClient.ts` | shared client: no retries on 4xx, no refetch on focus |
+| `pages/Error/` | `RouteErrorPage` (the router's `errorElement`: crash screen, 404, and a one-time reload when a lazy chunk vanished after a deploy) and `AppErrorBoundary` around the whole app |
 
 Styling is Tailwind CSS 4, configured in CSS (there is no `tailwind.config.ts`), loaded through the `@tailwindcss/vite` plugin:
 - Design tokens live in the `@theme` block of `src/index.css`. Colours are `primary`, `secondary`, `accent`, `background` and `text`, each in a light and dark shade (`bg-primary-light`, `dark:bg-primary-dark`, …).

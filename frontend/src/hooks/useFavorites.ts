@@ -28,7 +28,8 @@ export const useFavorite = (tourId: number): UseFavoritesResult => {
   } = useQuery<boolean, Error>({
     queryKey: favoritesKeys.status(tourId),
     queryFn: () => fetchFavoriteStatus(tourId),
-    enabled: !!tourId,
+    // Guests have no favourites: don't send a request that can only fail.
+    enabled: !!tourId && isAuthenticated,
   });
 
   const { mutate: add } = useMutation({

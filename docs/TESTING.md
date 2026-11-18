@@ -6,7 +6,7 @@ npm test         # both workspaces
 npm run check    # lint + typecheck + tests + production builds
 ```
 
-## Backend — `backend/tests` (Vitest + Supertest, 45 tests)
+## Backend — `backend/tests` (Vitest + Supertest, 52 tests)
 
 - **Real database, hermetic.** `tests/globalSetup.ts` connects as the owner role and:
   1. drops the `wanderluxe_test` schema;
@@ -24,19 +24,27 @@ npm run check    # lint + typecheck + tests + production builds
 | `auth.test.ts` | sign-up validation and case-insensitive duplicates; sign-in without data leaks or enumeration, refresh token only in an `HttpOnly; SameSite=Strict; Path=/api/auth` cookie, stored hashed; `/me`; sessions: rotation on refresh, missing/garbage/access-token cookies, two tabs refreshing at once, reuse of a rotated token revoking the session, logout ending only that session, password change keeping this device and signing out others, deleted accounts; full password-reset flow including token hashing, single use and signing out every session |
 | `account.test.ts` | profile update never returns the hash; e-mail conflicts; change password; admin-only routes (401/403/200); page-size cap; admin self-delete/self-demote guards |
 | `bookings.test.ts` | price and seat maths; **concurrent overselling**; validation; departed tours; owner/admin/stranger access; cancellation rules (3-day rule vs admin); admin list and confirm |
+| `demo.test.ts` | demo accounts: off unless `DEMO_MODE`; unknown role 400, missing account 503; the demo customer signs in without a password, may book and favourite, can't edit the account or password (403 with a clear message); refreshed tokens stay demo tokens; the demo admin is read-only and gets other users' e-mails and names masked; bookings older than 24 h are removed and seats released on the next demo sign-in; `maskPersonalData` masks contact messages but not status messages |
 | `content.test.ts` | catalogue pagination and image URLs; id/limit validation; literal `%` search; JSON 404; security headers; real vs fake image uploads; cover-image ownership; date order; reviews (range, duplicate, owner delete); favourites; contact e-mail HTML escaping; admin stats; newsletter double-confirm |
 
 Run one file: `npx vitest run tests/bookings.test.ts` (inside `backend/`).
 
-## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 21 tests)
+## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 66 tests)
 
 | File | Covers |
 |---|---|
 | `schemas.test.ts` | sign-up password policy (mirrors the API), confirm/terms, "required" messages, review rating, URL page parsing |
 | `axios.test.ts` | concurrent 401s trigger **one** cookie refresh (no token in the body) and are retried; after a reload the token is fetched before the first request; a rejected session signs out without looping, a network error does not; no token ever reaches `localStorage`; `signOut` calls `/auth/logout` and signs out locally even offline |
 | `components.test.tsx` | Pagination accessibility and edge states; `SmartImage` fallback; `StarRating` radio-group semantics |
+| `forms.test.tsx` | sign-in and sign-up (validation, payloads, server and network errors), contact form, ReviewForm (stars, text, links rejected, signed-out redirect), PasswordChangeForm (cancel, mismatch, payload, keeps the input when the server rejects it) |
+| `booking.test.tsx` | tour page booking box: total follows the guest count, more guests than seats, payload, API errors, signed-out redirect, departed and sold-out tours, tour not found |
+| `admin.test.tsx` | `AdminRoute` / `ProtectedRoute` / `UnprotectedRoute` for visitor, customer and admin; admin Users page (rows, empty, error, delete only after confirming); admin Bookings page (actions per status, confirm, failed cancel) |
+| `profile.test.tsx` | dashboard "Booked on" and My Reviews dates, using the API's real field names (`booking_date`, `createdAt`) |
+| `errors.test.tsx` | a crashing page shows the recovery screen; unknown URLs show the 404 page; stale-chunk errors after a deploy are recognised; `AppErrorBoundary` catches errors outside the router |
 
-## End-to-end — `e2e/` (Playwright, 6 tests)
+`utils.tsx` holds the shared helpers: `mockApi` (answers every axios request and records it), `renderWithProviders` (fresh QueryClient, memory router, toasts) and `signInAs`.
+
+## End-to-end — `e2e/` (Playwright, 18 tests)
 
 The real app in a real browser (Chromium): the Vite dev server, the API and the local docker PostgreSQL + Mailpit. **Local stack only.** Nothing in `e2e/` knows a production URL.
 
@@ -75,6 +83,8 @@ Each test creates the users and tours it needs through the API (`e2e/support/api
 | `booking.spec.ts` | book 3 seats on a future tour (seats 8 → 5) → listed in My Bookings → details → confirm dialog ("Keep booking" first, then "Cancel booking") → My Bookings is empty, seats back to 8 in the UI and the API |
 | `departed-tour.spec.ts` | a tour that started 10 days ago shows a disabled "Unavailable" button, a disabled guest field and the "already departed" status |
 | `admin.spec.ts` | admin signs in → user menu → Admin Panel; every dashboard metric shows a number → edits a tour's start/end dates → API returns the new dates, public page shows the new duration |
+| `demo.spec.ts` | *Try as customer* → profile with the demo banner → saving Account Info is refused with the demo message; *Try as admin* → admin dashboard, read-only banner, customer e-mails masked on the Users page |
+| `quality.spec.ts` | for nine public pages and a tour page: the page title, a meta description, exactly one `h1`, headings that never skip a level, and no axe-core violations at WCAG 2.1 A/AA. Keeps the Lighthouse accessibility/SEO scores from slipping without depending on network speed |
 | `password-reset.spec.ts` | "Forgot password?" → e-mail read from Mailpit's API (`/api/v1/messages`) → link opens the e2e frontend → new password → sign-in works; the old password and a second use of the link are rejected |
 
 ### Settings
@@ -102,7 +112,25 @@ Mailpit is shared with `npm run dev`. The tests only read messages sent to their
 
 CI needs no repository secrets. The Vercel API-URL guard in `frontend/vite.config.ts` only applies when `VERCEL` is set, so it does not run in CI. If CI fails but `npm run check` passes locally, check whether a migration or test relies on data that exists only in your local database.
 
-The Playwright suite (`npm run test:e2e`) is not part of `npm run check` and does not run in CI yet; run it locally before merging changes to the booking, auth or admin flows.
+A second job, **End-to-end (Playwright)**, runs the browser suite on the same stack as locally:
+1. `npm run setup` writes `.env` files with random local passwords.
+2. `npm run db:up` starts docker compose (PostgreSQL + Mailpit).
+3. Playwright installs Chromium.
+4. `npm run test:e2e` runs the suite. On failure the HTML report and traces are uploaded as the `playwright-report` artifact (kept 7 days).
+
+Render deploys only once both jobs pass.
+
+### Lighthouse
+
+Performance is measured by hand, because it depends on the network and on the image host. To run it:
+- build: `npm run build -w frontend`;
+- serve: `npx vite preview` in `frontend/`, with the API running;
+- audit: `npx lighthouse@13 http://localhost:4173/tours`.
+
+Results on 2026-11-18, mobile profile:
+- accessibility, best practices and SEO are 100 on every main page;
+- the home page's largest paint halved after the hero image was resized;
+- the tours and destinations pages are slowed mainly by full-size photos from Supabase Storage (see docs/FEATURE_PLANS.md).
 
 ## Adding tests
 

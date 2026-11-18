@@ -22,7 +22,11 @@ export const ContactForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className='px-6 pb-24 pt-20 sm:pb-32 lg:px-8 lg:py-48'>
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit)}
+      className='px-6 pb-24 pt-20 sm:pb-32 lg:px-8 lg:py-48'
+    >
       <div className='mx-auto max-w-xl lg:mr-0 lg:max-w-lg'>
         <div className='flex flex-col gap-y-6'>
           <div>

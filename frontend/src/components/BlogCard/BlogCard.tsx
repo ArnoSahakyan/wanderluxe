@@ -5,9 +5,11 @@ import { formatDate } from '../../utils';
 
 interface BlogPost {
   post: IBlog;
+  /** h2 when the card sits directly under the page's h1. */
+  headingLevel?: 'h2' | 'h3';
 }
 
-export const BlogCard: FC<BlogPost> = ({ post }) => {
+export const BlogCard: FC<BlogPost> = ({ post, headingLevel: Heading = 'h3' }) => {
   return (
     <article className='relative isolate flex flex-col justify-end overflow-hidden rounded-2xl bg-gray-900 px-8 pb-8 pt-80 sm:pt-48 lg:pt-80 hover:shadow-lg transition-shadow'>
       <img
@@ -22,12 +24,12 @@ export const BlogCard: FC<BlogPost> = ({ post }) => {
         <p className='mr-8'>{formatDate(post.createdAt)}</p>
       </div>
 
-      <h3 className='mt-3 text-lg/6 font-semibold text-white'>
+      <Heading className='mt-3 text-lg/6 font-semibold text-white'>
         <Link to={`${ROUTES.BLOG}/${post.slug}`}>
           <span className='absolute inset-0' />
           {post.title}
         </Link>
-      </h3>
+      </Heading>
       <p className='mt-2 line-clamp-2 text-sm/6 text-gray-300'>{post.excerpt}</p>
     </article>
   );

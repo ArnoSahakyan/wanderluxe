@@ -23,6 +23,7 @@ const LegalPage = () => {
 
   return (
     <div className='bg-background-light dark:bg-background-dark'>
+      <title>Terms and conditions | WanderLuxe</title>
       <div className='mx-auto max-w-7xl px-6 pt-16 sm:pt-24 lg:px-8 lg:pt-32'>
         <div className='mx-auto max-w-4xl'>
           <h1 className='text-4xl font-semibold tracking-tight text-primary-light dark:text-text-dark sm:text-5xl'>

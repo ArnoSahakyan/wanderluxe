@@ -4,6 +4,10 @@ import { ROUTES } from '../../shared';
 
 export const UnprotectedRoute = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
 
-  return !isAuthenticated ? <Outlet /> : <Navigate to={ROUTES.PROFILE} replace />;
+  if (!isAuthenticated) return <Outlet />;
+  // "Try as admin" (sign-in page) lands in the admin area; everyone else on their profile.
+  const home = user?.demo && user.role === 'admin' ? ROUTES.ADMIN_DASHBOARD : ROUTES.PROFILE;
+  return <Navigate to={home} replace />;
 };

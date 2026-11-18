@@ -13,7 +13,7 @@ import { Outlet } from 'react-router-dom';
 import { signOut } from '../../api';
 import { SidebarContent } from './components';
 import { ROUTES } from '../../shared';
-import { GlobalNavigateSetup } from '../../components';
+import { DemoBanner, GlobalNavigateSetup } from '../../components';
 
 const navigation = [
   { name: 'Dashboard', href: ROUTES.PROFILE_DASHBOARD, icon: Squares2X2Icon },
@@ -71,8 +71,9 @@ const ProfileLayout = () => {
       </div>
 
       {/* Main content */}
-      <main className='py-10 lg:pl-72 bg-background-light dark:bg-background-dark min-h-screen'>
-        <div className='px-4 sm:px-6 lg:px-8'>
+      <main className='lg:pl-72 bg-background-light dark:bg-background-dark min-h-screen'>
+        <DemoBanner />
+        <div className='py-10 px-4 sm:px-6 lg:px-8'>
           <Outlet />
         </div>
       </main>

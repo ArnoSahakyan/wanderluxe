@@ -14,7 +14,8 @@
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
     "db:migrate:status": "sequelize-cli db:migrate:status",
     "db:migrate:test": "NODE_ENV=test sequelize-cli db:migrate --env test",
-    "db:dev-users": "tsx scripts/create-dev-users.ts"
+    "db:dev-users": "tsx scripts/create-dev-users.ts",
+    "db:demo-users": "tsx scripts/create-demo-users.ts"
   },
   "private": true,
   "author": "",

@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { ROUTES, SignUpFormData, signUpSchema } from '../../shared';
 import { useSignUp, useToast } from '../../hooks';
-import { AxiosError } from 'axios';
+import { formatAxiosError } from '../../utils';
 
 const SignUpPage = () => {
   const {
@@ -25,18 +25,19 @@ const SignUpPage = () => {
         navigate(ROUTES.AUTH + ROUTES.SIGNIN);
       },
       onError: (error: Error) => {
-        const message = error instanceof AxiosError ? error.response?.data?.message : error.message;
-        showError(message);
+        // A network error has no response body: fall back to a readable message.
+        showError(formatAxiosError(error) || 'Sign-up failed. Please try again.');
       },
     });
   };
 
   return (
     <div className='w-full max-w-md space-y-8 rounded-xl bg-white dark:bg-gray-800/50 p-8 shadow-lg'>
+      <title>Create an account | WanderLuxe</title>
       <div className='text-center'>
-        <h2 className='text-3xl font-bold tracking-tight text-primary-light dark:text-text-dark'>
+        <h1 className='text-3xl font-bold tracking-tight text-primary-light dark:text-text-dark'>
           Start your adventure
-        </h2>
+        </h1>
         <p className='mt-2 text-sm text-secondary-light dark:text-secondary-dark'>
           Create your WanderLuxe account to book your next journey
         </p>

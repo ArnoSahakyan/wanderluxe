@@ -7,6 +7,9 @@
 # grants. The backend test-suite then resets wanderluxe_test from
 # database/schema/baseline.sql and runs every migration (tests/globalSetup.ts).
 #
+# A second job runs the Playwright end-to-end suite (e2e/) on the docker
+# compose stack. Render deploys only when both jobs pass.
+#
 # Pushes to main auto-deploy to Render and Vercel, so keep this green.
 name: CI
 
@@ -95,3 +98,46 @@ jobs:
 
       - name: npm run check
         run: npm run check
+
+  e2e:
+    # The Playwright suite against the same stack as `npm run test:e2e` locally:
+    # docker compose (PostgreSQL + Mailpit), the API and the Vite dev server.
+    # Everything is throw-away and local to the runner; no secrets are used.
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create .env files with random local passwords
+        run: npm run setup
+
+      - name: Start PostgreSQL and Mailpit
+        run: npm run db:up
+
+      - name: Install Chromium for Playwright
+        run: npx -w e2e playwright install --with-deps chromium
+
+      - name: npm run test:e2e
+        run: npm run test:e2e
+
+      - name: Upload the Playwright report and traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7
