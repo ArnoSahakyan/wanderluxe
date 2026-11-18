@@ -33,12 +33,12 @@ const AdminHomePage = () => {
       icon: XCircleIcon,
     },
     {
-      name: 'Revenue (completed trips)',
+      name: 'Revenue (completed)',
       stat: `$${Number(stats.metrics.totalRevenue || 0).toFixed(2)}`,
       icon: CurrencyDollarIcon,
     },
     {
-      name: 'Booked (upcoming trips)',
+      name: 'Booked (upcoming)',
       stat: `$${Number(stats.metrics.bookedRevenue || 0).toFixed(2)}`,
       icon: CalendarDaysIcon,
     },
@@ -81,7 +81,7 @@ const AdminHomePage = () => {
               <div className='absolute rounded-md bg-primary-light p-3'>
                 <item.icon className='h-6 w-6 text-white' aria-hidden='true' />
               </div>
-              <p className='ml-16 truncate text-sm font-medium text-secondary-light dark:text-secondary-dark'>
+              <p className='ml-16 line-clamp-2 min-h-10 text-sm font-medium leading-5 text-secondary-light dark:text-secondary-dark'>
                 {item.name}
               </p>
             </dt>
