@@ -6,8 +6,8 @@
  *   the only way in is POST /api/auth/demo, available while DEMO_MODE=true.
  * - Their access tokens carry `demo: true`, and verifyToken then limits them:
  *   the demo admin is read-only and sees other people's personal data masked;
- *   the demo customer may book, cancel, favourite and review, but cannot change
- *   the account itself.
+ *   the demo customer may book, cancel and favourite (and, like anyone, review a
+ *   tour after travelling on it), but cannot change the account itself.
  * - The demo customer's bookings (cancelled ones too), reviews and favourites are
  *   deleted 24 h after they were made (on the next demo sign-in), so seats go back
  *   on sale. Real customers' cancelled bookings are kept as history instead.

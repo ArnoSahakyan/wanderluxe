@@ -3,6 +3,7 @@ import {
   createReview,
   deleteReview,
   fetchAllReviews,
+  fetchReviewEligibility,
   fetchReviewsByTour,
   fetchUserReviews,
 } from '../api';
@@ -98,5 +99,16 @@ export const useDeleteReview = () => {
       queryClient.invalidateQueries({ queryKey: reviewKeys.all });
       queryClient.invalidateQueries({ queryKey: ['tour'] });
     },
+  });
+};
+
+/** May the signed-in user review this tour? (Invalidated with every review change.) */
+export const useReviewEligibility = (tour_id: number) => {
+  const { isAuthenticated } = useAuthStore();
+  return useQuery({
+    queryKey: reviewKeys.eligibility(tour_id),
+    queryFn: () => fetchReviewEligibility(tour_id),
+    enabled: isAuthenticated && !!tour_id,
+    staleTime: 1000 * 60 * 5,
   });
 };

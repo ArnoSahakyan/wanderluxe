@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthenticatedRequest, IPaginationQuery, TypedRequest } from '../types';
 import { Review, User, Tour, sequelize } from '../db/models';
 import { AppError, ForbiddenError, NotFoundError, getPagination, totalPages } from '../utils';
+import { NOT_TRAVELLED_MESSAGE, getReviewEligibility } from '../lib/reviews';
 
 // --- Types ---
 type CreateReviewBody = {
@@ -30,12 +31,12 @@ export const createReview = async (
         throw new NotFoundError('Tour not found');
     }
 
-    const existingReview = await Review.findOne({
-        where: { user_id, tour_id },
-    });
-
-    if (existingReview) {
+    const eligibility = await getReviewEligibility(user_id, tour_id);
+    if (eligibility.reason === 'already_reviewed') {
         throw new AppError(409, 'You have already reviewed this tour');
+    }
+    if (!eligibility.canReview) {
+        throw new ForbiddenError(NOT_TRAVELLED_MESSAGE);
     }
 
     const review = await Review.create({
@@ -188,4 +189,13 @@ export const getUserReviews = async (
         totalPages: totalPages(count, limit),
         reviews,
     });
+};
+
+/** Whether the signed-in user may review this tour, and why not. */
+export const getEligibility = async (req: AuthenticatedRequest<TourIdParam>, res: Response): Promise<void> => {
+    const tour = await Tour.findByPk(req.params.tour_id, { attributes: ['tour_id'] });
+    if (!tour) {
+        throw new NotFoundError('Tour not found');
+    }
+    res.status(200).json(await getReviewEligibility(req.user_id!, tour.tour_id));
 };

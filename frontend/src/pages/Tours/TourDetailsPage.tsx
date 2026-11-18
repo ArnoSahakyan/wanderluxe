@@ -8,7 +8,7 @@ import { useCreateBooking, useReview, useToast, useTour, useFavorite } from '../
 import { getDuration } from '../../utils';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
-import { ReviewForm, ReviewModal } from './components';
+import { ReviewGate, ReviewModal } from './components';
 import { StarIcon } from '@heroicons/react/20/solid';
 import { LoadingState, ErrorState, EmptyState } from '../../components';
 
@@ -330,7 +330,7 @@ const TourDetailsPage = () => {
             </div>
 
             {/* Review Form Section */}
-            {!tour?.hasReviewed && <ReviewForm tourId={id} />}
+            <ReviewGate tourId={id} />
           </div>
         </div>
       </div>

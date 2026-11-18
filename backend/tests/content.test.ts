@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { Contact, TourImage } from '../src/db/models';
 import { sentEmails } from '../src/utils/sendEmail';
-import { api, createTour, createUser, pngBuffer, uniqueEmail } from './helpers';
+import { api, createTour, createUser, pngBuffer, uniqueEmail, completeTrip } from './helpers';
 
 let admin: Awaited<ReturnType<typeof createUser>>;
 
@@ -96,6 +96,7 @@ describe('reviews and favourites', () => {
         const tour = await createTour(admin.auth);
         const author = await createUser();
         const other = await createUser();
+        await completeTrip(admin.auth, author.auth, tour.tour_id);
 
         expect((await api().post('/api/review').set(author.auth).send({ tour_id: tour.tour_id, rating: 6 })).status).toBe(400);
 

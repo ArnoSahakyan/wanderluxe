@@ -68,3 +68,18 @@ export const signInSession = async (email: string, password = STRONG_PASSWORD) =
     if (res.status !== 200) throw new Error(`sign-in failed: ${res.status}`);
     return sessionCookie(res)!;
 };
+
+/** Books `tour` for the customer and has the admin confirm and complete it, so they may review it. */
+export const completeTrip = async (
+    adminAuth: Record<string, string>,
+    customerAuth: Record<string, string>,
+    tour_id: number,
+) => {
+    const booking = await api().post('/api/booking').set(customerAuth).send({ tour_id, number_of_people: 1 });
+    if (booking.status !== 201) throw new Error(`booking failed: ${booking.status}`);
+    for (const status of ['confirmed', 'completed']) {
+        const res = await api().patch(`/api/booking/${booking.body.booking_id}/status`).set(adminAuth).send({ status });
+        if (res.status !== 200) throw new Error(`status ${status} failed: ${res.status}`);
+    }
+    return booking.body as { booking_id: number };
+};

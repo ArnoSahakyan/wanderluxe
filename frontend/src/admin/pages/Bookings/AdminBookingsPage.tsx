@@ -171,7 +171,11 @@ const AdminBookingsPage = () => {
                         <button
                           type='button'
                           onClick={() => setManaged(booking)}
-                          title={`Manage booking #${booking.booking_id}`}
+                          aria-label={
+                            booking.next_statuses?.length
+                              ? `Manage booking #${booking.booking_id}`
+                              : `History of booking #${booking.booking_id}`
+                          }
                           className='inline-flex items-center gap-1 text-primary-light hover:text-primary-dark dark:text-primary-dark'
                         >
                           {booking.next_statuses?.length ? (

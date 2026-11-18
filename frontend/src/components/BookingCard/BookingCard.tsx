@@ -118,12 +118,22 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
               ? `Cancelled on ${new Date(booking.cancelled_at).toLocaleDateString()}`
               : `Booked on ${new Date(booking.booking_date).toLocaleDateString()}`}
           </div>
-          <Link
-            to={`${ROUTES.PROFILE_BOOKINGS}/${booking.booking_id}`}
-            className='rounded-md bg-primary-light dark:bg-primary-dark px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 transition-colors'
-          >
-            View Details
-          </Link>
+          <div className='flex items-center gap-2'>
+            {booking.status === 'completed' && booking.tour_id && (
+              <Link
+                to={`${ROUTES.TOURS}/${booking.tour_id}`}
+                className='rounded-md px-3 py-1.5 text-sm font-medium text-primary-light ring-1 ring-primary-light/40 hover:bg-primary-light/10 dark:text-primary-dark dark:ring-primary-dark/40 transition-colors'
+              >
+                Write a review
+              </Link>
+            )}
+            <Link
+              to={`${ROUTES.PROFILE_BOOKINGS}/${booking.booking_id}`}
+              className='rounded-md bg-primary-light dark:bg-primary-dark px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-light/90 dark:hover:bg-primary-dark/90 transition-colors'
+            >
+              View Details
+            </Link>
+          </div>
         </div>
       </div>
     </div>
