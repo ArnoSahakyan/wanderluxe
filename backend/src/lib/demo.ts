@@ -48,8 +48,11 @@ const MASKERS: Record<string, (value: string) => string> = {
     phone_number: () => '•••',
     phone: () => '•••',
 };
+/** Free text people wrote about a booking (cancellation reasons, status notes). */
+const FREE_TEXT_KEYS = new Set(['cancellation_reason', 'note']);
 /** Contact-form messages are private too; other `message` keys are API status texts. */
-const maskMessage = (row: Record<string, unknown>, key: string) => key === 'message' && 'contact_id' in row;
+const maskMessage = (row: Record<string, unknown>, key: string) =>
+    FREE_TEXT_KEYS.has(key) || (key === 'message' && 'contact_id' in row);
 
 /**
  * Deep copy of a JSON body with personal fields masked, so visitors browsing
