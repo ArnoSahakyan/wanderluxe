@@ -14,6 +14,7 @@ import { Op, QueryTypes, type Transaction, type WhereOptions } from 'sequelize';
 import { Booking, BookingStatusHistory, Tour, sequelize } from '../db/models';
 import type { BookingStatus } from '../db/models/booking.model';
 import { ConflictError } from '../utils';
+import { queueBookingEmail } from './bookingNotifications';
 import { logger } from './logger';
 
 export const TRANSITIONS: Record<BookingStatus, readonly BookingStatus[]> = {
@@ -135,7 +136,7 @@ export const transitionBooking = async (
  */
 export const completeFinishedBookings = async (): Promise<number[]> => {
     try {
-        return await sequelize.transaction(async (transaction) => {
+        const completed = await sequelize.transaction(async (transaction) => {
             const rows = await sequelize.query<{ booking_id: number }>(
                 `UPDATE bookings AS b
                     SET status = 'completed', updated_at = NOW()
@@ -160,6 +161,8 @@ export const completeFinishedBookings = async (): Promise<number[]> => {
             }
             return rows.map((row) => row.booking_id);
         });
+        for (const id of completed) queueBookingEmail(id, 'completed');
+        return completed;
     } catch (err) {
         // Never fail a page because of housekeeping.
         logger.warn('Completing finished bookings failed', { err });

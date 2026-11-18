@@ -13,6 +13,7 @@ import {
     recordStatusChange,
     transitionBooking,
 } from '../lib/bookings';
+import { isEmailedStatus, queueBookingEmail } from '../lib/bookingNotifications';
 import type { AuthenticatedRequest, TypedRequest } from '../types';
 import {
     BadRequestError,
@@ -64,6 +65,7 @@ export const createBooking = async (
         return booking;
     });
 
+    queueBookingEmail(booking.booking_id, 'received');
     res.status(201).json(booking);
 };
 
@@ -103,6 +105,7 @@ export const cancelBooking = async (
         return cancelBookingRow(booking, { actorId: user_id, reason: req.body?.reason, transaction });
     });
 
+    queueBookingEmail(booking.booking_id, 'cancelled');
     res.status(200).json({ message: 'Booking cancelled successfully', booking });
 };
 
@@ -276,14 +279,17 @@ export const getAllBookings = async (
     });
 };
 
-const changeStatus = async (booking_id: number, actorId: number, to: BookingStatus, note?: string) =>
-    sequelize.transaction(async (transaction) => {
+const changeStatus = async (booking_id: number, actorId: number, to: BookingStatus, note?: string) => {
+    const booking = await sequelize.transaction(async (transaction) => {
         const booking = await Booking.findByPk(booking_id, { transaction, lock: transaction.LOCK.UPDATE });
         if (!booking) {
             throw new NotFoundError('Booking not found');
         }
         return transitionBooking(booking, to, { actorId, note, transaction });
     });
+    if (isEmailedStatus(to)) queueBookingEmail(booking.booking_id, to);
+    return booking;
+};
 
 /** Admin: move a booking along its lifecycle (409 lists the allowed next states). */
 export const updateBookingStatus = async (

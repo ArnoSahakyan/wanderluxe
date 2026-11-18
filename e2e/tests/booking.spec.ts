@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ADMIN } from '../support/env';
 import { createTour, getTour, signIn, signInViaUi, signUp, uniqueEmail } from '../support/api';
+import { waitForEmail } from '../support/mailpit';
 
 /** The "Available Spots: N" line on the tour page. */
 const availableSpots = (page: Page) => page.getByText('Available Spots:').locator('..');
@@ -22,6 +23,11 @@ test('a customer books a future tour, cancels it and finds it under Cancelled', 
 
     await expect(page.getByText('Booking successful!')).toBeVisible();
     await expect(availableSpots(page)).toHaveText(/Available Spots:\s*5$/);
+
+    // The customer gets a "booking received" e-mail.
+    const received = await waitForEmail(request, customer.email, /^Booking received/);
+    expect(received.Subject).toContain(tour.name);
+    expect(received.HTML).toContain('<strong>Guests:</strong> 3');
 
     // It is listed under My Bookings.
     await page.getByRole('button', { name: 'Open user menu' }).click();
@@ -59,6 +65,7 @@ test('a customer books a future tour, cancels it and finds it under Cancelled', 
     await page.getByRole('link', { name: 'View Details' }).click();
     await expect(page.getByText('You cancelled this booking', { exact: false })).toBeVisible();
     await expect(page.getByText('Reason: Plans changed')).toBeVisible();
+    expect((await waitForEmail(request, customer.email, /^Booking cancelled/)).HTML).toContain('As you asked');
     await expect(page.getByRole('button', { name: 'Cancel Booking' })).toHaveCount(0);
 
     // The seats are released.
