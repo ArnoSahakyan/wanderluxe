@@ -78,6 +78,11 @@ const schema = z
         COOKIE_SECURE: z.enum(['true', 'false', '1', '0', '']).optional(),
         BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
 
+        /** Enables POST /auth/demo ("Try as customer / admin" on the sign-in page). */
+        DEMO_MODE: bool(false),
+        DEMO_CUSTOMER_EMAIL: z.string().email().default('demo-customer@example.com'),
+        DEMO_ADMIN_EMAIL: z.string().email().default('demo-admin@example.com'),
+
         RATE_LIMIT_ENABLED: bool(true),
         RATE_LIMIT_AUTH_MAX: z.coerce.number().int().positive().default(20),
         RATE_LIMIT_FORMS_MAX: z.coerce.number().int().positive().default(10),
@@ -204,6 +209,11 @@ export const config = {
         cookieSecure: env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' || env.COOKIE_SECURE === '1' : isProduction,
     },
     bcryptRounds: env.BCRYPT_ROUNDS,
+    demo: {
+        enabled: env.DEMO_MODE,
+        customerEmail: env.DEMO_CUSTOMER_EMAIL.toLowerCase(),
+        adminEmail: env.DEMO_ADMIN_EMAIL.toLowerCase(),
+    },
     rateLimit: {
         enabled: env.RATE_LIMIT_ENABLED && env.NODE_ENV !== 'test',
         authMax: env.RATE_LIMIT_AUTH_MAX,

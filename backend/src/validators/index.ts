@@ -74,6 +74,8 @@ export const signInBody = z.object({
 
 export const emailBody = z.object({ email });
 
+export const demoBody = z.object({ role: z.enum(['customer', 'admin']) });
+
 export const resetPasswordQuery = z.object({ token: z.string().min(1, 'Reset token is required.').max(200) });
 export const resetPasswordBody = z.object({ new_password: strongPassword });
 

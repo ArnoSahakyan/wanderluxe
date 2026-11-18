@@ -6,6 +6,8 @@ interface User {
   /** returned by GET /auth/me (same value as phone_number) */
   phone?: string | null;
   role: string;
+  /** One of the shared demo accounts (read-only admin / limited customer). */
+  demo?: boolean;
 }
 
 export interface AuthState {

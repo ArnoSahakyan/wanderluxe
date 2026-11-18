@@ -19,7 +19,7 @@ import { useAuthStore } from '../../store';
 import { signOut } from '../../api';
 import { SidebarContent } from '../../pages/Profile/components';
 import { useRehydrateAuth } from '../../hooks';
-import { GlobalNavigateSetup } from '../../components';
+import { DemoBanner, GlobalNavigateSetup } from '../../components';
 
 const adminNavigation = [
   { name: 'Dashboard', href: ROUTES.ADMIN_DASHBOARD, icon: Squares2X2Icon },
@@ -93,6 +93,7 @@ const AdminLayout = () => {
       </div>
 
       <main className=' lg:pl-72 bg-background-light dark:bg-background-dark min-h-screen'>
+        <DemoBanner />
         <div className='px-4 sm:px-6 lg:px-8'>
           <Outlet />
         </div>

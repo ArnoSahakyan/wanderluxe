@@ -12,6 +12,17 @@ export const signIn = async (credentials: SignInFormData) => {
   return response.data;
 };
 
+export const getDemoStatus = async (): Promise<{ enabled: boolean }> => {
+  const response = await public_api.get('/auth/demo');
+  return response.data;
+};
+
+/** Signs in as the shared demo customer or demo admin (no password; sets the session cookie). */
+export const demoSignIn = async (role: 'customer' | 'admin') => {
+  const response = await public_api.post('/auth/demo', { role });
+  return response.data;
+};
+
 export const signUp = async (payload: SignUpFormData) => {
   const response = await public_api.post('/auth/signup', payload);
   return response.data;

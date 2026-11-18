@@ -1,4 +1,5 @@
 import type { NextFunction, RequestHandler, Response } from 'express';
+import { DEMO_READ_ONLY_MESSAGE, isDemoWriteAllowed, maskPersonalData } from '../lib/demo';
 import type { AuthenticatedRequest } from '../types';
 import { verifyAccessToken } from '../utils/generateTokens';
 
@@ -24,6 +25,20 @@ export const verifyToken: RequestHandler = (req: AuthenticatedRequest, res: Resp
 
     req.user_id = payload.user_id;
     req.user_role = payload.role;
+    req.is_demo = payload.demo;
+
+    if (payload.demo) {
+        const path = (req.originalUrl ?? req.url).split('?')[0];
+        if (!isDemoWriteAllowed(req.method, path, payload.role)) {
+            res.status(403).json({ message: DEMO_READ_ONLY_MESSAGE, demo: true });
+            return;
+        }
+        if (payload.role === 'admin') {
+            // Visitors browsing the admin area never see real customers' personal data.
+            const json = res.json.bind(res);
+            res.json = (body: unknown) => json(maskPersonalData(body));
+        }
+    }
     next();
 };
 

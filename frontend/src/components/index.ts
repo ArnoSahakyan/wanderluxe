@@ -10,6 +10,7 @@ export * from './Pagination';
 export * from './ProtectedRoute';
 export * from './ReviewCard';
 export * from './ConfirmModal';
+export * from './DemoBanner';
 export * from './SearchInput';
 export * from './States';
 export * from './ThemeToggle';

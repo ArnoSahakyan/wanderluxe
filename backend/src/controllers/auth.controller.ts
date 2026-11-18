@@ -6,6 +6,7 @@ import { EXPIRATION_TIME } from '../constants';
 import { Role, User } from '../db/models';
 import { generateResetPasswordEmail } from '../emails';
 import { logger } from '../lib/logger';
+import { cleanUpDemoCustomer, demoEmail, isDemoEmail } from '../lib/demo';
 import { endSession, revokeAllSessions, rotateSession, startSession } from '../lib/sessions';
 import type { AuthenticatedRequest, TypedRequest } from '../types';
 import {
@@ -35,6 +36,7 @@ const toSessionUser = (user: User) => ({
     phone: user.phone_number ?? null,
     phone_number: user.phone_number ?? null,
     role: user.Role?.name,
+    ...(isDemoEmail(user.email) ? { demo: true } : {}),
 });
 
 // POST /auth/signup
@@ -75,6 +77,31 @@ export const signIn = async (req: TypedRequest<{}, {}, z.infer<typeof v.signInBo
     }
 
     // The refresh token travels only in the httpOnly cookie, never in the body.
+    await startSession(res, user.user_id);
+    res.json({ token: generateToken(user), user: toSessionUser(user) });
+};
+
+// GET /auth/demo — lets the sign-in page decide whether to offer the demo buttons.
+export const demoStatus = (_req: Request, res: Response) => {
+    res.json({ enabled: config.demo.enabled });
+};
+
+// POST /auth/demo { role } — signs in as the demo customer or demo admin (DEMO_MODE only).
+export const demoSignIn = async (req: TypedRequest<{}, {}, z.infer<typeof v.demoBody>>, res: Response) => {
+    if (!config.demo.enabled) {
+        throw new NotFoundError('The demo is not available.');
+    }
+
+    const user = await User.findOne({
+        where: emailEquals(demoEmail(req.body.role)),
+        include: { model: Role, as: 'Role' },
+    });
+    if (!user || user.Role?.name !== req.body.role) {
+        logger.error('Demo account missing or has the wrong role; run npm run db:demo-users', { role: req.body.role });
+        throw new AppError(503, 'The demo is not available right now.');
+    }
+
+    if (req.body.role === 'customer') await cleanUpDemoCustomer(user.user_id);
     await startSession(res, user.user_id);
     res.json({ token: generateToken(user), user: toSessionUser(user) });
 };

@@ -30,6 +30,7 @@
     "db:migrate": "npm run db:migrate -w backend",
     "db:migrate:test": "npm run db:migrate:test -w backend",
     "db:dev-users": "npm run db:dev-users -w backend",
+    "db:demo-users": "npm run db:demo-users -w backend",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "devDependencies": {

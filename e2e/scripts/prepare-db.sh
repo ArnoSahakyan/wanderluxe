@@ -66,4 +66,5 @@ database/scripts/db.sh import --db "$E2E_DB_NAME" --file "${E2E_DB_IMPORT_FILE:-
 cd backend
 DB_NAME="$E2E_DB_NAME" NODE_ENV=development npx sequelize-cli db:migrate >/dev/null
 DB_NAME="$E2E_DB_NAME" NODE_ENV=development npx tsx scripts/create-dev-users.ts
+DB_NAME="$E2E_DB_NAME" NODE_ENV=development npx tsx scripts/create-demo-users.ts >/dev/null
 echo "✔ [e2e] database '$E2E_DB_NAME' is ready"
