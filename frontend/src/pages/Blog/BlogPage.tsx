@@ -25,6 +25,7 @@ const BlogPage = () => {
 
   return (
     <div className='bg-background-light dark:bg-background-dark py-12'>
+      <title>Travel blog | WanderLuxe</title>
       <div className='container mx-auto px-4 lg:px-8'>
         {/* Page Header */}
         <div className='mx-auto max-w-2xl text-center mb-12'>
@@ -59,7 +60,7 @@ const BlogPage = () => {
             {/* Blog Cards */}
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
               {data?.posts.map((post) => (
-                <BlogCard key={post.post_id} post={post} />
+                <BlogCard key={post.post_id} post={post} headingLevel='h2' />
               ))}
             </div>
 

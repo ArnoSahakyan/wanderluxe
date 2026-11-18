@@ -57,6 +57,7 @@ const DestinationDetailsPage = () => {
 
   return (
     <section className='py-12 bg-background-light dark:bg-background-dark'>
+      <title>{`${destination.name} | WanderLuxe`}</title>
       <div className='container mx-auto px-4 lg:px-8'>
         <h1 className='text-3xl font-bold text-primary-light dark:text-text-dark mb-4'>
           {destination.name}

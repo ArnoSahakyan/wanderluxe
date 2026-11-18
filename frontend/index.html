@@ -2,22 +2,36 @@
 <html lang="en" class="h-full">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Preload and load font CSS (for better rendering performance) -->
+    <!-- Font CSS without blocking the first paint: loaded as "print", switched to "all" once it arrives. -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" media="all" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
     </noscript>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WanderLuxe</title>
+    <title>WanderLuxe — curated small-group tours</title>
+    <meta name="description" content="Browse curated small-group tours and destinations, book a trip in a few clicks and manage your bookings, favourites and reviews. A full-stack React, Express and PostgreSQL portfolio project." />
+    <meta name="theme-color" content="#2a7a7b" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="WanderLuxe" />
+    <meta property="og:title" content="WanderLuxe — curated small-group tours" />
+    <meta property="og:description" content="Browse tours and destinations, book a trip and manage it from your profile. Try it with a demo account." />
+    <meta property="og:url" content="https://wanderluxe.vercel.app/" />
+    <meta property="og:image" content="https://wanderluxe.vercel.app/og-image.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
     <script>
       // Check for saved theme preference or fall back to system preference
-      const savedTheme = localStorage.getItem('theme');
+      let savedTheme = null;
+      try {
+        savedTheme = localStorage.getItem('theme');
+      } catch {
+        // storage blocked: fall back to the system preference
+      }
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
       document.documentElement.classList.add(theme);

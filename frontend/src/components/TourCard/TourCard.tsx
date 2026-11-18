@@ -13,6 +13,8 @@ export const TourCard: FC<ITourCardProps> = ({
   price,
   duration,
   mode = 'public',
+  headingLevel: Heading = 'h3',
+  priority = false,
 }) => {
   return (
     <div className='relative flex flex-col rounded-xl bg-background-light dark:bg-background-dark shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 transition-transform hover:scale-[1.02] hover:shadow-lg'>
@@ -22,6 +24,7 @@ export const TourCard: FC<ITourCardProps> = ({
           src={imageUrl ?? undefined}
           alt={title}
           className='w-full h-full object-cover'
+          {...(priority ? { loading: 'eager', fetchPriority: 'high' } : {})}
         />
         <div className='absolute top-4 right-4 bg-primary-light dark:bg-primary-dark text-background-light px-3 py-1 rounded-full font-bold text-sm shadow-md'>
           ${price.toLocaleString()}
@@ -32,9 +35,9 @@ export const TourCard: FC<ITourCardProps> = ({
       </div>
 
       <div className='p-4 flex flex-col grow'>
-        <h3 className='text-lg font-semibold text-primary-light dark:text-text-dark mb-2 line-clamp-2'>
+        <Heading className='text-lg font-semibold text-primary-light dark:text-text-dark mb-2 line-clamp-2'>
           {title}
-        </h3>
+        </Heading>
         <p className='text-sm text-secondary-light dark:text-secondary-dark mb-4 line-clamp-3'>
           {description}
         </p>

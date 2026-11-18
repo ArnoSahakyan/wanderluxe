@@ -6,6 +6,10 @@ import { MapPinIcon } from '@heroicons/react/24/outline';
 
 interface DestinationCardProps extends IDestination {
   mode?: 'public' | 'admin';
+  /** h2 when the card sits directly under the page's h1. */
+  headingLevel?: 'h2' | 'h3';
+  /** Above the fold: load the image eagerly and early. */
+  priority?: boolean;
 }
 
 export const DestinationCard: FC<DestinationCardProps> = ({
@@ -16,6 +20,8 @@ export const DestinationCard: FC<DestinationCardProps> = ({
   description,
   startingPrice,
   mode = 'public',
+  headingLevel: Heading = 'h3',
+  priority = false,
 }) => {
   const isAdmin = mode === 'admin';
 
@@ -27,6 +33,7 @@ export const DestinationCard: FC<DestinationCardProps> = ({
           src={image ?? undefined}
           alt={name}
           className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
+          {...(priority ? { loading: 'eager', fetchPriority: 'high' } : {})}
         />
         <div className='absolute inset-0 bg-linear-to-t from-background-dark/70 via-transparent to-transparent' />
 
@@ -40,7 +47,9 @@ export const DestinationCard: FC<DestinationCardProps> = ({
         <div className='absolute bottom-4 left-4 right-4'>
           <div className='flex justify-between items-end'>
             <div>
-              <h3 className='text-2xl font-bold text-background-light drop-shadow-md'>{name}</h3>
+              <Heading className='text-2xl font-bold text-background-light drop-shadow-md'>
+                {name}
+              </Heading>
               <p className='text-background-light/90 text-sm mt-1 line-clamp-1' title={description}>
                 {description}
               </p>

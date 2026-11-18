@@ -63,9 +63,9 @@ export const ContactInfo = () => (
         </svg>
       </div>
 
-      <h2 className='text-pretty text-4xl font-semibold tracking-tight text-primary-light dark:text-text-dark sm:text-5xl'>
+      <h1 className='text-pretty text-4xl font-semibold tracking-tight text-primary-light dark:text-text-dark sm:text-5xl'>
         Start Your Next Adventure
-      </h2>
+      </h1>
       <p className='mt-6 text-lg/8 text-secondary-light dark:text-secondary-dark'>
         Our travel experts are ready to help you plan your perfect trip. Contact us for personalized
         itineraries, questions about our tours, or travel advice.

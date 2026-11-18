@@ -78,6 +78,7 @@ const TourDetailsPage = () => {
 
   return (
     <section className='py-12 bg-background-light dark:bg-background-dark'>
+      <title>{`${tour.name} | WanderLuxe`}</title>
       <div className='container mx-auto px-4 lg:px-8'>
         <div className='flex flex-col lg:flex-row gap-8'>
           {/* Sticky Image Gallery */}
@@ -92,12 +93,16 @@ const TourDetailsPage = () => {
                   modules={[FreeMode, Thumbs]}
                   className='rounded-lg overflow-hidden'
                 >
-                  {tour.images.map((image) => (
+                  {tour.images.map((image, index) => (
                     <SwiperSlide key={image.image_id}>
                       <PhotoView src={image.image_url}>
                         <img
                           src={image.image_url}
-                          alt={`Tour ${image.image_id}`}
+                          alt={`${tour.name}, photo ${index + 1} of ${tour.images.length}`}
+                          // The first photo is the page's largest element: fetch it first.
+                          {...(index === 0
+                            ? { fetchPriority: 'high' as const }
+                            : { loading: 'lazy' as const })}
                           className='w-full h-auto max-h-[70vh] object-cover rounded-lg cursor-zoom-in'
                         />
                       </PhotoView>
@@ -115,11 +120,12 @@ const TourDetailsPage = () => {
                 modules={[FreeMode, Thumbs]}
                 className='rounded-lg'
               >
-                {tour.images.map((image) => (
+                {tour.images.map((image, index) => (
                   <SwiperSlide key={image.image_id}>
                     <img
                       src={image.image_url}
-                      alt={`Thumb ${image.image_id}`}
+                      alt={`Show photo ${index + 1}`}
+                      loading='lazy'
                       className='h-20 w-full object-cover rounded-md cursor-pointer border border-gray-200 dark:border-gray-600'
                     />
                   </SwiperSlide>
@@ -206,9 +212,9 @@ const TourDetailsPage = () => {
               <div className='mt-8 pt-6 border-t border-gray-200 dark:border-gray-700'>
                 <div className='flex justify-between items-center'>
                   <div>
-                    <h3 className='text-lg font-medium text-text-light dark:text-text-dark'>
+                    <h2 className='text-lg font-medium text-text-light dark:text-text-dark'>
                       Price per person
-                    </h3>
+                    </h2>
                     <p className='text-sm text-secondary-light dark:text-secondary-dark'>
                       Total for {guestCount} {guestCount === 1 ? 'guest' : 'guests'}
                     </p>
@@ -289,9 +295,9 @@ const TourDetailsPage = () => {
                     >
                       <div className='flex items-center gap-3 mb-3'>
                         <div className='flex-1'>
-                          <h4 className='font-semibold text-text-light dark:text-text-dark'>
+                          <h3 className='font-semibold text-text-light dark:text-text-dark'>
                             {review.full_name}
-                          </h4>
+                          </h3>
                           <div className='flex items-center gap-1 mt-1'>
                             {[1, 2, 3, 4, 5].map((star) => (
                               <StarIcon
@@ -302,7 +308,7 @@ const TourDetailsPage = () => {
                           </div>
                         </div>
                         <span className='text-xs text-secondary-light dark:text-secondary-dark'>
-                          {new Date(review.created_at).toLocaleDateString('en-US', {
+                          {new Date(review.createdAt).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric',

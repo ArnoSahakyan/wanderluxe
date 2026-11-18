@@ -11,6 +11,7 @@ export const Hero = () => {
           alt='Beautiful travel destination'
           className='h-full w-full object-cover'
           loading='eager'
+          fetchPriority='high'
         />
         <div className='absolute inset-0 bg-linear-to-t from-background-dark/80 via-background-dark/30 to-transparent dark:from-background-dark/90 dark:via-background-dark/40' />
       </div>

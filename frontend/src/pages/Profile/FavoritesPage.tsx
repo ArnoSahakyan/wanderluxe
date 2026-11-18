@@ -20,9 +20,9 @@ const FavoritesPage = () => {
     <section className='py-12 bg-background-light dark:bg-background-dark min-h-screen'>
       <div className='container mx-auto px-4 lg:px-8'>
         <div className='text-center mb-12'>
-          <h2 className='text-3xl font-bold text-primary-light dark:text-text-dark mb-4'>
+          <h1 className='text-3xl font-bold text-primary-light dark:text-text-dark mb-4'>
             Your Favorites
-          </h2>
+          </h1>
           <p className='text-secondary-light dark:text-secondary-dark max-w-2xl mx-auto'>
             All the tours you've saved for your next adventure
           </p>
@@ -52,6 +52,7 @@ const FavoritesPage = () => {
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
               {favorites.map((item) => (
                 <TourCard
+                  headingLevel='h2'
                   key={item.tour.tour_id}
                   id={item.tour.tour_id}
                   title={item.tour.name}

@@ -3,6 +3,7 @@ import { stats, team, values } from '../../assets';
 const AboutPage = () => {
   return (
     <div className='bg-background-light dark:bg-background-dark'>
+      <title>About us | WanderLuxe</title>
       <main className='relative isolate'>
         {/* Background */}
         <div
