@@ -58,6 +58,7 @@ const FavoritesPage = () => {
                   title={item.tour.name}
                   description={item.tour.description}
                   imageUrl={item.tour.image}
+                  imageCardUrl={item.tour.image_card}
                   price={item.tour.price}
                   duration={getDuration(item.tour.start_date, item.tour.end_date)}
                 />

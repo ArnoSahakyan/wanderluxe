@@ -6,7 +6,7 @@ npm test         # both workspaces
 npm run check    # lint + typecheck + tests + production builds
 ```
 
-## Backend — `backend/tests` (Vitest + Supertest, 75 tests)
+## Backend — `backend/tests` (Vitest + Supertest, 80 tests)
 
 - **Real database, hermetic.** `tests/globalSetup.ts` connects as the owner role and:
   1. drops the `wanderluxe_test` schema;
@@ -28,17 +28,18 @@ npm run check    # lint + typecheck + tests + production builds
 | `bookingEmails.test.ts` | "booking received" e-mail with reference, total, link and escaped name; confirmed and company-cancelled e-mails (escaped reason); customer-cancelled wording; completion asks for a review; nothing to example.com; a failing e-mail never fails the booking |
 | `reviews.test.ts` | no booking, a future confirmed booking or a cancelled booking → 403; a completed booking → one review, then 409; a confirmed booking whose tour has ended counts; the eligibility endpoint for each case, sign-in and 404 |
 | `demo.test.ts` | demo accounts: off unless `DEMO_MODE`; unknown role 400, missing account 503; the demo customer signs in without a password, may book and favourite, can't edit the account or password (403 with a clear message); refreshed tokens stay demo tokens; the demo admin is read-only and gets other users' e-mails and names masked; bookings older than 24 h are removed and seats released on the next demo sign-in; `maskPersonalData` masks contact messages but not status messages |
+| `cardImages.test.ts` | every upload also stores an 800px card copy (never enlarged) at `<key>_card.webp`; list, details and gallery responses carry `image_card` / `card_url`; deleting a destination or a tour photo removes both files |
 | `content.test.ts` | catalogue pagination and image URLs; id/limit validation; literal `%` search; JSON 404; security headers; real vs fake image uploads; cover-image ownership; date order; reviews (range, duplicate, owner delete); favourites; contact e-mail HTML escaping; admin stats; newsletter double-confirm |
 
 Run one file: `npx vitest run tests/bookings.test.ts` (inside `backend/`).
 
-## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 78 tests)
+## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 79 tests)
 
 | File | Covers |
 |---|---|
 | `schemas.test.ts` | sign-up password policy (mirrors the API), confirm/terms, "required" messages, review rating, URL page parsing |
 | `axios.test.ts` | concurrent 401s trigger **one** cookie refresh (no token in the body) and are retried; after a reload the token is fetched before the first request; a rejected session signs out without looping, a network error does not; no token ever reaches `localStorage`; `signOut` calls `/auth/logout` and signs out locally even offline |
-| `components.test.tsx` | Pagination accessibility and edge states; `SmartImage` fallback; `StarRating` radio-group semantics |
+| `components.test.tsx` | Pagination accessibility and edge states; `SmartImage` fallback (card copy → full image → placeholder); `StarRating` radio-group semantics |
 | `forms.test.tsx` | sign-in and sign-up (validation, payloads, server and network errors), contact form, ReviewForm (stars, text, links rejected, signed-out redirect), PasswordChangeForm (cancel, mismatch, payload, keeps the input when the server rejects it) |
 | `booking.test.tsx` | tour page booking box: total follows the guest count, the seat limit shows inline and disables Book, payload, API errors, signed-out redirect, departed and sold-out tours, tour not found |
 | `booking-history.test.tsx` | My Bookings tabs ask the API for each view and show cancelled bookings with their date; a cancelled booking's details explain who cancelled and why, with no cancel button; cancelling sends the optional reason and opens the Cancelled tab |

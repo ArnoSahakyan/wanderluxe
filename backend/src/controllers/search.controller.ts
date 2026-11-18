@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { Op } from 'sequelize';
 import { Destination, Tour, Post } from '../db/models';
-import { toPublicImageUrl, containsPattern } from '../utils';
+import { toImageUrls, containsPattern } from '../utils';
 import { DESTINATIONS_BUCKET, TOURS_BUCKET, BLOGS_BUCKET } from '../constants';
 import { TourImage } from "../db/models";
 import { TypedRequest } from "../types";
@@ -60,23 +60,21 @@ export const globalSearch = async (req: TypedRequest<{}, {}, {}, GetFilteredTPos
         destinations: destinations.map((d) => ({
             id: d.destination_id,
             name: d.name,
-            image: d.image ? toPublicImageUrl(d.image, DESTINATIONS_BUCKET) : undefined,
+            ...toImageUrls(d.image, DESTINATIONS_BUCKET),
             description: d.description,
             type: 'destination',
         })),
         tours: tours.map((t) => ({
             id: t.tour_id,
             name: t.name,
-            image: t.TourImages?.[0]?.image_url
-                ? toPublicImageUrl(t.TourImages[0].image_url, TOURS_BUCKET)
-                : null,
+            ...toImageUrls(t.TourImages?.[0]?.image_url, TOURS_BUCKET),
             description: t.description,
             type: 'tour',
         })),
         posts: posts.map((p) => ({
             id: p.post_id,
             name: p.title,
-            image: p.image ? toPublicImageUrl(p.image, BLOGS_BUCKET) : null,
+            ...toImageUrls(p.image, BLOGS_BUCKET),
             slug: p.slug,
             excerpt: p.excerpt,
             type: 'post',

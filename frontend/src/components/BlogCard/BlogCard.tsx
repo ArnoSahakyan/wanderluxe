@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { IBlog, ROUTES } from '../../shared';
 import { FC } from 'react';
 import { formatDate } from '../../utils';
+import { SmartImage } from '../SmartImage/SmartImage';
 
 interface BlogPost {
   post: IBlog;
@@ -12,9 +13,10 @@ interface BlogPost {
 export const BlogCard: FC<BlogPost> = ({ post, headingLevel: Heading = 'h3' }) => {
   return (
     <article className='relative isolate flex flex-col justify-end overflow-hidden rounded-2xl bg-gray-900 px-8 pb-8 pt-80 sm:pt-48 lg:pt-80 hover:shadow-lg transition-shadow'>
-      <img
+      <SmartImage
         alt=''
-        src={post.image}
+        src={post.image_card || post.image}
+        fallbackSrc={post.image}
         className='absolute inset-0 -z-10 size-full object-cover transition-transform duration-500 hover:scale-105'
       />
       <div className='absolute inset-0 -z-10 bg-linear-to-t from-gray-900 via-gray-900/40' />

@@ -28,6 +28,7 @@ export const ToursSection = () => {
                 title={tour.name}
                 description={tour.description}
                 imageUrl={tour.image}
+                imageCardUrl={tour.image_card}
                 price={tour.price}
                 duration={getDuration(tour.start_date, tour.end_date)}
               />

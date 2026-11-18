@@ -197,12 +197,12 @@ None can be fixed without a major-version change of the parent package. See §6.
 
    See [DEPLOYMENT.md](DEPLOYMENT.md).
 4. **SQL dump:** decided to keep it out of git because it contains personal data. Share it privately with developers who need real data (database/README.md).
-5. **Missing production image:** the cover of "Family Fun in Gold Coast" (tour 4) no longer exists in the Supabase bucket. Re-upload it via the admin UI.
+5. **Missing production images:** the cover of "Family Fun in Gold Coast" (tour 4) and the Italy destination image no longer exist in the Supabase bucket. Re-upload them via the admin UI.
 
 **Known limitations, deliberately not changed:**
 - ~~**Tokens in `localStorage`** (S-20)~~ fixed on 2026-11-18: httpOnly session cookie, access token in memory (recommendation 1).
-- **Cancelled bookings are deleted** rather than set to `cancelled`. That is the existing business rule, although the enum supports the softer option.
-- **Reviews don't require a booking.** This is existing behaviour.
+- ~~**Cancelled bookings are deleted**~~ fixed on 2026-11-18 (PR #5): cancelling sets `status='cancelled'` and keeps who, when and why; every status change is recorded in `booking_status_history`.
+- ~~**Reviews don't require a booking**~~ fixed on 2026-11-18 (PR #5): only customers with a completed trip (or a confirmed one whose tour has ended) can review a tour.
 - **Tour dates in the dump are all in the past,** so locally nothing is bookable until an admin creates or edits a tour.
 - ~~**Remaining `npm audit` items**~~ fixed on 2026-11-17 (§8).
 - **Hero headline artefacts:** the `drop-shadow` filter showed jagged artefacts in the headless preview browser only. Not reproduced elsewhere, so left as designed.
@@ -213,7 +213,7 @@ None can be fixed without a major-version change of the parent package. See §6.
 2. ~~Add a CI workflow~~ done: `.github/workflows/ci.yml`.
 3. ~~Add Playwright end-to-end tests~~ done: `e2e/` (see docs/TESTING.md).
 4. ~~Replace `react-markdown-editor-lite`~~ not needed. It is still maintained, and its `nanoid` advisory is fixed by an override (§8).
-5. Make cancellation set `status='cancelled'` instead of deleting, if the business wants booking history and refunds. The enum already supports it.
+5. ~~Make cancellation set `status='cancelled'` instead of deleting~~ done 2026-11-18 (PR #5), together with admin status changes (confirmed → completed → refunded) and booking e-mails.
 6. ~~Upgrade Tailwind 3 → 4~~ done (§8). Upgrade Sequelize 6 → 7 once it leaves alpha.
 
 ## 8. Dependency modernisation (2026-11-17)

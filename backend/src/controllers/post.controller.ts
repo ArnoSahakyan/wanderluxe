@@ -12,7 +12,7 @@ import {
     generateSlug,
     generateUniqueSlug,
     getPagination,
-    toPublicImageUrl,
+    toImageUrls,
     totalPages,
     uploadAndProcessImages,
 } from '../utils';
@@ -27,7 +27,7 @@ interface SlugParams {
 
 const withImageUrl = (post: Post) => {
     const raw = post.get({ plain: true });
-    return { ...raw, image: raw.image ? toPublicImageUrl(raw.image, BLOGS_BUCKET) : null };
+    return { ...raw, ...toImageUrls(raw.image, BLOGS_BUCKET) };
 };
 
 // --- GET /blog?page=&limit=&search= ---

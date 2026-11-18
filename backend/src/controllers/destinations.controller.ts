@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, Sequelize, WhereOptions } from 'sequelize';
-import { toPublicImageUrl, uploadAndProcessImages, NotFoundError, containsPattern, getPagination, totalPages } from '../utils';
+import { toImageUrls, uploadAndProcessImages, NotFoundError, containsPattern, getPagination, totalPages } from '../utils';
 import { removeQuietly } from '../lib/storage';
 import { DESTINATIONS_BUCKET } from '../constants';
 import { Destination } from '../db/models';
@@ -142,7 +142,7 @@ export const getAllDestinations = async (
         const raw = destination.get({ plain: true }) as DestinationAttributes & { startingPrice?: number | null };
         return {
             ...raw,
-            image: raw.image ? toPublicImageUrl(raw.image, DESTINATIONS_BUCKET) : null,
+            ...toImageUrls(raw.image, DESTINATIONS_BUCKET),
         };
     });
 
@@ -171,7 +171,7 @@ export const getDestinationById = async (
 
     res.json({
         ...plainDestination,
-        image: plainDestination.image ? toPublicImageUrl(plainDestination.image, DESTINATIONS_BUCKET) : null,
+        ...toImageUrls(plainDestination.image, DESTINATIONS_BUCKET),
     });
 };
 

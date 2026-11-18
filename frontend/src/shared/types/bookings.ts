@@ -21,4 +21,6 @@ export interface IBooking {
   destination_name: string;
   category_name: string;
   image: string;
+  /** Card-size copy (800px) for lists; may be missing for old images until it is generated. */
+  image_card?: string | null;
 }

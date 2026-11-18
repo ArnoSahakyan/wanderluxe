@@ -30,8 +30,9 @@ helmet → cors (allow-list) → json/urlencoded (size-limited) → request log
   - Reviews (`src/lib/reviews.ts`) need a completed booking, or a confirmed one whose tour has ended.
 - **Configuration.** `src/config/env.ts` is the only place that reads `process.env`. It validates every variable at start-up.
 - **Errors.** Throw `NotFoundError`, `BadRequestError`, `ForbiddenError` or `AppError(status, msg)`. The client always receives `{ message }`; validation errors also include `errors: [{field, message}]`.
-- **Storage.** `src/lib/storage.ts` provides `put`/`remove` with two drivers.
+- **Storage.** `src/lib/storage.ts` provides `put`/`remove`/`get` with two drivers.
   - The DB stores only object keys. `toPublicImageUrl(key, bucket)` builds URLs.
+  - Every upload is stored twice: the image (WebP, ≤ 1500 px) and a card copy (WebP, ≤ 800 px) at `toCardKey(key)` = `<key>_card.webp`. Lists return both as `image` / `image_card` (`toImageUrls`), tour photos as `image_url` / `card_url`. Cards, search results and gallery thumbnails use the copy; `SmartImage` falls back to the full image if it is missing. `npm run images:cards -w backend` creates missing copies for older images.
   - Files are deleted only **after** the DB change commits (`removeQuietly`), so a storage outage can never leave a row without its file.
 - **Logging.** `src/lib/logger.ts` writes levelled lines in development and JSON lines in production. Secrets are never logged.
 

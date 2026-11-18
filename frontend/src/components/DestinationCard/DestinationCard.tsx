@@ -16,6 +16,7 @@ export const DestinationCard: FC<DestinationCardProps> = ({
   destination_id,
   name,
   image,
+  image_card,
   tourCount,
   description,
   startingPrice,
@@ -30,7 +31,8 @@ export const DestinationCard: FC<DestinationCardProps> = ({
       {/* Image with overlay */}
       <div className='relative h-60 overflow-hidden'>
         <SmartImage
-          src={image ?? undefined}
+          src={image_card || image || undefined}
+          fallbackSrc={image}
           alt={name}
           className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
           {...(priority ? { loading: 'eager', fetchPriority: 'high' } : {})}

@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { Favorite, Tour, TourImage } from '../db/models';
 import { TOURS_BUCKET } from '../constants';
-import { toPublicImageUrl, NotFoundError, AppError, getPagination, totalPages } from '../utils';
+import { toImageUrls, NotFoundError, AppError, getPagination, totalPages } from '../utils';
 import { AuthenticatedRequest, IPaginationQuery } from '../types';
 
 // --- Types ---
@@ -95,9 +95,7 @@ export const getUserFavorites = async (
                 start_date: tour?.start_date,
                 end_date: tour?.end_date,
                 available_spots: tour?.available_spots,
-                image: tour?.TourImages?.[0]?.image_url
-                    ? toPublicImageUrl(tour.TourImages[0].image_url, TOURS_BUCKET)
-                    : null,
+                ...toImageUrls(tour?.TourImages?.[0]?.image_url, TOURS_BUCKET),
             },
         };
     });

@@ -3,6 +3,8 @@ export interface ITourCardProps {
   title: string;
   description: string;
   imageUrl: string;
+  /** Card-size copy; the card falls back to imageUrl if it fails to load. */
+  imageCardUrl?: string | null;
   price: number;
   duration: number;
   mode?: 'public' | 'admin';

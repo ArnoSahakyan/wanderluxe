@@ -181,8 +181,6 @@ cancelled, no_show, refunded → (final)
 
 ## Also worth doing (found along the way)
 
-- **Smaller images for cards.**
-  - Tour and destination photos are served at their original size (≈ 450 KB for a 378 px card). On a throttled mobile connection that makes up most of the tours/destinations page load (Lighthouse LCP ≈ 7–14 s).
-  - Generate a ~800 px "card" variant at upload time with sharp (already a dependency), and backfill the existing images with a one-off script against Supabase Storage.
+- **Smaller images for cards.** *Done:* every upload also stores an 800 px card copy (about 50–70 KiB instead of 250–400 KiB), used by all cards, search results and gallery thumbnails. `npm run images:cards -w backend` creates the copies for images uploaded earlier. Until it has run, cards fall back to the full image.
 - **Guest count above available seats.** *Done:* the limit now shows next to the Guests field and *Book* stays disabled until the count fits.
 - **Missing production images.** The Italy destination image and the "Family Fun in Gold Coast" cover are missing from the Supabase buckets. Re-upload them through the admin panel.

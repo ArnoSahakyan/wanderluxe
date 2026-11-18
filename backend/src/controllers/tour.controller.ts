@@ -7,6 +7,7 @@ import {
     TourImage,
 } from '../db/models';
 import {
+    toImageUrls,
     toPublicImageUrl,
     formatDate,
     uploadAndProcessImages,
@@ -16,7 +17,7 @@ import {
     getPagination,
     totalPages,
 } from '../utils';
-import { removeQuietly } from '../lib/storage';
+import { removeQuietly, toCardKey } from '../lib/storage';
 import { sequelize } from '../db/models';
 import { TOURS_BUCKET } from '../constants';
 import {
@@ -144,7 +145,7 @@ export const getFilteredTours = async (
 
         return {
             ...tourJson,
-            image: coverImage ? toPublicImageUrl(coverImage, TOURS_BUCKET) : null,
+            ...toImageUrls(coverImage, TOURS_BUCKET),
             TourImages: undefined,
         };
     });
@@ -185,6 +186,7 @@ export const getTourById = async (
         image_id: img.image_id,
         is_cover: img.is_cover,
         image_url: toPublicImageUrl(img.image_url, TOURS_BUCKET),
+        card_url: toPublicImageUrl(toCardKey(img.image_url), TOURS_BUCKET),
     }));
 
     let hasReviewed = false;
