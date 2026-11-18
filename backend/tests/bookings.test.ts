@@ -182,7 +182,7 @@ describe('admin booking routes', () => {
         const confirm = await api().patch(`/api/booking/${booking.booking_id}/confirm`).set(admin.auth);
         expect(confirm.status).toBe(200);
         expect(confirm.body.booking.status).toBe('confirmed');
-        expect((await api().patch(`/api/booking/${booking.booking_id}/confirm`).set(admin.auth)).status).toBe(400);
+        expect((await api().patch(`/api/booking/${booking.booking_id}/confirm`).set(admin.auth)).status).toBe(409);
 
         const confirmed = await api().get('/api/booking?status=confirmed&limit=100').set(admin.auth);
         expect(confirmed.body.bookings.every((b: { status: string }) => b.status === 'confirmed')).toBe(true);

@@ -2,11 +2,13 @@ import { Response } from 'express';
 import { Op } from 'sequelize';
 import { TypedRequest } from '../types';
 import { User, Booking, Tour, Destination, Category, Review, Contact } from '../db/models';
+import { completeFinishedBookings } from '../lib/bookings';
 
 export const getAdminStats = async (
     req: TypedRequest<{}>,
     res: Response
 ): Promise<void> => {
+    await completeFinishedBookings();
     const [
         totalUsers,
         totalBookings,
@@ -17,6 +19,7 @@ export const getAdminStats = async (
         unreadMessages,
         revenueResult,
         cancelledLast30Days,
+        bookedRevenueResult,
     ] = await Promise.all([
         User.count(),
         Booking.count({ where: { status: { [Op.ne]: 'cancelled' } } }),
@@ -29,6 +32,8 @@ export const getAdminStats = async (
         Booking.count({
             where: { status: 'cancelled', cancelled_at: { [Op.gte]: new Date(Date.now() - 30 * 86_400_000) } },
         }),
+        // Confirmed trips that haven't happened yet: paid, but not earned.
+        Booking.sum('total_price', { where: { status: 'confirmed' } }),
     ]);
 
     const recentBookings = await Booking.findAll({
@@ -49,7 +54,10 @@ export const getAdminStats = async (
             totalCategories,
             totalReviews,
             unreadMessages,
+            /** Completed trips. */
             totalRevenue: revenueResult || 0,
+            /** Confirmed trips still to come. */
+            bookedRevenue: bookedRevenueResult || 0,
             cancelledLast30Days,
         },
         recentBookings

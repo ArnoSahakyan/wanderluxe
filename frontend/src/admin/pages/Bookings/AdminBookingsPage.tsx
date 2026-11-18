@@ -1,73 +1,34 @@
 import { useState } from 'react';
-import { Loader, Pagination, ConfirmModal, ErrorState } from '../../../components';
-import { useAdminBookings, useAdminCancelBooking, useAdminConfirmBooking } from '../../../hooks';
-import { formatAxiosError } from '../../../utils';
-import type { AdminBookingStatus } from '../../../api';
 import { format } from 'date-fns';
-import { toast } from 'react-toastify';
 import {
+  AdjustmentsHorizontalIcon,
+  ClockIcon,
   CurrencyDollarIcon,
   UserGroupIcon,
-  TrashIcon,
-  CheckIcon,
 } from '@heroicons/react/24/outline';
+import { ErrorState, Loader, Pagination } from '../../../components';
+import { useAdminBookings } from '../../../hooks';
+import type { AdminBooking, AdminBookingStatus } from '../../../api';
+import { BookingStatusDialog } from './BookingStatusDialog';
+import { STATUS_BADGE, STATUS_LABELS } from './bookingStatus';
 
 const STATUS_FILTERS: { value: AdminBookingStatus | ''; label: string }[] = [
   { value: '', label: 'All statuses' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'confirmed', label: 'Confirmed' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'no_show', label: 'No-show' },
-  { value: 'refunded', label: 'Refunded' },
+  ...(Object.keys(STATUS_LABELS) as AdminBookingStatus[]).map((value) => ({
+    value,
+    label: STATUS_LABELS[value],
+  })),
 ];
 
 const AdminBookingsPage = () => {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<AdminBookingStatus | ''>('');
-  const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
-  const [cancelReason, setCancelReason] = useState('');
-  const [confirmBookingId, setConfirmBookingId] = useState<number | null>(null);
+  const [managed, setManaged] = useState<AdminBooking | null>(null);
 
   const { data, isLoading, isError } = useAdminBookings(page, status || undefined);
-  const cancelMutation = useAdminCancelBooking();
-  const confirmMutation = useAdminConfirmBooking();
 
   const bookings = data?.bookings ?? [];
   const totalPages = data?.totalPages ?? 1;
-
-  const handleCancelBooking = (id: number) => {
-    setCancelBookingId(id);
-  };
-
-  const confirmCancelBooking = async () => {
-    if (!cancelBookingId) return;
-    try {
-      await cancelMutation.mutateAsync({ booking_id: cancelBookingId, reason: cancelReason });
-      toast.success('Booking cancelled successfully');
-    } catch (err) {
-      toast.error(formatAxiosError(err) || 'Failed to cancel booking');
-    } finally {
-      setCancelBookingId(null);
-      setCancelReason('');
-    }
-  };
-
-  const handleConfirmBookingClick = (id: number) => {
-    setConfirmBookingId(id);
-  };
-
-  const confirmPendingBooking = async () => {
-    if (!confirmBookingId) return;
-    try {
-      await confirmMutation.mutateAsync(confirmBookingId);
-      toast.success('Booking confirmed successfully');
-    } catch (err) {
-      toast.error(formatAxiosError(err) || 'Failed to confirm booking');
-    } finally {
-      setConfirmBookingId(null);
-    }
-  };
 
   if (isLoading) return <Loader />;
   if (isError && !data) {
@@ -187,15 +148,7 @@ const AdminBookingsPage = () => {
                       </td>
                       <td className='whitespace-nowrap px-3 py-4 text-sm'>
                         <span
-                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                            booking.status === 'confirmed'
-                              ? 'bg-green-50 text-green-700 ring-green-600/20'
-                              : booking.status === 'pending'
-                                ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20'
-                                : booking.status === 'cancelled'
-                                  ? 'bg-red-50 text-red-700 ring-red-600/20'
-                                  : 'bg-gray-50 text-gray-600 ring-gray-500/10'
-                          }`}
+                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${STATUS_BADGE[booking.status] ?? STATUS_BADGE.no_show}`}
                         >
                           {booking.status.replace('_', '-').toUpperCase()}
                         </span>
@@ -215,26 +168,22 @@ const AdminBookingsPage = () => {
                         )}
                       </td>
                       <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
-                        <div className='flex justify-end gap-3'>
-                          {booking.status === 'pending' && (
-                            <button
-                              onClick={() => handleConfirmBookingClick(booking.booking_id)}
-                              title='Confirm Booking'
-                              className='text-green-600 hover:text-green-900 flex items-center gap-1'
-                            >
-                              <CheckIcon className='w-4 h-4' /> Confirm
-                            </button>
+                        <button
+                          type='button'
+                          onClick={() => setManaged(booking)}
+                          title={`Manage booking #${booking.booking_id}`}
+                          className='inline-flex items-center gap-1 text-primary-light hover:text-primary-dark dark:text-primary-dark'
+                        >
+                          {booking.next_statuses?.length ? (
+                            <>
+                              <AdjustmentsHorizontalIcon className='w-4 h-4' /> Manage
+                            </>
+                          ) : (
+                            <>
+                              <ClockIcon className='w-4 h-4' /> History
+                            </>
                           )}
-                          {booking.status !== 'cancelled' && booking.status !== 'completed' && (
-                            <button
-                              onClick={() => handleCancelBooking(booking.booking_id)}
-                              title='Cancel Booking'
-                              className='text-red-600 hover:text-red-900 flex items-center gap-1'
-                            >
-                              <TrashIcon className='w-4 h-4' /> Cancel
-                            </button>
-                          )}
-                        </div>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -264,38 +213,7 @@ const AdminBookingsPage = () => {
         </div>
       </div>
 
-      <ConfirmModal
-        isOpen={!!cancelBookingId}
-        onClose={() => setCancelBookingId(null)}
-        onConfirm={confirmCancelBooking}
-        title='Cancel Booking'
-        message='The seats go back on sale and the booking stays in the list as cancelled. This cannot be undone.'
-        confirmText='Cancel Booking'
-        isLoading={cancelMutation.isPending}
-      >
-        <label htmlFor='admin-cancel-reason' className='form-label'>
-          Reason (shown to the customer)
-        </label>
-        <textarea
-          id='admin-cancel-reason'
-          rows={2}
-          maxLength={255}
-          value={cancelReason}
-          onChange={(e) => setCancelReason(e.target.value)}
-          className='form-input'
-        />
-      </ConfirmModal>
-
-      <ConfirmModal
-        isOpen={!!confirmBookingId}
-        onClose={() => setConfirmBookingId(null)}
-        onConfirm={confirmPendingBooking}
-        title='Confirm Booking'
-        message='Are you sure you want to confirm this booking?'
-        confirmText='Confirm Booking'
-        type='info'
-        isLoading={confirmMutation.isPending}
-      />
+      {managed && <BookingStatusDialog booking={managed} onClose={() => setManaged(null)} />}
     </div>
   );
 };

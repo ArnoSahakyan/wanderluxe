@@ -31,11 +31,6 @@ export const cancelBooking = async ({ booking_id, reason }: CancelBookingInput) 
   return response.data;
 };
 
-export const confirmBooking = async (booking_id: number) => {
-  const response = await api.patch(`/booking/${booking_id}/confirm`);
-  return response.data;
-};
-
 export type AdminBookingStatus = BookingStatus;
 
 /** Booking as returned by the admin list (GET /booking): nested User and Tour. */
@@ -48,6 +43,8 @@ export interface AdminBooking {
   cancelled_at?: string | null;
   cancellation_reason?: string | null;
   CancelledBy?: { user_id: number; full_name: string } | null;
+  /** The statuses an admin may move this booking to next. */
+  next_statuses?: AdminBookingStatus[];
   User: {
     user_id: number;
     full_name: string;
@@ -74,5 +71,40 @@ export const fetchAllBookings = async (
   status?: AdminBookingStatus,
 ): Promise<AdminBookingsResponse> => {
   const response = await api.get('/booking', { params: { page, limit, status } });
+  return response.data;
+};
+
+export interface UpdateBookingStatusInput {
+  booking_id: number;
+  status: AdminBookingStatus;
+  note?: string;
+}
+
+/** Admin: move a booking along its lifecycle (pending → confirmed → completed, ...). */
+export const updateBookingStatus = async ({
+  booking_id,
+  status,
+  note,
+}: UpdateBookingStatusInput) => {
+  const response = await api.patch(`/booking/${booking_id}/status`, {
+    status,
+    note: note?.trim() || undefined,
+  });
+  return response.data;
+};
+
+export interface BookingHistoryEntry {
+  id: number;
+  from_status: AdminBookingStatus | null;
+  to_status: AdminBookingStatus;
+  note: string | null;
+  changed_at: string;
+  ChangedBy?: { user_id: number; full_name: string } | null;
+}
+
+export const fetchBookingHistory = async (
+  booking_id: number,
+): Promise<{ history: BookingHistoryEntry[] }> => {
+  const response = await api.get(`/booking/${booking_id}/history`);
   return response.data;
 };

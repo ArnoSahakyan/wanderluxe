@@ -50,6 +50,7 @@ export class Booking
             foreignKey: 'cancelled_by',
             constraints: false,
         });
+        Booking.hasMany(models.BookingStatusHistory, { as: 'History', foreignKey: 'booking_id' });
         Booking.belongsTo(models.Tour, {
             foreignKey: 'tour_id',
             onDelete: 'CASCADE',

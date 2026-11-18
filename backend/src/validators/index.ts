@@ -113,6 +113,12 @@ export const adminBookingsQuery = pagination.extend({
     status: z.preprocess(emptyToUndefined, z.enum(BOOKING_STATUSES).optional()),
 });
 
+/** PATCH /booking/:id/status (admin). Which moves are allowed lives in lib/bookings.ts. */
+export const bookingStatusBody = z.object({
+    status: z.enum(BOOKING_STATUSES),
+    note: optionalText(255),
+});
+
 /** The body is optional: DELETE requests from older clients send none. */
 export const cancelBookingBody = z.object({ reason: optionalText(255) });
 

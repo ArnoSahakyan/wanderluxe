@@ -8,11 +8,11 @@ import {
   UpdateUserAdminPayload,
   UserStats,
   UsersResponse,
-  cancelBooking,
-  confirmBooking,
   deleteAdminUser,
   deleteContactMessage,
   fetchAllBookings,
+  fetchBookingHistory,
+  updateBookingStatus,
   fetchContactMessages,
   getAdminStats,
   getAdminUsers,
@@ -86,15 +86,17 @@ const useInvalidateBookings = () => {
   };
 };
 
-export const useAdminCancelBooking = () => {
+export const useAdminUpdateBookingStatus = () => {
   const invalidate = useInvalidateBookings();
-  return useMutation({ mutationFn: cancelBooking, onSuccess: invalidate });
+  return useMutation({ mutationFn: updateBookingStatus, onSuccess: invalidate });
 };
 
-export const useAdminConfirmBooking = () => {
-  const invalidate = useInvalidateBookings();
-  return useMutation({ mutationFn: confirmBooking, onSuccess: invalidate });
-};
+export const useBookingHistory = (bookingId: number | null) =>
+  useQuery({
+    queryKey: adminKeys.bookingHistory(bookingId ?? 0),
+    queryFn: () => fetchBookingHistory(bookingId!),
+    enabled: !!bookingId,
+  });
 
 // ── Contact messages ──────────────────────────────────────────────────────────
 export const useContactMessages = (page: number, limit = ADMIN_PAGE_SIZE) =>

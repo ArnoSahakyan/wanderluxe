@@ -12,6 +12,7 @@ import {
     User,
     Contact,
     RefreshToken,
+    BookingStatusHistory,
 } from "../db/models";
 
 export interface DbModels {
@@ -29,4 +30,5 @@ export interface DbModels {
     NewsletterVerification: typeof NewsletterVerification;
     Contact: typeof Contact;
     RefreshToken: typeof RefreshToken;
+    BookingStatusHistory: typeof BookingStatusHistory;
 }

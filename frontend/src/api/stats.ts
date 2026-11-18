@@ -11,6 +11,8 @@ export interface AdminStats {
     unreadMessages: number;
     totalRevenue: number | string;
     cancelledLast30Days?: number;
+    /** Confirmed trips that haven't happened yet. */
+    bookedRevenue?: number | string;
   };
   recentBookings: {
     booking_id: number;

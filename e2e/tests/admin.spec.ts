@@ -21,7 +21,9 @@ test('an admin signs in, sees the dashboard metrics and changes a tour’s dates
         await expect(metric(name), name).toHaveText(/^\d+$/);
     }
     await expect(metric('Total Tours')).not.toHaveText('0');
-    await expect(metric('Total Revenue')).toHaveText(/^\$\d+\.\d{2}$/);
+    for (const name of ['Revenue (completed trips)', 'Booked (upcoming trips)']) {
+        await expect(metric(name), name).toHaveText(/^\$\d+\.\d{2}$/);
+    }
     await expect(page.getByRole('heading', { name: 'Recent Bookings' })).toBeVisible();
 
     // Edit the tour's dates.

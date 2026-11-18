@@ -11,6 +11,7 @@ import {
   CurrencyDollarIcon,
   BriefcaseIcon,
   XCircleIcon,
+  CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 
 const AdminHomePage = () => {
@@ -32,9 +33,14 @@ const AdminHomePage = () => {
       icon: XCircleIcon,
     },
     {
-      name: 'Total Revenue',
+      name: 'Revenue (completed trips)',
       stat: `$${Number(stats.metrics.totalRevenue || 0).toFixed(2)}`,
       icon: CurrencyDollarIcon,
+    },
+    {
+      name: 'Booked (upcoming trips)',
+      stat: `$${Number(stats.metrics.bookedRevenue || 0).toFixed(2)}`,
+      icon: CalendarDaysIcon,
     },
     { name: 'Total Tours', stat: stats.metrics.totalTours, icon: PaperAirplaneIcon },
     { name: 'Total Destinations', stat: stats.metrics.totalDestinations, icon: MapPinIcon },
