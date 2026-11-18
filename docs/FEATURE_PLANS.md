@@ -1,5 +1,13 @@
 # Feature plans
 
+> **Status (2026-11-19): all four are built**, one commit each on `feat/booking-lifecycle`. Where the build differs from the plan:
+> - My Bookings filters with `?view=upcoming|past|cancelled` (not `?status=`), so it can't be confused with a booking's status.
+> - No partial index on active bookings: the existing `bookings_user_id_idx` is enough at this size.
+> - The optional `notify_bookings` preference was left out.
+> - The admin's status change and history share one *Manage* dialog instead of a dropdown plus a popover.
+>
+> Of "Also worth doing", the guest-count limit is done. Card-size images and the two missing production images are still open.
+
 Plans for the next four product features, written 2026-11-18 against the code at that date. Each plan lists:
 - what happens today;
 - the proposed change across the database, API and frontend;
@@ -9,12 +17,12 @@ Plans for the next four product features, written 2026-11-18 against the code at
 
 They are ordered so that each builds on the one before. All four share one idea: a booking has a **lifecycle** (`pending → confirmed → completed`, with `cancelled`, `no_show` and `refunded` as side exits) instead of being deleted.
 
-| # | Feature | Depends on | Size |
-|---|---|---|---|
-| 1 | Keep cancelled bookings as history | – | M (1–1.5 days) |
-| 2 | Admin booking status changes | 1 | M (1 day) |
-| 3 | Booking confirmation e-mails | 1, 2 (for the status e-mails) | S–M (0.5–1 day) |
-| 4 | Reviews only after a completed trip | 2 | S (0.5 day) |
+| # | Feature | Depends on | Size | Status |
+|---|---|---|---|---|
+| 1 | Keep cancelled bookings as history | – | M (1–1.5 days) | Done |
+| 2 | Admin booking status changes | 1 | M (1 day) | Done |
+| 3 | Booking confirmation e-mails | 1, 2 (for the status e-mails) | S–M (0.5–1 day) | Done |
+| 4 | Reviews only after a completed trip | 2 | S (0.5 day) | Done |
 
 ---
 
@@ -176,5 +184,5 @@ cancelled, no_show, refunded → (final)
 - **Smaller images for cards.**
   - Tour and destination photos are served at their original size (≈ 450 KB for a 378 px card). On a throttled mobile connection that makes up most of the tours/destinations page load (Lighthouse LCP ≈ 7–14 s).
   - Generate a ~800 px "card" variant at upload time with sharp (already a dependency), and backfill the existing images with a one-off script against Supabase Storage.
-- **Guest count above available seats.** The tour page only blocks this when *Book* is pressed (`TourDetailsPage.tsx`). Capping the input, or showing the limit inline, would be friendlier.
+- **Guest count above available seats.** *Done:* the limit now shows next to the Guests field and *Book* stays disabled until the count fits.
 - **Missing production images.** The Italy destination image and the "Family Fun in Gold Coast" cover are missing from the Supabase buckets. Re-upload them through the admin panel.
