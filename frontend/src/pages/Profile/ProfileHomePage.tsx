@@ -133,7 +133,7 @@ const ProfileHomePage = () => {
                               {booking.Tour?.name}
                             </p>
                             <p className='text-xs text-secondary-light dark:text-secondary-dark'>
-                              Booked on {new Date(booking.created_at).toLocaleDateString()}
+                              Booked on {new Date(booking.booking_date).toLocaleDateString()}
                             </p>
                           </div>
                         </div>

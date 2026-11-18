@@ -29,8 +29,8 @@ export const PasswordChangeForm = () => {
 
   const onPasswordSubmit = (data: PasswordChangeFormData) => {
     const { current_password, new_password } = data;
-    changePassword({ current_password, new_password });
-    resetPasswordForm();
+    // Clear only once the server accepted it, so a wrong current password keeps the input.
+    changePassword({ current_password, new_password }, { onSuccess: () => resetPasswordForm() });
   };
 
   return (
