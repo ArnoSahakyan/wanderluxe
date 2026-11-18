@@ -10,6 +10,8 @@ import {
   EnvelopeIcon,
   CurrencyDollarIcon,
   BriefcaseIcon,
+  XCircleIcon,
+  CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 
 const AdminHomePage = () => {
@@ -26,9 +28,19 @@ const AdminHomePage = () => {
     { name: 'Total Users', stat: stats.metrics.totalUsers, icon: UsersIcon },
     { name: 'Total Bookings', stat: stats.metrics.totalBookings, icon: BriefcaseIcon },
     {
-      name: 'Total Revenue',
+      name: 'Cancelled (30 days)',
+      stat: stats.metrics.cancelledLast30Days ?? 0,
+      icon: XCircleIcon,
+    },
+    {
+      name: 'Revenue (completed)',
       stat: `$${Number(stats.metrics.totalRevenue || 0).toFixed(2)}`,
       icon: CurrencyDollarIcon,
+    },
+    {
+      name: 'Booked (upcoming)',
+      stat: `$${Number(stats.metrics.bookedRevenue || 0).toFixed(2)}`,
+      icon: CalendarDaysIcon,
     },
     { name: 'Total Tours', stat: stats.metrics.totalTours, icon: PaperAirplaneIcon },
     { name: 'Total Destinations', stat: stats.metrics.totalDestinations, icon: MapPinIcon },
@@ -69,7 +81,7 @@ const AdminHomePage = () => {
               <div className='absolute rounded-md bg-primary-light p-3'>
                 <item.icon className='h-6 w-6 text-white' aria-hidden='true' />
               </div>
-              <p className='ml-16 truncate text-sm font-medium text-secondary-light dark:text-secondary-dark'>
+              <p className='ml-16 line-clamp-2 min-h-10 text-sm font-medium leading-5 text-secondary-light dark:text-secondary-dark'>
                 {item.name}
               </p>
             </dt>

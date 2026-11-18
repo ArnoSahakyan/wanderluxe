@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AdminBookingStatus,
   AdminBookingsResponse,
   AdminStats,
   ContactMessagesResponse,
@@ -7,11 +8,11 @@ import {
   UpdateUserAdminPayload,
   UserStats,
   UsersResponse,
-  cancelBooking,
-  confirmBooking,
   deleteAdminUser,
   deleteContactMessage,
   fetchAllBookings,
+  fetchBookingHistory,
+  updateBookingStatus,
   fetchContactMessages,
   getAdminStats,
   getAdminUsers,
@@ -65,10 +66,14 @@ export const useDeleteAdminUser = () => {
 };
 
 // ── Bookings ──────────────────────────────────────────────────────────────────
-export const useAdminBookings = (page: number, limit = ADMIN_PAGE_SIZE) =>
+export const useAdminBookings = (
+  page: number,
+  status?: AdminBookingStatus,
+  limit = ADMIN_PAGE_SIZE,
+) =>
   useQuery<AdminBookingsResponse>({
-    queryKey: adminKeys.bookings(page, limit),
-    queryFn: () => fetchAllBookings(page, limit),
+    queryKey: adminKeys.bookings(page, limit, status),
+    queryFn: () => fetchAllBookings(page, limit, status),
     placeholderData: (prev) => prev,
   });
 
@@ -81,15 +86,17 @@ const useInvalidateBookings = () => {
   };
 };
 
-export const useAdminCancelBooking = () => {
+export const useAdminUpdateBookingStatus = () => {
   const invalidate = useInvalidateBookings();
-  return useMutation({ mutationFn: cancelBooking, onSuccess: invalidate });
+  return useMutation({ mutationFn: updateBookingStatus, onSuccess: invalidate });
 };
 
-export const useAdminConfirmBooking = () => {
-  const invalidate = useInvalidateBookings();
-  return useMutation({ mutationFn: confirmBooking, onSuccess: invalidate });
-};
+export const useBookingHistory = (bookingId: number | null) =>
+  useQuery({
+    queryKey: adminKeys.bookingHistory(bookingId ?? 0),
+    queryFn: () => fetchBookingHistory(bookingId!),
+    enabled: !!bookingId,
+  });
 
 // ── Contact messages ──────────────────────────────────────────────────────────
 export const useContactMessages = (page: number, limit = ADMIN_PAGE_SIZE) =>

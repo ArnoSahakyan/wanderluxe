@@ -39,3 +39,16 @@ export const deleteReview = async (review_id: number) => {
   const response = await api.delete(`/review/${review_id}`);
   return response.data;
 };
+
+export type ReviewEligibilityReason = 'eligible' | 'already_reviewed' | 'not_travelled';
+
+export interface ReviewEligibility {
+  canReview: boolean;
+  reason: ReviewEligibilityReason;
+}
+
+/** Whether the signed-in user may review the tour (only after travelling on it). */
+export const fetchReviewEligibility = async (tour_id: number): Promise<ReviewEligibility> => {
+  const response = await api.get(`/review/eligibility/${tour_id}`);
+  return response.data;
+};

@@ -91,6 +91,18 @@ export const createTour = async (
     return getTour(request, created.tour_id);
 };
 
+/** Books `tour_id` as the signed-in customer and returns the booking. */
+export const createBooking = async (
+    request: APIRequestContext,
+    auth: Record<string, string>,
+    tour_id: number,
+    number_of_people = 1,
+) =>
+    ok<{ booking_id: number; status: string }>(
+        await request.post(api('/booking'), { headers: auth, data: { tour_id, number_of_people } }),
+        `book tour ${tour_id}`,
+    );
+
 export const getTour = async (request: APIRequestContext, id: number) =>
     ok<Tour>(await request.get(api(`/tours/${id}`)), `get tour ${id}`);
 

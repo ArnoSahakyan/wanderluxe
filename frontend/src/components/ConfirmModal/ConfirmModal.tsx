@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, type ReactNode } from 'react';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import { ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
@@ -12,6 +12,8 @@ interface ConfirmModalProps {
   cancelText?: string;
   type?: 'danger' | 'info';
   isLoading?: boolean;
+  /** Extra content under the message, e.g. an optional reason field. */
+  children?: ReactNode;
 }
 
 export const ConfirmModal: FC<ConfirmModalProps> = ({
@@ -24,6 +26,7 @@ export const ConfirmModal: FC<ConfirmModalProps> = ({
   cancelText = 'Cancel',
   type = 'danger',
   isLoading = false,
+  children,
 }) => {
   return (
     <Dialog open={isOpen} onClose={isLoading ? () => {} : onClose} className='relative z-50'>
@@ -58,6 +61,7 @@ export const ConfirmModal: FC<ConfirmModalProps> = ({
               <div className='mt-2'>
                 <p className='text-sm text-secondary-light dark:text-secondary-dark'>{message}</p>
               </div>
+              {children && <div className='mt-4'>{children}</div>}
             </div>
           </div>
 

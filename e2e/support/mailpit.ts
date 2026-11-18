@@ -16,8 +16,8 @@ export interface Message extends MessageSummary {
     HTML: string;
 }
 
-/** Waits for the newest message sent to `to` and returns it in full. */
-export const waitForEmail = async (request: APIRequestContext, to: string): Promise<Message> => {
+/** Waits for the newest message sent to `to` (optionally with a matching subject) and returns it in full. */
+export const waitForEmail = async (request: APIRequestContext, to: string, subject?: RegExp): Promise<Message> => {
     let found: MessageSummary | undefined;
     await expect
         .poll(
@@ -25,10 +25,14 @@ export const waitForEmail = async (request: APIRequestContext, to: string): Prom
                 const res = await request.get(`${MAILPIT_URL}/api/v1/messages`, { params: { limit: 50 } });
                 expect(res.ok(), `Mailpit is not reachable at ${MAILPIT_URL}; run npm run db:up`).toBe(true);
                 const { messages } = (await res.json()) as { messages: MessageSummary[] };
-                found = messages.find((m) => m.To.some((r) => r.Address.toLowerCase() === to.toLowerCase()));
+                found = messages.find(
+                    (m) =>
+                        m.To.some((r) => r.Address.toLowerCase() === to.toLowerCase()) &&
+                        (!subject || subject.test(m.Subject)),
+                );
                 return found?.ID;
             },
-            { message: `e-mail to ${to}`, timeout: 15_000 },
+            { message: `e-mail to ${to}${subject ? ` matching ${subject}` : ''}`, timeout: 15_000 },
         )
         .toBeTruthy();
 

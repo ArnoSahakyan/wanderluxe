@@ -22,7 +22,7 @@ export const DemoBanner = () => {
       <span>
         {isAdmin
           ? 'You are exploring the demo admin: read-only, and customer details are masked.'
-          : 'You are exploring a demo account. Bookings, favourites and reviews made here are removed after 24 hours.'}
+          : 'You are exploring a demo account. Bookings and favourites made here are removed after 24 hours.'}
       </span>
       <Link
         to={ROUTES.AUTH + ROUTES.SIGNUP}

@@ -1,9 +1,20 @@
 import type { Response } from 'express';
-import { literal, Op } from 'sequelize';
+import { literal, Op, type OrderItem } from 'sequelize';
 import type { z } from 'zod';
 import { CANCELLATION_MIN_DAYS, TOURS_BUCKET } from '../constants';
-import { Booking, Category, Destination, Tour, TourImage, User, sequelize } from '../db/models';
-import type { AuthenticatedRequest, IPaginationQuery, TypedRequest } from '../types';
+import { Booking, BookingStatusHistory, Category, Destination, Tour, TourImage, User, sequelize } from '../db/models';
+import type { BookingStatus } from '../db/models/booking.model';
+import {
+    type BookingView,
+    bookingViewWhere,
+    cancelBookingRow,
+    completeFinishedBookings,
+    nextStatuses,
+    recordStatusChange,
+    transitionBooking,
+} from '../lib/bookings';
+import { isEmailedStatus, queueBookingEmail } from '../lib/bookingNotifications';
+import type { AuthenticatedRequest, TypedRequest } from '../types';
 import {
     BadRequestError,
     ForbiddenError,
@@ -49,21 +60,28 @@ export const createBooking = async (
 
         // numeric(10,2) arrives as a string from pg; compute in cents to avoid float drift.
         const total_price = (Math.round(Number(tour.price) * 100) * number_of_people) / 100;
-        return Booking.create({ user_id, tour_id, number_of_people, total_price }, { transaction });
+        const booking = await Booking.create({ user_id, tour_id, number_of_people, total_price }, { transaction });
+        await recordStatusChange(booking.booking_id, null, booking.status, { actorId: user_id, transaction });
+        return booking;
     });
 
+    queueBookingEmail(booking.booking_id, 'received');
     res.status(201).json(booking);
 };
 
 /**
- * Cancels (deletes) a booking and releases its seats. Customers may cancel
- * their own bookings up to CANCELLATION_MIN_DAYS before the start; admins any time.
+ * Cancels a booking and releases its seats. The row is kept as history with
+ * status 'cancelled'. Customers may cancel their own bookings up to
+ * CANCELLATION_MIN_DAYS before the start; admins any time.
  */
-export const cancelBooking = async (req: AuthenticatedRequest<BookingIdParams>, res: Response) => {
-    const user_id = req.user_id;
+export const cancelBooking = async (
+    req: AuthenticatedRequest<BookingIdParams, {}, z.infer<typeof v.cancelBookingBody>>,
+    res: Response,
+) => {
+    const user_id = req.user_id!;
     const isAdmin = req.user_role === 'admin';
 
-    await sequelize.transaction(async (transaction) => {
+    const booking = await sequelize.transaction(async (transaction) => {
         const booking = await Booking.findByPk(req.params.booking_id, { transaction, lock: transaction.LOCK.UPDATE });
         if (!booking) {
             throw new NotFoundError('Booking not found');
@@ -78,17 +96,17 @@ export const cancelBooking = async (req: AuthenticatedRequest<BookingIdParams>, 
         }
 
         const daysUntilStart = (new Date(tour.start_date).getTime() - Date.now()) / DAY_MS;
-        if (!isAdmin && daysUntilStart < CANCELLATION_MIN_DAYS) {
+        if (!isAdmin && booking.status !== 'cancelled' && daysUntilStart < CANCELLATION_MIN_DAYS) {
             throw new BadRequestError(
                 `Bookings can only be cancelled at least ${CANCELLATION_MIN_DAYS} days before the tour starts.`,
             );
         }
 
-        await tour.increment('available_spots', { by: booking.number_of_people, transaction });
-        await booking.destroy({ transaction });
+        return cancelBookingRow(booking, { actorId: user_id, reason: req.body?.reason, transaction });
     });
 
-    res.status(200).json({ message: 'Booking cancelled successfully' });
+    queueBookingEmail(booking.booking_id, 'cancelled');
+    res.status(200).json({ message: 'Booking cancelled successfully', booking });
 };
 
 const coverImageUrl = (tour?: Tour) => {
@@ -96,17 +114,36 @@ const coverImageUrl = (tour?: Tour) => {
     return cover ? toPublicImageUrl(cover.image_url, TOURS_BUCKET) : null;
 };
 
+const VIEW_ORDER: Record<BookingView, OrderItem[]> = {
+    upcoming: [[Tour, 'start_date', 'ASC']],
+    past: [[Tour, 'start_date', 'DESC']],
+    cancelled: [['cancelled_at', 'DESC']],
+};
+
+/** Cancellation details as the customer and admin pages show them. */
+const cancellationInfo = (booking: Booking) =>
+    booking.status === 'cancelled'
+        ? {
+              cancelled_at: booking.cancelled_at,
+              cancellation_reason: booking.cancellation_reason,
+              cancelled_by_customer: booking.cancelled_by === booking.user_id,
+          }
+        : {};
+
 export const getUsersBookings = async (
-    req: AuthenticatedRequest<{}, {}, {}, IPaginationQuery>,
+    req: AuthenticatedRequest<{}, {}, {}, z.infer<typeof v.myBookingsQuery>>,
     res: Response,
 ) => {
     const { page, limit, offset } = getPagination(req.query);
+    const view: BookingView = req.query.view ?? 'upcoming';
+    await completeFinishedBookings();
 
     const { count, rows } = await Booking.findAndCountAll({
-        where: { user_id: req.user_id },
+        where: { user_id: req.user_id, ...bookingViewWhere(view) },
         include: [
             {
                 model: Tour,
+                required: true,
                 include: [
                     { model: Destination, attributes: ['name'] },
                     { model: Category, attributes: ['name'] },
@@ -114,10 +151,13 @@ export const getUsersBookings = async (
                 ],
             },
         ],
-        order: [['booking_date', 'DESC']],
+        order: [...VIEW_ORDER[view], ['booking_id', 'DESC']],
         limit,
         offset,
         distinct: true,
+        // The view filters on the tour's dates; a tour has at most one cover image,
+        // so a flat join paginates correctly.
+        subQuery: false,
     });
 
     const bookings = rows.map((booking) => {
@@ -128,6 +168,8 @@ export const getUsersBookings = async (
             number_of_people: booking.number_of_people,
             total_price: booking.total_price,
             status: booking.status,
+            ...cancellationInfo(booking),
+            tour_id: tour?.tour_id,
             tour_name: tour?.name,
             start_date: tour?.start_date,
             end_date: tour?.end_date,
@@ -179,6 +221,7 @@ export const getBookingById = async (req: AuthenticatedRequest<BookingIdParams>,
         number_of_people: booking.number_of_people,
         total_price: booking.total_price,
         status: booking.status,
+        ...cancellationInfo(booking),
         tour_id: tour?.tour_id,
         tour_name: tour?.name,
         start_date: tour?.start_date,
@@ -196,10 +239,16 @@ export const getBookingById = async (req: AuthenticatedRequest<BookingIdParams>,
     });
 };
 
-export const getAllBookings = async (req: TypedRequest<{}, {}, {}, IPaginationQuery>, res: Response) => {
+export const getAllBookings = async (
+    req: TypedRequest<{}, {}, {}, z.infer<typeof v.adminBookingsQuery>>,
+    res: Response,
+) => {
     const { page, limit, offset } = getPagination(req.query);
+    const { status } = req.query;
+    await completeFinishedBookings();
 
     const { count, rows } = await Booking.findAndCountAll({
+        where: status ? { status } : {},
         include: [
             {
                 model: Tour,
@@ -208,6 +257,11 @@ export const getAllBookings = async (req: TypedRequest<{}, {}, {}, IPaginationQu
             {
                 model: User,
                 attributes: ['user_id', 'full_name', 'email'],
+            },
+            {
+                model: User,
+                as: 'CancelledBy',
+                attributes: ['user_id', 'full_name'],
             },
         ],
         order: [['booking_date', 'DESC']],
@@ -220,22 +274,54 @@ export const getAllBookings = async (req: TypedRequest<{}, {}, {}, IPaginationQu
         total: count,
         page,
         totalPages: totalPages(count, limit),
-        bookings: rows,
+        // next_statuses: what the admin may move each booking to (see lib/bookings.ts).
+        bookings: rows.map((row) => ({ ...row.toJSON(), next_statuses: nextStatuses(row.status) })),
     });
 };
 
+const changeStatus = async (booking_id: number, actorId: number, to: BookingStatus, note?: string) => {
+    const booking = await sequelize.transaction(async (transaction) => {
+        const booking = await Booking.findByPk(booking_id, { transaction, lock: transaction.LOCK.UPDATE });
+        if (!booking) {
+            throw new NotFoundError('Booking not found');
+        }
+        return transitionBooking(booking, to, { actorId, note, transaction });
+    });
+    if (isEmailedStatus(to)) queueBookingEmail(booking.booking_id, to);
+    return booking;
+};
+
+/** Admin: move a booking along its lifecycle (409 lists the allowed next states). */
+export const updateBookingStatus = async (
+    req: AuthenticatedRequest<BookingIdParams, {}, z.infer<typeof v.bookingStatusBody>>,
+    res: Response,
+) => {
+    const booking = await changeStatus(req.params.booking_id, req.user_id!, req.body.status, req.body.note);
+    res.status(200).json({
+        message: `Booking marked ${booking.status.replace('_', '-')}`,
+        booking: { ...booking.toJSON(), next_statuses: nextStatuses(booking.status) },
+    });
+};
+
+/** Admin: shortcut for pending → confirmed, kept for older clients. */
 export const confirmBooking = async (req: AuthenticatedRequest<BookingIdParams>, res: Response) => {
-    const booking = await Booking.findByPk(req.params.booking_id);
+    const booking = await changeStatus(req.params.booking_id, req.user_id!, 'confirmed');
+    res.status(200).json({ message: 'Booking confirmed successfully', booking });
+};
+
+/** Admin: the status changes of one booking, oldest first. */
+export const getBookingHistory = async (req: AuthenticatedRequest<BookingIdParams>, res: Response) => {
+    const booking = await Booking.findByPk(req.params.booking_id, { attributes: ['booking_id'] });
     if (!booking) {
         throw new NotFoundError('Booking not found');
     }
-
-    if (booking.status !== 'pending') {
-        throw new BadRequestError('Only pending bookings can be confirmed');
-    }
-
-    booking.status = 'confirmed';
-    await booking.save();
-
-    res.status(200).json({ message: 'Booking confirmed successfully', booking });
+    const history = await BookingStatusHistory.findAll({
+        where: { booking_id: booking.booking_id },
+        include: [{ model: User, as: 'ChangedBy', attributes: ['user_id', 'full_name'] }],
+        order: [
+            ['changed_at', 'ASC'],
+            ['id', 'ASC'],
+        ],
+    });
+    res.status(200).json({ history });
 };

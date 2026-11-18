@@ -6,15 +6,17 @@
  *   the only way in is POST /api/auth/demo, available while DEMO_MODE=true.
  * - Their access tokens carry `demo: true`, and verifyToken then limits them:
  *   the demo admin is read-only and sees other people's personal data masked;
- *   the demo customer may book, cancel, favourite and review, but cannot change
- *   the account itself.
- * - The demo customer's bookings, reviews and favourites are removed 24 h after
- *   they were made (on the next demo sign-in), so seats go back on sale.
+ *   the demo customer may book, cancel and favourite (and, like anyone, review a
+ *   tour after travelling on it), but cannot change the account itself.
+ * - The demo customer's bookings (cancelled ones too), reviews and favourites are
+ *   deleted 24 h after they were made (on the next demo sign-in), so seats go back
+ *   on sale. Real customers' cancelled bookings are kept as history instead.
  * The restrictions follow the e-mail address, so they also apply with DEMO_MODE off.
  */
 import { Op, col, where } from 'sequelize';
 import { Booking, Favorite, Review, Tour, sequelize } from '../db/models';
 import { type DemoRole, isDemoEmail } from '../utils/demoAccounts';
+import { ACTIVE_STATUSES } from './bookings';
 import { logger } from './logger';
 
 export { type DemoRole, demoEmail, isDemoEmail } from '../utils/demoAccounts';
@@ -46,8 +48,11 @@ const MASKERS: Record<string, (value: string) => string> = {
     phone_number: () => '•••',
     phone: () => '•••',
 };
+/** Free text people wrote about a booking (cancellation reasons, status notes). */
+const FREE_TEXT_KEYS = new Set(['cancellation_reason', 'note']);
 /** Contact-form messages are private too; other `message` keys are API status texts. */
-const maskMessage = (row: Record<string, unknown>, key: string) => key === 'message' && 'contact_id' in row;
+const maskMessage = (row: Record<string, unknown>, key: string) =>
+    FREE_TEXT_KEYS.has(key) || (key === 'message' && 'contact_id' in row);
 
 /**
  * Deep copy of a JSON body with personal fields masked, so visitors browsing
@@ -90,11 +95,14 @@ export const cleanUpDemoCustomer = async (userId: number) => {
                 lock: transaction.LOCK.UPDATE,
             });
             for (const booking of bookings) {
-                await Tour.increment('available_spots', {
-                    by: booking.number_of_people,
-                    where: { tour_id: booking.tour_id },
-                    transaction,
-                });
+                // Cancelled bookings already gave their seats back.
+                if (ACTIVE_STATUSES.includes(booking.status)) {
+                    await Tour.increment('available_spots', {
+                        by: booking.number_of_people,
+                        where: { tour_id: booking.tour_id },
+                        transaction,
+                    });
+                }
                 await booking.destroy({ transaction });
             }
             await Review.destroy({ where: olderThanCutoff, transaction });

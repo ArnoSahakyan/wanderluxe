@@ -263,3 +263,15 @@ Follow-up cleanup, also 2026-11-17:
   - 66 frontend tests, up from 21.
   - 18 Playwright tests, up from 6, now also run in CI as a second job.
 - **README** rewritten for visitors, with screenshots and an architecture diagram. Feature plans are in docs/FEATURE_PLANS.md.
+
+## 10. Booking lifecycle (2026-11-19)
+
+The four product features planned in docs/FEATURE_PLANS.md, one commit each:
+
+- **Cancelled bookings are kept as history.** The row stays with who cancelled it, when and why. The seats are released exactly once; a second cancel is a 409. My Bookings has Upcoming / Past / Cancelled tabs.
+- **Admins change booking status.** One transition table (`backend/src/lib/bookings.ts`), a history row for every change, and automatic completion of finished trips. This also fixed the dashboard revenue, which was always $0.00 because nothing ever set `completed`.
+- **Booking e-mails.** Sent when a booking is made, confirmed, cancelled or completed. They go out after the transaction commits, so a mail failure can't fail a booking.
+- **Reviews only after a completed trip.** `POST /review` answers 403 otherwise. The tour page explains why the form is missing.
+- **Smaller fix.** The tour page shows the seat limit next to the Guests field.
+- **Schema.** Two additive migrations, `20261119000001` (three nullable columns on `bookings`) and `20261119000002` (`booking_status_history`). Both must be applied to Supabase before the API is deployed.
+- **Tests.** 75 API tests, 78 frontend tests and 20 Playwright tests.

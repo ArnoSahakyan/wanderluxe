@@ -23,6 +23,7 @@ const BookingDetailsPage = () => {
   // The hook shows the success/error toasts; the page only navigates away on success.
   const { mutate: cancelBooking, isPending: cancelling } = useCancelBooking();
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [reason, setReason] = useState('');
 
   if (isLoading) {
     return (
@@ -67,10 +68,13 @@ const BookingDetailsPage = () => {
   }
 
   const handleCancel = () => {
-    cancelBooking(booking.booking_id, {
-      onSuccess: () => navigate(ROUTES.PROFILE_BOOKINGS),
-      onSettled: () => setConfirmCancel(false),
-    });
+    cancelBooking(
+      { booking_id: booking.booking_id, reason },
+      {
+        onSuccess: () => navigate(`${ROUTES.PROFILE_BOOKINGS}?view=cancelled`),
+        onSettled: () => setConfirmCancel(false),
+      },
+    );
   };
 
   return (
@@ -81,10 +85,23 @@ const BookingDetailsPage = () => {
         onConfirm={handleCancel}
         isLoading={cancelling}
         title='Cancel this booking?'
-        message='Your seats will be released and this booking will be removed. This cannot be undone.'
+        message='Your seats will be released. The booking stays in your history under Cancelled. This cannot be undone.'
         confirmText='Cancel booking'
         cancelText='Keep booking'
-      />
+      >
+        <label htmlFor='cancel-reason' className='form-label'>
+          Reason (optional)
+        </label>
+        <textarea
+          id='cancel-reason'
+          rows={2}
+          maxLength={255}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className='form-input'
+          placeholder='Let us know why, if you like'
+        />
+      </ConfirmModal>
       {/* Back button and hero section remain the same */}
       <div className='mb-8'>
         <Link
@@ -139,10 +156,24 @@ const BookingDetailsPage = () => {
                         : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                     }`}
                   >
-                    {booking.status.toUpperCase()}
+                    {booking.status.replace('_', '-').toUpperCase()}
                   </span>
                 </div>
               </div>
+
+              {booking.status === 'cancelled' && (
+                <div className='mb-8 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/30 dark:text-red-200'>
+                  <p className='font-medium'>
+                    {booking.cancelled_by_customer
+                      ? 'You cancelled this booking'
+                      : 'WanderLuxe cancelled this booking'}
+                    {booking.cancelled_at && ` on ${formatDate(booking.cancelled_at)}`}.
+                  </p>
+                  {booking.cancellation_reason && (
+                    <p className='mt-1'>Reason: {booking.cancellation_reason}</p>
+                  )}
+                </div>
+              )}
 
               <div className='grid grid-cols-1 md:grid-cols-3 gap-8 mb-8'>
                 <div className='border-r border-gray-200 dark:border-gray-700 pr-8'>

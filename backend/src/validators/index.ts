@@ -101,6 +101,27 @@ export const createBookingBody = z.object({
     number_of_people: z.coerce.number().int('must be a whole number').min(1).max(100),
 });
 
+export const BOOKING_STATUSES = ['pending', 'confirmed', 'cancelled', 'completed', 'no_show', 'refunded'] as const;
+
+/** GET /booking/my: which part of the customer's history to list. */
+export const myBookingsQuery = pagination.extend({
+    view: z.preprocess(emptyToUndefined, z.enum(['upcoming', 'past', 'cancelled']).optional()),
+});
+
+/** GET /booking (admin): optional status filter. */
+export const adminBookingsQuery = pagination.extend({
+    status: z.preprocess(emptyToUndefined, z.enum(BOOKING_STATUSES).optional()),
+});
+
+/** PATCH /booking/:id/status (admin). Which moves are allowed lives in lib/bookings.ts. */
+export const bookingStatusBody = z.object({
+    status: z.enum(BOOKING_STATUSES),
+    note: optionalText(255),
+});
+
+/** The body is optional: DELETE requests from older clients send none. */
+export const cancelBookingBody = z.object({ reason: optionalText(255) });
+
 // ── categories ────────────────────────────────────────────────────────────────
 export const categoryBody = z.object({ name: requiredText(255) });
 

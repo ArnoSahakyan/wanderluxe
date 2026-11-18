@@ -79,10 +79,16 @@ describe('Tour booking', () => {
     await screen.findByRole('heading', { name: 'Bali Retreat' });
 
     setGuests('6');
+    // The limit shows next to the field and Book is disabled until it fits.
+    expect(screen.getByRole('alert')).toHaveTextContent('Only 4 spots left');
+    expect(guests()).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('button', { name: 'Book Now' })).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: 'Book Now' }));
-
-    expect(await screen.findByText('Only 4 spot(s) available')).toBeInTheDocument();
     expect(calls.some((c) => c.method === 'POST' && c.url === '/booking')).toBe(false);
+
+    setGuests('4');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Book Now' })).toBeEnabled();
   });
 
   it('books the tour for the chosen number of guests', async () => {

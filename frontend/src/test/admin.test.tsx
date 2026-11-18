@@ -148,72 +148,148 @@ describe('admin Users page', () => {
 });
 
 describe('admin Bookings page', () => {
+  const NEXT: Record<string, string[]> = {
+    pending: ['confirmed', 'cancelled'],
+    confirmed: ['completed', 'no_show', 'cancelled'],
+    completed: ['refunded'],
+    cancelled: [],
+  };
   const booking = (booking_id: number, status: string) => ({
     booking_id,
     booking_date: '2026-05-10T09:00:00Z',
     number_of_people: 2,
     total_price: '2500.00',
     status,
+    next_statuses: NEXT[status],
     User: { user_id: 7, full_name: 'Jane Traveller', email: 'jane@example.com' },
     Tour: { tour_id: 12, name: `Tour ${booking_id}`, Destination: { name: 'Bali' } },
   });
+  const listOf = (...bookings: unknown[]) => ({
+    data: { bookings, total: bookings.length, page: 1, totalPages: 1 },
+  });
+  const history = {
+    data: {
+      history: [
+        {
+          id: 1,
+          from_status: null,
+          to_status: 'pending',
+          note: null,
+          changed_at: '2026-05-10T09:00:00Z',
+          ChangedBy: { user_id: 7, full_name: 'Jane Traveller' },
+        },
+      ],
+    },
+  };
 
-  it('offers the actions that fit each status and confirms a pending booking', async () => {
+  it('offers only the allowed next statuses and records a note', async () => {
     signInAs(admin);
     const calls = mockApi((req) => {
-      if (req.method === 'GET') {
-        return {
-          data: {
-            bookings: [booking(1, 'pending'), booking(2, 'confirmed'), booking(3, 'cancelled')],
-            total: 3,
-            page: 1,
-            totalPages: 1,
-          },
-        };
+      if (req.method === 'GET' && req.url === '/booking') {
+        return listOf(booking(1, 'pending'), booking(2, 'confirmed'), booking(3, 'cancelled'));
       }
-      if (req.method === 'PATCH' && req.url === '/booking/1/confirm') return { data: {} };
+      if (req.method === 'GET' && req.url === '/booking/1/history') return history;
+      if (req.method === 'PATCH' && req.url === '/booking/1/status') return { data: {} };
       return undefined;
     });
     renderWithProviders(<AdminBookingsPage />);
 
     const pending = (await screen.findByText('Tour 1')).closest('tr')!;
-    const confirmed = screen.getByText('Tour 2').closest('tr')!;
     const cancelled = screen.getByText('Tour 3').closest('tr')!;
-
     expect(within(pending).getByText('PENDING')).toBeInTheDocument();
-    expect(within(pending).getByTitle('Confirm Booking')).toBeInTheDocument();
-    expect(within(pending).getByTitle('Cancel Booking')).toBeInTheDocument();
-    expect(within(confirmed).queryByTitle('Confirm Booking')).not.toBeInTheDocument();
-    expect(within(confirmed).getByTitle('Cancel Booking')).toBeInTheDocument();
-    expect(within(cancelled).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(pending).getByRole('button', { name: /Manage/ })).toBeInTheDocument();
+    // A final booking can only show its history.
+    expect(within(cancelled).getByRole('button', { name: /History/ })).toBeInTheDocument();
 
-    await userEvent.click(within(pending).getByTitle('Confirm Booking'));
-    await userEvent.click(
-      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirm Booking' }),
-    );
+    await userEvent.click(within(pending).getByRole('button', { name: /Manage/ }));
+    const dialog = await screen.findByRole('dialog');
+    const choices = within(dialog)
+      .getAllByRole('radio')
+      .map((radio) => (radio as HTMLInputElement).value);
+    expect(choices).toEqual(['confirmed', 'cancelled']);
+    expect(await within(dialog).findByText('Booked (Pending)')).toBeInTheDocument();
 
-    expect(await screen.findByText('Booking confirmed successfully')).toBeInTheDocument();
-    expect(calls.find((c) => c.method === 'PATCH')?.url).toBe('/booking/1/confirm');
+    await userEvent.type(within(dialog).getByLabelText('Note (optional)'), 'Paid by transfer');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Update status' }));
+
+    expect(await screen.findByText('Booking #1 is now confirmed')).toBeInTheDocument();
+    expect(calls.find((c) => c.method === 'PATCH')).toMatchObject({
+      url: '/booking/1/status',
+      body: { status: 'confirmed', note: 'Paid by transfer' },
+    });
   });
 
-  it('shows the server reason when a cancellation fails', async () => {
+  it('a final booking shows its history and no status choices', async () => {
     signInAs(admin);
     mockApi((req) => {
-      if (req.method === 'GET') {
-        return { data: { bookings: [booking(2, 'confirmed')], total: 1, page: 1, totalPages: 1 } };
-      }
-      if (req.method === 'DELETE') {
-        return { status: 400, data: { message: 'Tour already departed' } };
+      if (req.url === '/booking') return listOf(booking(3, 'cancelled'));
+      if (req.url === '/booking/3/history') return history;
+      return undefined;
+    });
+    renderWithProviders(<AdminBookingsPage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /History/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/can no longer change/)).toBeInTheDocument();
+    expect(within(dialog).queryByRole('radio')).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: 'Update status' })).not.toBeInTheDocument();
+  });
+
+  it('shows the server reason when a change is refused', async () => {
+    signInAs(admin);
+    mockApi((req) => {
+      if (req.url === '/booking') return listOf(booking(2, 'confirmed'));
+      if (req.url === '/booking/2/history') return { data: { history: [] } };
+      if (req.method === 'PATCH') {
+        return { status: 409, data: { message: 'This booking is already cancelled.' } };
       }
       return undefined;
     });
     renderWithProviders(<AdminBookingsPage />);
 
-    await userEvent.click(await screen.findByTitle('Cancel Booking'));
-    await userEvent.click(
-      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Cancel Booking' }),
-    );
+    await userEvent.click(await screen.findByRole('button', { name: /Manage/ }));
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.click(within(dialog).getByLabelText(/Cancelled/));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Update status' }));
 
-    expect(await screen.findByText('Tour already departed')).toBeInTheDocument();
+    expect(await screen.findByText('This booking is already cancelled.')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('filters the list by status', async () => {
+    signInAs(admin);
+    const calls = mockApi((req) =>
+      req.url === '/booking' ? listOf(booking(2, 'confirmed')) : undefined,
+    );
+    renderWithProviders(<AdminBookingsPage />);
+
+    await screen.findByText('Tour 2');
+    await userEvent.selectOptions(screen.getByLabelText('Filter by status'), 'cancelled');
+    await waitFor(() =>
+      expect(calls[calls.length - 1]).toMatchObject({
+        method: 'GET',
+        url: '/booking',
+        params: { page: 1, status: 'cancelled' },
+      }),
+    );
+  });
+
+  it('shows who cancelled a booking and why', async () => {
+    signInAs(admin);
+    mockApi((req) =>
+      req.method === 'GET'
+        ? listOf({
+            ...booking(3, 'cancelled'),
+            cancelled_at: '2026-05-12T09:00:00Z',
+            cancellation_reason: 'Plans changed',
+            CancelledBy: { user_id: 7, full_name: 'Jane Traveller' },
+          })
+        : undefined,
+    );
+    renderWithProviders(<AdminBookingsPage />);
+
+    const row = (await screen.findByText('Tour 3')).closest('tr')!;
+    expect(within(row).getByText(/May 12 by Jane Traveller/)).toBeInTheDocument();
+    expect(within(row).getByText(/Plans changed/)).toBeInTheDocument();
   });
 });

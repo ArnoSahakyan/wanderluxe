@@ -6,7 +6,7 @@ npm test         # both workspaces
 npm run check    # lint + typecheck + tests + production builds
 ```
 
-## Backend — `backend/tests` (Vitest + Supertest, 52 tests)
+## Backend — `backend/tests` (Vitest + Supertest, 75 tests)
 
 - **Real database, hermetic.** `tests/globalSetup.ts` connects as the owner role and:
   1. drops the `wanderluxe_test` schema;
@@ -23,13 +23,16 @@ npm run check    # lint + typecheck + tests + production builds
 |---|---|
 | `auth.test.ts` | sign-up validation and case-insensitive duplicates; sign-in without data leaks or enumeration, refresh token only in an `HttpOnly; SameSite=Strict; Path=/api/auth` cookie, stored hashed; `/me`; sessions: rotation on refresh, missing/garbage/access-token cookies, two tabs refreshing at once, reuse of a rotated token revoking the session, logout ending only that session, password change keeping this device and signing out others, deleted accounts; full password-reset flow including token hashing, single use and signing out every session |
 | `account.test.ts` | profile update never returns the hash; e-mail conflicts; change password; admin-only routes (401/403/200); page-size cap; admin self-delete/self-demote guards |
-| `bookings.test.ts` | price and seat maths; **concurrent overselling**; validation; departed tours; owner/admin/stranger access; cancellation rules (3-day rule vs admin); admin list and confirm |
+| `bookings.test.ts` | price and seat maths; **concurrent overselling**; validation; departed tours; owner/admin/stranger access; cancelling keeps the booking as `cancelled` history with who/when/why and releases the seats; a second (or concurrent) cancel is 409 and releases nothing; 3-day rule vs admin; reason length; `/booking/my?view=` upcoming/past/cancelled; admin list, status filter and confirm; stats leave cancellations out |
+| `bookingStatus.test.ts` | the transition table; pending → confirmed → completed → refunded with a history row per step (who, note); a disallowed move is 409 with the allowed next states; cancelling via status releases seats exactly once under concurrency; admin only; `next_statuses` in the admin list; finished tours complete confirmed bookings automatically (not pending ones) and revenue splits into completed and booked |
+| `bookingEmails.test.ts` | "booking received" e-mail with reference, total, link and escaped name; confirmed and company-cancelled e-mails (escaped reason); customer-cancelled wording; completion asks for a review; nothing to example.com; a failing e-mail never fails the booking |
+| `reviews.test.ts` | no booking, a future confirmed booking or a cancelled booking → 403; a completed booking → one review, then 409; a confirmed booking whose tour has ended counts; the eligibility endpoint for each case, sign-in and 404 |
 | `demo.test.ts` | demo accounts: off unless `DEMO_MODE`; unknown role 400, missing account 503; the demo customer signs in without a password, may book and favourite, can't edit the account or password (403 with a clear message); refreshed tokens stay demo tokens; the demo admin is read-only and gets other users' e-mails and names masked; bookings older than 24 h are removed and seats released on the next demo sign-in; `maskPersonalData` masks contact messages but not status messages |
 | `content.test.ts` | catalogue pagination and image URLs; id/limit validation; literal `%` search; JSON 404; security headers; real vs fake image uploads; cover-image ownership; date order; reviews (range, duplicate, owner delete); favourites; contact e-mail HTML escaping; admin stats; newsletter double-confirm |
 
 Run one file: `npx vitest run tests/bookings.test.ts` (inside `backend/`).
 
-## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 66 tests)
+## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 78 tests)
 
 | File | Covers |
 |---|---|
@@ -37,14 +40,16 @@ Run one file: `npx vitest run tests/bookings.test.ts` (inside `backend/`).
 | `axios.test.ts` | concurrent 401s trigger **one** cookie refresh (no token in the body) and are retried; after a reload the token is fetched before the first request; a rejected session signs out without looping, a network error does not; no token ever reaches `localStorage`; `signOut` calls `/auth/logout` and signs out locally even offline |
 | `components.test.tsx` | Pagination accessibility and edge states; `SmartImage` fallback; `StarRating` radio-group semantics |
 | `forms.test.tsx` | sign-in and sign-up (validation, payloads, server and network errors), contact form, ReviewForm (stars, text, links rejected, signed-out redirect), PasswordChangeForm (cancel, mismatch, payload, keeps the input when the server rejects it) |
-| `booking.test.tsx` | tour page booking box: total follows the guest count, more guests than seats, payload, API errors, signed-out redirect, departed and sold-out tours, tour not found |
-| `admin.test.tsx` | `AdminRoute` / `ProtectedRoute` / `UnprotectedRoute` for visitor, customer and admin; admin Users page (rows, empty, error, delete only after confirming); admin Bookings page (actions per status, confirm, failed cancel) |
+| `booking.test.tsx` | tour page booking box: total follows the guest count, the seat limit shows inline and disables Book, payload, API errors, signed-out redirect, departed and sold-out tours, tour not found |
+| `booking-history.test.tsx` | My Bookings tabs ask the API for each view and show cancelled bookings with their date; a cancelled booking's details explain who cancelled and why, with no cancel button; cancelling sends the optional reason and opens the Cancelled tab |
+| `review-gate.test.tsx` | the tour page shows the review form only when eligible; explanations for signed-out, not travelled and already reviewed; nothing for admins; completed bookings get a "Write a review" link |
+| `admin.test.tsx` | `AdminRoute` / `ProtectedRoute` / `UnprotectedRoute` for visitor, customer and admin; admin Users page (rows, empty, error, delete only after confirming); admin Bookings page (Manage dialog offers only the allowed next states and sends the note, final bookings show history only, refused changes show the server's message, status filter, who cancelled and why) |
 | `profile.test.tsx` | dashboard "Booked on" and My Reviews dates, using the API's real field names (`booking_date`, `createdAt`) |
 | `errors.test.tsx` | a crashing page shows the recovery screen; unknown URLs show the 404 page; stale-chunk errors after a deploy are recognised; `AppErrorBoundary` catches errors outside the router |
 
 `utils.tsx` holds the shared helpers: `mockApi` (answers every axios request and records it), `renderWithProviders` (fresh QueryClient, memory router, toasts) and `signInAs`.
 
-## End-to-end — `e2e/` (Playwright, 18 tests)
+## End-to-end — `e2e/` (Playwright, 20 tests)
 
 The real app in a real browser (Chromium): the Vite dev server, the API and the local docker PostgreSQL + Mailpit. **Local stack only.** Nothing in `e2e/` knows a production URL.
 
@@ -80,7 +85,8 @@ Each test creates the users and tours it needs through the API (`e2e/support/api
 | File | Covers |
 |---|---|
 | `auth.spec.ts` | sign-up form → sign-in form → profile dashboard greets the user; the navbar user menu → Account Settings shows their name and e-mail. Session: no token in `localStorage` or `document.cookie`, the `wl_session` cookie is httpOnly/Strict/`/api/auth`; a reload keeps the user signed in; Sign Out removes the cookie and the server rejects a copy of it; profile pages then redirect to sign-in |
-| `booking.spec.ts` | book 3 seats on a future tour (seats 8 → 5) → listed in My Bookings → details → confirm dialog ("Keep booking" first, then "Cancel booking") → My Bookings is empty, seats back to 8 in the UI and the API |
+| `booking.spec.ts` | book 3 seats on a future tour (seats 8 → 5) → "booking received" e-mail in Mailpit → listed in My Bookings → details → confirm dialog ("Keep booking" first, then "Cancel booking" with a reason) → the booking is under *Cancelled* with its date and reason, *Upcoming* is empty, a cancellation e-mail arrives, seats back to 8 in the UI and the API |
+| `review.spec.ts` | an admin confirms and then completes a booking in the Manage dialog (e-mails for both, history with the note) → the customer finds it under *Past*, follows "Write a review" and posts one; a customer who has not travelled sees "Reviews open after your trip" and a visitor sees a sign-in note |
 | `departed-tour.spec.ts` | a tour that started 10 days ago shows a disabled "Unavailable" button, a disabled guest field and the "already departed" status |
 | `admin.spec.ts` | admin signs in → user menu → Admin Panel; every dashboard metric shows a number → edits a tour's start/end dates → API returns the new dates, public page shows the new duration |
 | `demo.spec.ts` | *Try as customer* → profile with the demo banner → saving Account Info is refused with the demo message; *Try as admin* → admin dashboard, read-only banner, customer e-mails masked on the Users page |

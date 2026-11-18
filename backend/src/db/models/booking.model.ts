@@ -24,15 +24,20 @@ export class Booking
     declare number_of_people: number;
     declare total_price: number;
     declare status: CreationOptional<BookingStatus>;
+    declare cancelled_at: CreationOptional<Date | null>;
+    declare cancelled_by: CreationOptional<number | null>;
+    declare cancellation_reason: CreationOptional<string | null>;
 
     // Optional: declare readonly created_at: Date;
     // Optional: declare readonly updated_at: Date;
     declare Tour?: Tour;
     declare User?: User;
+    declare CancelledBy?: User | null;
 
     public static associations: {
         Tour: Association<Booking, Tour>;
         User: Association<Booking, User>;
+        CancelledBy: Association<Booking, User>;
     };
 
     static associate(models: DbModels) {
@@ -40,6 +45,12 @@ export class Booking
             foreignKey: 'user_id',
             onDelete: 'CASCADE',
         });
+        Booking.belongsTo(models.User, {
+            as: 'CancelledBy',
+            foreignKey: 'cancelled_by',
+            constraints: false,
+        });
+        Booking.hasMany(models.BookingStatusHistory, { as: 'History', foreignKey: 'booking_id' });
         Booking.belongsTo(models.Tour, {
             foreignKey: 'tour_id',
             onDelete: 'CASCADE',
@@ -85,6 +96,18 @@ export default function initBookingModel(sequelize: Sequelize): typeof Booking {
                     'refunded'
                 ),
                 defaultValue: 'pending',
+            },
+            cancelled_at: {
+                type: DataTypes.DATE,
+                allowNull: true,
+            },
+            cancelled_by: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+            },
+            cancellation_reason: {
+                type: DataTypes.STRING(255),
+                allowNull: true,
             },
         },
         {

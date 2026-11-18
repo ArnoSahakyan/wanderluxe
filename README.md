@@ -23,14 +23,15 @@
 ## What it does
 
 - **Visitors** browse destinations, tours, and blog posts, search the catalogue, read reviews, subscribe to the newsletter (double opt-in), and use the contact form.
-- **Customers** book tours with live seat counts, cancel up to three days before departure, save favourites, write reviews, and manage their profile and password.
-- **Admins** manage tours (with image galleries), destinations, categories, blog posts, users and roles, bookings, reviews, newsletter subscribers, and contact messages, from a dashboard with key metrics.
+- **Customers** book tours with live seat counts and get e-mail confirmations, cancel up to three days before departure (cancelled trips stay in their history), save favourites, review tours they have travelled on, and manage their profile and password.
+- **Admins** manage tours (with image galleries), destinations, categories, blog posts, users and roles, bookings (moving each through pending → confirmed → completed, with a history of every change), reviews, newsletter subscribers, and contact messages, from a dashboard with key metrics.
 
 ## Engineering highlights
 
 - **Sessions done properly.** The short-lived access token lives in memory only. The refresh token is an opaque, rotating value in an `HttpOnly; Secure; SameSite=Strict` cookie, and the database stores only its hash. Reusing an old token revokes the whole session, and logout or a password change ends sessions on the server. Vercel proxies `/api`, so the cookie is first-party.
 - **Defence in depth.** zod validation on every request, role checks from the signed token, rate limiting on auth and forms, helmet headers, a least-privilege database role, image uploads re-encoded with sharp, and hashed reset tokens.
 - **No overselling.** Seats are taken with a single conditional `UPDATE`, which is tested with concurrent bookings.
+- **A real booking lifecycle.** One transition table decides which status changes are allowed; every change is recorded in the same transaction, seats are released exactly once, and finished trips complete themselves without a cron job. E-mails go out only after the database commits, so a mail outage can't break a booking.
 - **Demo accounts that can't do damage.** A server-side write allow-list blocks changes, responses are masked for the demo admin, and the demo customer's bookings are cleaned up automatically after 24 hours.
 - **Tested at three levels.** API integration tests against a real PostgreSQL, React component tests, and Playwright end-to-end tests that include axe accessibility checks. CI runs all of them on every PR, and the API deploys only when CI is green.
 - **Accessible and findable.** Lighthouse gives the main pages 100 for accessibility, best practices and SEO. They have per-page titles, a meta description, social preview tags, a sitemap, ordered headings and a dark mode.
@@ -109,7 +110,7 @@ npm run db:demo-users       # optional: the demo accounts behind "Try as custome
 npm run dev                 # API on :3000 and web app on :5173, with hot reload
 ```
 
-Open http://localhost:5173. E-mails such as password resets and newsletter confirmations appear at http://localhost:8025.
+Open http://localhost:5173. E-mails such as booking confirmations, password resets and newsletter confirmations appear at http://localhost:8025.
 
 The development account passwords are `DEV_ADMIN_PASSWORD` / `DEV_CUSTOMER_PASSWORD` in `backend/.env.example`. They work only against a local database.
 
@@ -154,7 +155,7 @@ The full variable reference is in `backend/.env.example` and [LOCAL_DEVELOPMENT.
 
 ```bash
 npm run db:up      # tests need PostgreSQL
-npm test           # 52 API tests + 66 frontend tests (npm run test:e2e: 18 browser tests)
+npm test           # 75 API tests + 78 frontend tests (npm run test:e2e: 20 browser tests)
 ```
 
 The API suite rebuilds the dedicated `wanderluxe_test` database before every run, so it never touches your development data. See [docs/TESTING.md](docs/TESTING.md).

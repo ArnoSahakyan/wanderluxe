@@ -122,6 +122,18 @@ describe('demo accounts', () => {
 });
 
 describe('maskPersonalData', () => {
+    it('hides booking free text: cancellation reasons and status notes', () => {
+        expect(
+            maskPersonalData({
+                bookings: [{ booking_id: 1, status: 'cancelled', cancellation_reason: 'My mother is ill' }],
+                history: [{ id: 2, note: 'Called +1 555 0100', note_empty: '' }],
+            }),
+        ).toEqual({
+            bookings: [{ booking_id: 1, status: 'cancelled', cancellation_reason: '(hidden in the demo)' }],
+            history: [{ id: 2, note: '(hidden in the demo)', note_empty: '' }],
+        });
+    });
+
     it('masks contact details and contact messages but not status messages', () => {
         expect(
             maskPersonalData({

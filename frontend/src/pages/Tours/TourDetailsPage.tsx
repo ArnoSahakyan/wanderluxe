@@ -8,7 +8,7 @@ import { useCreateBooking, useReview, useToast, useTour, useFavorite } from '../
 import { getDuration } from '../../utils';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
-import { ReviewForm, ReviewModal } from './components';
+import { ReviewGate, ReviewModal } from './components';
 import { StarIcon } from '@heroicons/react/20/solid';
 import { LoadingState, ErrorState, EmptyState } from '../../components';
 
@@ -36,6 +36,8 @@ const TourDetailsPage = () => {
   const hasStarted = tour ? new Date(tour.start_date).getTime() <= now : false;
   const isSoldOut = tour ? tour.available_spots < 1 : false;
   const canBook = !hasStarted && !isSoldOut;
+  // Shown inline as soon as the guest count goes over what is left.
+  const tooManyGuests = !!tour && canBook && guestCount > tour.available_spots;
 
   const handleBooking = () => {
     if (guestCount < 1) {
@@ -239,7 +241,7 @@ const TourDetailsPage = () => {
                 )}
 
                 <div className='mt-6 flex flex-col sm:flex-row gap-4'>
-                  <div className='flex items-center gap-2'>
+                  <div className='flex flex-wrap items-center gap-2'>
                     <label htmlFor='guests' className='form-label'>
                       Guests:
                     </label>
@@ -250,16 +252,24 @@ const TourDetailsPage = () => {
                       max={tour.available_spots}
                       value={guestCount}
                       disabled={!canBook}
+                      aria-invalid={tooManyGuests}
+                      aria-describedby={tooManyGuests ? 'guests-limit' : undefined}
                       onChange={(e) =>
                         setGuestCount(Math.max(1, Math.floor(Number(e.target.value) || 1)))
                       }
                       className='form-input w-20'
                     />
+                    {tooManyGuests && (
+                      <p id='guests-limit' role='alert' className='form-error w-full sm:w-auto'>
+                        Only {tour.available_spots} {tour.available_spots === 1 ? 'spot' : 'spots'}{' '}
+                        left
+                      </p>
+                    )}
                   </div>
                   <button
                     onClick={handleBooking}
                     type='button'
-                    disabled={bookingLoading || guestCount < 1 || !canBook}
+                    disabled={bookingLoading || guestCount < 1 || !canBook || tooManyGuests}
                     className='form-button flex-1'
                   >
                     {bookingLoading ? 'Booking...' : canBook ? 'Book Now' : 'Unavailable'}
@@ -330,7 +340,7 @@ const TourDetailsPage = () => {
             </div>
 
             {/* Review Form Section */}
-            {!tour?.hasReviewed && <ReviewForm tourId={id} />}
+            <ReviewGate tourId={id} />
           </div>
         </div>
       </div>
