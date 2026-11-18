@@ -27,8 +27,10 @@ services:
         value: "24"
       - key: NODE_ENV
         value: production
+      # Browser traffic: Vercel's /api rewrite, then Render's load balancer.
+      # The client IP is the second X-Forwarded-For entry from the right.
       - key: TRUST_PROXY
-        value: "1"
+        value: "2"
       - key: LOG_LEVEL
         value: info
 
@@ -49,8 +51,6 @@ services:
         value: "5"
 
       - key: JWT_ACCESS_SECRET
-        generateValue: true
-      - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: JWT_ACCESS_EXPIRES_IN
         value: 15m

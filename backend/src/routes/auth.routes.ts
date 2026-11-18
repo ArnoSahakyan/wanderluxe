@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+    logout,
     refreshToken,
     userInfo,
     signUp,
@@ -18,7 +19,9 @@ const router = express.Router();
 // Public routes
 router.post('/signup', authLimiter, validate({ body: v.signUpBody }), asHandler(signUp));
 router.post('/signin', authLimiter, validate({ body: v.signInBody }), asHandler(signIn));
-router.post('/refresh', validate({ body: v.refreshBody }), asHandler(refreshToken));
+// Session cookie (httpOnly, path /api/auth) — no body.
+router.post('/refresh', asHandler(refreshToken));
+router.post('/logout', asHandler(logout));
 router.post('/request-password-reset', authLimiter, validate({ body: v.emailBody }), asHandler(requestPasswordReset));
 router.post(
     '/reset-password',

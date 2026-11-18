@@ -33,7 +33,7 @@ The **Status** column says what was done. "Fixed" items are covered by the backe
 | S-17 | **Low** | Least privilege (DB) | The production app connects as a single DB user of unknown privilege. | Fixed locally: the app uses `wanderluxe_app` (DML only, no DDL, no TRUNCATE), and migrations use the owner role. **Production: manual action required**, see FINAL_AUDIT_REPORT. |
 | S-18 | **Low** | Self-lockout | An admin could delete or demote their own account. | Fixed ✅T. Blocked with 400. |
 | S-19 | **Low** | Customer review deletion | The UI offers "delete my review", but the API was admin-only, so the 403 sent users to Home. | Fixed ✅T. Owner **or** admin may delete. |
-| S-20 | **Info** | Token storage (SPA) | Access and refresh tokens are stored in `localStorage`, so any XSS would leak them. No XSS sinks were found (no `dangerouslySetInnerHTML`, and markdown is rendered without raw HTML). | Accepted for now. Moving the refresh token to an httpOnly cookie changes the API contract; it is listed as a recommendation. |
+| S-20 | **Info** | Token storage (SPA) | Access and refresh tokens are stored in `localStorage`, so any XSS would leak them. No XSS sinks were found (no `dangerouslySetInnerHTML`, and markdown is rendered without raw HTML). | Fixed (2026-11-18). The refresh token is an opaque, rotating, server-revocable token in an `HttpOnly; SameSite=Strict; Path=/api/auth` cookie (`Secure` in production). Only its hash is stored. The access token is kept in memory, so `localStorage` holds no credentials. |
 | S-21 | **Info** | Secrets hygiene | No secrets in either git history. `.env` files were ignored, but the frontend `.gitignore` had a malformed last line. | Fixed. One root `.gitignore` covers `.env*` (except examples) and backups. |
 | S-22 | **Info** | Dev uploads to production | A developer running locally with the production `.env` would upload to and **delete from** the production Supabase buckets. | Fixed. `STORAGE_DRIVER=local` (default in development) writes to `backend/uploads/` and never deletes remote files. |
 | S-23 | **Info** | Hard-coded recipient | The contact form recipient was hard-coded in source. | Moved to `CONTACT_RECIPIENT_EMAIL`. |
@@ -52,12 +52,13 @@ The **Status** column says what was done. "Fixed" items are covered by the backe
   - Bookings, favourites, reviews and the profile are all scoped to `req.user_id` from the verified JWT.
   - Admin routes are guarded server-side. Frontend guards are UX only.
 - **CSRF:**
-  - The API authenticates with a `Bearer` header, not cookies, so browsers do not attach credentials cross-site.
+  - Every endpoint except two authenticates with a `Bearer` header, which browsers never attach cross-site.
+  - Since 2026-11-18 `/auth/refresh` and `/auth/logout` use the session cookie. It is `SameSite=Strict` and first-party (the SPA reaches the API through its own origin), so other sites cannot make the browser send it. Refresh only returns a token in the response body, which a cross-site page cannot read.
 - **Path traversal:**
   - Storage keys are generated server-side (uuid + slug).
   - The local driver resolves paths inside its root and rejects anything outside it.
 - **JWT:**
-  - Access and refresh tokens use separate secrets.
+  - Access tokens are HS256 JWTs; refresh tokens are random values checked against the database, not JWTs.
   - The algorithm is pinned to HS256 on verification.
   - Startup refuses secrets shorter than 32 characters in production.
 

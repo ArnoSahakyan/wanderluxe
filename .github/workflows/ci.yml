@@ -66,10 +66,8 @@ jobs:
         run: |
           app_password="$(openssl rand -hex 24)"
           access_secret="$(openssl rand -hex 32)"
-          refresh_secret="$(openssl rand -hex 32)"
           echo "::add-mask::$app_password"
           echo "::add-mask::$access_secret"
-          echo "::add-mask::$refresh_secret"
 
           # The same init script docker compose runs, executed inside the
           # service container, where POSTGRES_USER / POSTGRES_DB are already set.
@@ -92,7 +90,6 @@ jobs:
           DB_MIGRATION_PASSWORD=ci-owner-password
           DB_SSL=false
           JWT_ACCESS_SECRET=$access_secret
-          JWT_REFRESH_SECRET=$refresh_secret
           SMTP_HOST=
           EOF
 

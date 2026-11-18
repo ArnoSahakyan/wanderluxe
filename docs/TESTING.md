@@ -6,7 +6,7 @@ npm test         # both workspaces
 npm run check    # lint + typecheck + tests + production builds
 ```
 
-## Backend — `backend/tests` (Vitest + Supertest, 39 tests)
+## Backend — `backend/tests` (Vitest + Supertest, 45 tests)
 
 - **Real database, hermetic.** `tests/globalSetup.ts` connects as the owner role and:
   1. drops the `wanderluxe_test` schema;
@@ -21,22 +21,22 @@ npm run check    # lint + typecheck + tests + production builds
 
 | File | Covers |
 |---|---|
-| `auth.test.ts` | sign-up validation and case-insensitive duplicates; sign-in without data leaks or enumeration; `/me`; refresh (valid, garbage, access-token-as-refresh); full password-reset flow including token hashing, single use and refresh-token revocation |
+| `auth.test.ts` | sign-up validation and case-insensitive duplicates; sign-in without data leaks or enumeration, refresh token only in an `HttpOnly; SameSite=Strict; Path=/api/auth` cookie, stored hashed; `/me`; sessions: rotation on refresh, missing/garbage/access-token cookies, two tabs refreshing at once, reuse of a rotated token revoking the session, logout ending only that session, password change keeping this device and signing out others, deleted accounts; full password-reset flow including token hashing, single use and signing out every session |
 | `account.test.ts` | profile update never returns the hash; e-mail conflicts; change password; admin-only routes (401/403/200); page-size cap; admin self-delete/self-demote guards |
 | `bookings.test.ts` | price and seat maths; **concurrent overselling**; validation; departed tours; owner/admin/stranger access; cancellation rules (3-day rule vs admin); admin list and confirm |
 | `content.test.ts` | catalogue pagination and image URLs; id/limit validation; literal `%` search; JSON 404; security headers; real vs fake image uploads; cover-image ownership; date order; reviews (range, duplicate, owner delete); favourites; contact e-mail HTML escaping; admin stats; newsletter double-confirm |
 
 Run one file: `npx vitest run tests/bookings.test.ts` (inside `backend/`).
 
-## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 17 tests)
+## Frontend — `frontend/src/test` (Vitest + jsdom + Testing Library, 21 tests)
 
 | File | Covers |
 |---|---|
 | `schemas.test.ts` | sign-up password policy (mirrors the API), confirm/terms, "required" messages, review rating, URL page parsing |
-| `axios.test.ts` | concurrent 401s trigger **one** refresh and are retried; rejected refresh logs out without looping |
+| `axios.test.ts` | concurrent 401s trigger **one** cookie refresh (no token in the body) and are retried; after a reload the token is fetched before the first request; a rejected session signs out without looping, a network error does not; no token ever reaches `localStorage`; `signOut` calls `/auth/logout` and signs out locally even offline |
 | `components.test.tsx` | Pagination accessibility and edge states; `SmartImage` fallback; `StarRating` radio-group semantics |
 
-## End-to-end — `e2e/` (Playwright, 5 tests)
+## End-to-end — `e2e/` (Playwright, 6 tests)
 
 The real app in a real browser (Chromium): the Vite dev server, the API and the local docker PostgreSQL + Mailpit. **Local stack only.** Nothing in `e2e/` knows a production URL.
 
@@ -71,7 +71,7 @@ Each test creates the users and tours it needs through the API (`e2e/support/api
 
 | File | Covers |
 |---|---|
-| `auth.spec.ts` | sign-up form → sign-in form → profile dashboard greets the user; the navbar user menu → Account Settings shows their name and e-mail |
+| `auth.spec.ts` | sign-up form → sign-in form → profile dashboard greets the user; the navbar user menu → Account Settings shows their name and e-mail. Session: no token in `localStorage` or `document.cookie`, the `wl_session` cookie is httpOnly/Strict/`/api/auth`; a reload keeps the user signed in; Sign Out removes the cookie and the server rejects a copy of it; profile pages then redirect to sign-in |
 | `booking.spec.ts` | book 3 seats on a future tour (seats 8 → 5) → listed in My Bookings → details → confirm dialog ("Keep booking" first, then "Cancel booking") → My Bookings is empty, seats back to 8 in the UI and the API |
 | `departed-tour.spec.ts` | a tour that started 10 days ago shows a disabled "Unavailable" button, a disabled guest field and the "already departed" status |
 | `admin.spec.ts` | admin signs in → user menu → Admin Panel; every dashboard metric shows a number → edits a tour's start/end dates → API returns the new dates, public page shows the new duration |

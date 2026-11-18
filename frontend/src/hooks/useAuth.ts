@@ -12,11 +12,9 @@ export const useSignIn = () => {
   return useMutation({
     mutationFn: signIn,
     onSuccess: (data) => {
-      login({
-        user: data.user,
-        token: data.token,
-        refreshToken: data.refreshToken,
-      });
+      // The refresh token is set by the API as an httpOnly cookie; only the
+      // short-lived access token is handed to the app (kept in memory).
+      login({ user: data.user, token: data.token });
     },
   });
 };

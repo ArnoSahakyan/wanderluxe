@@ -13,12 +13,16 @@ export default defineConfig(({ mode }) => {
   // Public address used in sitemap.xml and robots.txt (build time only).
   const siteUrl = (env.SITE_URL || 'https://wanderluxe.vercel.app').replace(/\/+$/, '');
 
-  // On Vercel there is no /api proxy: without an absolute API URL every request
-  // would hit the static site. Fail the build instead of shipping a broken app.
-  if (process.env.VERCEL && mode === 'production' && !env.VITE_API_URL && !env.VITE_BACK_BASE_URL) {
+  // On Vercel, frontend/vercel.json forwards /api/* to the Render API, so the
+  // browser only ever talks to the site's own origin. That is what lets the
+  // session cookie be first-party (httpOnly, SameSite=Strict). An absolute API
+  // URL on another site would silently break sign-in, so refuse to build with one.
+  const apiUrl = env.VITE_API_URL || env.VITE_BACK_BASE_URL || '';
+  if (process.env.VERCEL && mode === 'production' && /^https?:\/\//i.test(apiUrl)) {
     throw new Error(
-      'VITE_API_URL is not set. In Vercel → Settings → Environment Variables add ' +
-        'VITE_API_URL=https://<your-render-service>.onrender.com/api, then redeploy.',
+      `VITE_API_URL is "${apiUrl}", an absolute URL. On Vercel the API is reached through the ` +
+        '/api rewrite in vercel.json: set VITE_API_URL=/api (or delete it) in Vercel → Settings → ' +
+        'Environment Variables, then redeploy.',
     );
   }
 

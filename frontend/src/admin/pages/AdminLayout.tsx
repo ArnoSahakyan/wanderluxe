@@ -16,6 +16,7 @@ import {
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../shared';
 import { useAuthStore } from '../../store';
+import { signOut } from '../../api';
 import { SidebarContent } from '../../pages/Profile/components';
 import { useRehydrateAuth } from '../../hooks';
 import { GlobalNavigateSetup } from '../../components';
@@ -35,7 +36,7 @@ const adminNavigation = [
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
   useRehydrateAuth(); // re-validates the role with the server whenever the admin area mounts
   const navigate = useNavigate();
 
@@ -54,7 +55,7 @@ const AdminLayout = () => {
           <DialogPanel className='relative mr-16 flex w-full max-w-xs flex-1'>
             <SidebarContent
               homePage={ROUTES.ADMIN}
-              logout={logout}
+              logout={signOut}
               navigation={adminNavigation}
               onLinkClick={() => setSidebarOpen(false)}
               title='WanderLuxe Admin'
@@ -67,7 +68,7 @@ const AdminLayout = () => {
       <div className='hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col'>
         <SidebarContent
           homePage={ROUTES.ADMIN}
-          logout={logout}
+          logout={signOut}
           navigation={adminNavigation}
           title='WanderLuxe Admin'
         />

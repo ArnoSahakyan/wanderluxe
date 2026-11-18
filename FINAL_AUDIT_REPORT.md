@@ -200,7 +200,7 @@ None can be fixed without a major-version change of the parent package. See §6.
 5. **Missing production image:** the cover of "Family Fun in Gold Coast" (tour 4) no longer exists in the Supabase bucket. Re-upload it via the admin UI.
 
 **Known limitations, deliberately not changed:**
-- **Tokens in `localStorage`** (S-20). Moving the refresh token to an httpOnly cookie changes the API contract and needs CSRF handling. It's the top recommendation below.
+- ~~**Tokens in `localStorage`** (S-20)~~ fixed on 2026-11-18: httpOnly session cookie, access token in memory (recommendation 1).
 - **Cancelled bookings are deleted** rather than set to `cancelled`. That is the existing business rule, although the enum supports the softer option.
 - **Reviews don't require a booking.** This is existing behaviour.
 - **Tour dates in the dump are all in the past,** so locally nothing is bookable until an admin creates or edits a tour.
@@ -209,7 +209,7 @@ None can be fixed without a major-version change of the parent package. See §6.
 
 ## 7. Recommendations (in priority order)
 
-1. Move the refresh token to an `httpOnly; Secure; SameSite=Strict` cookie and keep the access token in memory. This adds `/auth/logout` with server-side revocation.
+1. ~~Move the refresh token to an `httpOnly; Secure; SameSite=Strict` cookie~~ done 2026-11-18. The refresh token is an opaque, rotating token stored hashed in `refresh_tokens`, sent only in a `SameSite=Strict` cookie scoped to `/api/auth`. The access token lives in memory. `/auth/logout` revokes the session on the server. Vercel forwards `/api` to Render so the cookie is first-party. See docs/ARCHITECTURE.md.
 2. ~~Add a CI workflow~~ done: `.github/workflows/ci.yml`.
 3. ~~Add Playwright end-to-end tests~~ done: `e2e/` (see docs/TESTING.md).
 4. ~~Replace `react-markdown-editor-lite`~~ not needed. It is still maintained, and its `nanoid` advisory is fixed by an override (§8).

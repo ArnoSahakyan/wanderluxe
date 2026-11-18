@@ -9,23 +9,12 @@ export interface AccessTokenPayload {
     role: UserRole;
 }
 
-export interface RefreshTokenPayload {
-    user_id: number;
-    iat: number;
-}
-
 const ALGORITHM = 'HS256' as const;
 
 export const generateToken = (user: User): string =>
     jwt.sign({ user_id: user.user_id, role: (user.Role?.name as UserRole) || 'customer' }, config.jwt.accessSecret, {
         algorithm: ALGORITHM,
         expiresIn: config.jwt.accessExpiresIn as SignOptions['expiresIn'],
-    });
-
-export const generateRefreshToken = (user: User): string =>
-    jwt.sign({ user_id: user.user_id }, config.jwt.refreshSecret, {
-        algorithm: ALGORITHM,
-        expiresIn: config.jwt.refreshExpiresIn as SignOptions['expiresIn'],
     });
 
 const isPayload = (decoded: unknown): decoded is Record<string, unknown> =>
@@ -38,16 +27,6 @@ export const verifyAccessToken = (token: string): AccessTokenPayload | null => {
         if (!isPayload(decoded)) return null;
         const role = decoded.role === 'admin' ? 'admin' : 'customer';
         return { user_id: decoded.user_id as number, role };
-    } catch {
-        return null;
-    }
-};
-
-export const verifyRefreshToken = (token: string): RefreshTokenPayload | null => {
-    try {
-        const decoded = jwt.verify(token, config.jwt.refreshSecret, { algorithms: [ALGORITHM] });
-        if (!isPayload(decoded) || typeof decoded.iat !== 'number') return null;
-        return { user_id: decoded.user_id as number, iat: decoded.iat };
     } catch {
         return null;
     }

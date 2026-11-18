@@ -100,7 +100,7 @@ The full variable reference is in `backend/.env.example` and [LOCAL_DEVELOPMENT.
 
 ```bash
 npm run db:up      # tests need PostgreSQL
-npm test           # 39 API tests + 17 frontend tests (npm run test:e2e: 5 browser tests)
+npm test           # 45 API tests + 21 frontend tests (npm run test:e2e: 6 browser tests)
 ```
 
 The API suite rebuilds the dedicated `wanderluxe_test` database before every run, so it never touches your development data. See [docs/TESTING.md](docs/TESTING.md).
