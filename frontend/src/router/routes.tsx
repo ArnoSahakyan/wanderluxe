@@ -3,6 +3,7 @@ import { Loader, ProtectedRoute, UnprotectedRoute } from '../components';
 import { AdminRoute } from '../admin/components';
 import { ROUTES } from '../shared';
 import { lazy, ReactNode, Suspense } from 'react';
+import RouteErrorPage from '../pages/Error/RouteErrorPage';
 
 const HomePage = lazy(() => import('../pages/Home/HomePage.tsx'));
 const BlogPage = lazy(() => import('../pages/Blog/BlogPage.tsx'));
@@ -69,135 +70,147 @@ const withSuspense = (component: ReactNode) => (
 
 const routes: RouteObject[] = [
   {
-    path: ROUTES.HOME,
-    element: withSuspense(<Layout />),
-    children: [
-      { path: ROUTES.HOME, element: withSuspense(<HomePage />) },
-      { path: `${ROUTES.BLOG}/:slug`, element: withSuspense(<BlogDetailsPage />) },
-      { path: ROUTES.BLOG, element: withSuspense(<BlogPage />) },
-      { path: ROUTES.TOURS, element: withSuspense(<ToursPage />) },
-      {
-        path: `${ROUTES.TOURS}/:tourId`,
-        element: withSuspense(<TourDetailsPage />),
-      },
-      { path: ROUTES.DESTINATIONS, element: withSuspense(<DestinationsPage />) },
-      {
-        path: `${ROUTES.DESTINATIONS}/:destinationId`,
-        element: withSuspense(<DestinationDetailsPage />),
-      },
-      { path: ROUTES.ABOUT, element: withSuspense(<AboutPage />) },
-      { path: ROUTES.CONTACT, element: withSuspense(<ContactPage />) },
-      { path: ROUTES.FAQ, element: withSuspense(<FaqPage />) },
-      { path: ROUTES.LEGAL, element: withSuspense(<LegalPage />) },
-      { path: ROUTES.NEWSLETTER_CONFIRM, element: withSuspense(<NewsletterConfirmPage />) },
-      { path: ROUTES.SEARCH, element: withSuspense(<SearchResultsPage />) },
-    ],
-  },
-  {
-    element: <ProtectedRoute />,
+    // Any error while rendering or loading a page (including stale chunks after a deploy).
+    errorElement: <RouteErrorPage />,
     children: [
       {
-        path: ROUTES.PROFILE,
-        element: withSuspense(<ProfileLayout />),
+        path: ROUTES.HOME,
+        element: withSuspense(<Layout />),
         children: [
-          { index: true, element: <Navigate to={ROUTES.PROFILE_DASHBOARD} replace /> },
+          { path: ROUTES.HOME, element: withSuspense(<HomePage />) },
+          { path: `${ROUTES.BLOG}/:slug`, element: withSuspense(<BlogDetailsPage />) },
+          { path: ROUTES.BLOG, element: withSuspense(<BlogPage />) },
+          { path: ROUTES.TOURS, element: withSuspense(<ToursPage />) },
           {
-            path: ROUTES.PROFILE_DASHBOARD.replace(ROUTES.PROFILE + '/', ''),
-            element: withSuspense(<ProfileHomePage />),
+            path: `${ROUTES.TOURS}/:tourId`,
+            element: withSuspense(<TourDetailsPage />),
           },
+          { path: ROUTES.DESTINATIONS, element: withSuspense(<DestinationsPage />) },
           {
-            path: ROUTES.PROFILE_INFO.replace(ROUTES.PROFILE + '/', ''),
-            element: withSuspense(<Account />),
+            path: `${ROUTES.DESTINATIONS}/:destinationId`,
+            element: withSuspense(<DestinationDetailsPage />),
           },
+          { path: ROUTES.ABOUT, element: withSuspense(<AboutPage />) },
+          { path: ROUTES.CONTACT, element: withSuspense(<ContactPage />) },
+          { path: ROUTES.FAQ, element: withSuspense(<FaqPage />) },
+          { path: ROUTES.LEGAL, element: withSuspense(<LegalPage />) },
+          { path: ROUTES.NEWSLETTER_CONFIRM, element: withSuspense(<NewsletterConfirmPage />) },
+          { path: ROUTES.SEARCH, element: withSuspense(<SearchResultsPage />) },
+        ],
+      },
+      {
+        element: <ProtectedRoute />,
+        children: [
           {
-            path: ROUTES.PROFILE_BOOKINGS.replace(ROUTES.PROFILE + '/', ''),
-            element: withSuspense(<BookingsPage />),
-          },
-          {
-            path: `${ROUTES.PROFILE_BOOKINGS.replace(ROUTES.PROFILE + '/', '')}/:bookingId`,
-            element: withSuspense(<BookingDetailPage />),
-          },
-          {
-            path: ROUTES.PROFILE_FAVORITES.replace(ROUTES.PROFILE + '/', ''),
-            element: withSuspense(<FavoritesPage />),
-          },
-          {
-            path: ROUTES.PROFILE_REVIEWS.replace(ROUTES.PROFILE + '/', ''),
-            element: withSuspense(<MyReviewsPage />),
-          },
-          {
-            path: ROUTES.PROFILE_SECURITY.replace(ROUTES.PROFILE + '/', ''),
-            element: withSuspense(<SecurityPage />),
+            path: ROUTES.PROFILE,
+            element: withSuspense(<ProfileLayout />),
+            children: [
+              { index: true, element: <Navigate to={ROUTES.PROFILE_DASHBOARD} replace /> },
+              {
+                path: ROUTES.PROFILE_DASHBOARD.replace(ROUTES.PROFILE + '/', ''),
+                element: withSuspense(<ProfileHomePage />),
+              },
+              {
+                path: ROUTES.PROFILE_INFO.replace(ROUTES.PROFILE + '/', ''),
+                element: withSuspense(<Account />),
+              },
+              {
+                path: ROUTES.PROFILE_BOOKINGS.replace(ROUTES.PROFILE + '/', ''),
+                element: withSuspense(<BookingsPage />),
+              },
+              {
+                path: `${ROUTES.PROFILE_BOOKINGS.replace(ROUTES.PROFILE + '/', '')}/:bookingId`,
+                element: withSuspense(<BookingDetailPage />),
+              },
+              {
+                path: ROUTES.PROFILE_FAVORITES.replace(ROUTES.PROFILE + '/', ''),
+                element: withSuspense(<FavoritesPage />),
+              },
+              {
+                path: ROUTES.PROFILE_REVIEWS.replace(ROUTES.PROFILE + '/', ''),
+                element: withSuspense(<MyReviewsPage />),
+              },
+              {
+                path: ROUTES.PROFILE_SECURITY.replace(ROUTES.PROFILE + '/', ''),
+                element: withSuspense(<SecurityPage />),
+              },
+            ],
           },
         ],
       },
-    ],
-  },
-  {
-    element: <AdminRoute />,
-    children: [
       {
-        path: ROUTES.ADMIN,
-        element: withSuspense(<AdminLayout />),
+        element: <AdminRoute />,
         children: [
-          { path: '', element: withSuspense(<AdminHomePage />) },
           {
-            path: ROUTES.ADMIN_DASHBOARD.replace(ROUTES.ADMIN + '/', ''),
-            element: withSuspense(<AdminHomePage />),
+            path: ROUTES.ADMIN,
+            element: withSuspense(<AdminLayout />),
+            children: [
+              { path: '', element: withSuspense(<AdminHomePage />) },
+              {
+                path: ROUTES.ADMIN_DASHBOARD.replace(ROUTES.ADMIN + '/', ''),
+                element: withSuspense(<AdminHomePage />),
+              },
+              { path: ROUTES.ADMIN_USERS, element: withSuspense(<AdminUsersPage />) },
+              { path: ROUTES.ADMIN_CATEGORIES, element: withSuspense(<AdminCategoriesPage />) },
+              { path: ROUTES.ADMIN_DESTINATIONS, element: withSuspense(<AdminDestinationsPage />) },
+              {
+                path: `${ROUTES.ADMIN_DESTINATIONS}/:destinationId`,
+                element: withSuspense(<AdminDestinationUpdatePage />),
+              },
+              {
+                path: ROUTES.ADMIN_DESTINATIONS_NEW,
+                element: withSuspense(<AdminDestinationCreatePage />),
+              },
+              { path: ROUTES.ADMIN_TOURS, element: withSuspense(<AdminToursPage />) },
+              {
+                path: `${ROUTES.ADMIN_TOURS}/:tourId`,
+                element: withSuspense(<AdminTourUpdatePage />),
+              },
+              {
+                path: ROUTES.ADMIN_TOURS_NEW,
+                element: withSuspense(<AdminTourCreatePage />),
+              },
+              { path: ROUTES.ADMIN_NEWSLETTER, element: withSuspense(<AdminNewsletterPage />) },
+              { path: ROUTES.ADMIN_BLOG, element: withSuspense(<AdminBlogPage />) },
+              {
+                path: ROUTES.ADMIN_BLOG_NEW,
+                element: withSuspense(<AdminBlogCreatePage />),
+              },
+              {
+                path: `${ROUTES.ADMIN_BLOG}/:slug`,
+                element: withSuspense(<AdminBlogUpdatePage />),
+              },
+              { path: ROUTES.ADMIN_BOOKINGS, element: withSuspense(<AdminBookingsPage />) },
+              { path: ROUTES.ADMIN_REVIEWS, element: withSuspense(<AdminReviewsPage />) },
+              { path: ROUTES.ADMIN_CONTACTS, element: withSuspense(<AdminContactsPage />) },
+            ],
           },
-          { path: ROUTES.ADMIN_USERS, element: withSuspense(<AdminUsersPage />) },
-          { path: ROUTES.ADMIN_CATEGORIES, element: withSuspense(<AdminCategoriesPage />) },
-          { path: ROUTES.ADMIN_DESTINATIONS, element: withSuspense(<AdminDestinationsPage />) },
-          {
-            path: `${ROUTES.ADMIN_DESTINATIONS}/:destinationId`,
-            element: withSuspense(<AdminDestinationUpdatePage />),
-          },
-          {
-            path: ROUTES.ADMIN_DESTINATIONS_NEW,
-            element: withSuspense(<AdminDestinationCreatePage />),
-          },
-          { path: ROUTES.ADMIN_TOURS, element: withSuspense(<AdminToursPage />) },
-          {
-            path: `${ROUTES.ADMIN_TOURS}/:tourId`,
-            element: withSuspense(<AdminTourUpdatePage />),
-          },
-          {
-            path: ROUTES.ADMIN_TOURS_NEW,
-            element: withSuspense(<AdminTourCreatePage />),
-          },
-          { path: ROUTES.ADMIN_NEWSLETTER, element: withSuspense(<AdminNewsletterPage />) },
-          { path: ROUTES.ADMIN_BLOG, element: withSuspense(<AdminBlogPage />) },
-          {
-            path: ROUTES.ADMIN_BLOG_NEW,
-            element: withSuspense(<AdminBlogCreatePage />),
-          },
-          {
-            path: `${ROUTES.ADMIN_BLOG}/:slug`,
-            element: withSuspense(<AdminBlogUpdatePage />),
-          },
-          { path: ROUTES.ADMIN_BOOKINGS, element: withSuspense(<AdminBookingsPage />) },
-          { path: ROUTES.ADMIN_REVIEWS, element: withSuspense(<AdminReviewsPage />) },
-          { path: ROUTES.ADMIN_CONTACTS, element: withSuspense(<AdminContactsPage />) },
         ],
       },
-    ],
-  },
-  {
-    element: <UnprotectedRoute />,
-    children: [
       {
-        path: ROUTES.AUTH,
-        element: withSuspense(<AuthLayout />),
+        element: <UnprotectedRoute />,
         children: [
-          { path: ROUTES.SIGNIN.slice(1), element: withSuspense(<SignInPage />) },
-          { path: ROUTES.SIGNUP.slice(1), element: withSuspense(<SignUpPage />) },
-          { path: ROUTES.FORGOT_PASSWORD.slice(1), element: withSuspense(<ForgotPasswordPage />) },
-          { path: ROUTES.RESET_PASSWORD.slice(1), element: withSuspense(<ResetPasswordPage />) },
+          {
+            path: ROUTES.AUTH,
+            element: withSuspense(<AuthLayout />),
+            children: [
+              { path: ROUTES.SIGNIN.slice(1), element: withSuspense(<SignInPage />) },
+              { path: ROUTES.SIGNUP.slice(1), element: withSuspense(<SignUpPage />) },
+              {
+                path: ROUTES.FORGOT_PASSWORD.slice(1),
+                element: withSuspense(<ForgotPasswordPage />),
+              },
+              {
+                path: ROUTES.RESET_PASSWORD.slice(1),
+                element: withSuspense(<ResetPasswordPage />),
+              },
+            ],
+          },
         ],
       },
+      { path: ROUTES.NOT_FOUND, element: <NotFoundPage /> },
     ],
   },
-  { path: ROUTES.NOT_FOUND, element: <NotFoundPage /> },
 ];
 
 export const router = createBrowserRouter(routes);
