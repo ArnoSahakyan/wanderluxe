@@ -9,6 +9,8 @@ export interface ITour {
   category_id: number;
   destination_id: number;
   image: string;
+  /** Card-size copy (800px) for lists; may be missing for old images until it is generated. */
+  image_card?: string | null;
 }
 
 export interface ITourResponse {
@@ -31,6 +33,8 @@ export interface ITourImage {
   image_id: number;
   is_cover: boolean;
   image_url: string;
+  /** Card-size copy for thumbnails. */
+  card_url?: string;
 }
 
 export interface ISingleTour {

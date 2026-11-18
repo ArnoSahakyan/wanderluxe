@@ -9,7 +9,8 @@
  *    production dump) are redirected, read-only, to STORAGE_FALLBACK_URL.
  *
  * Database rows store only the object key ("<folder>/<file>.webp"), exactly as
- * before, so both drivers work with existing data.
+ * before, so both drivers work with existing data. Every image also has a
+ * smaller card copy next to it at toCardKey(key); it is not stored in the database.
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -20,6 +21,8 @@ import { logger } from './logger';
 export interface StorageDriver {
     put(bucket: string, key: string, data: Buffer, contentType: string): Promise<void>;
     remove(bucket: string, key: string): Promise<void>;
+    /** The stored file, or null when it does not exist. */
+    get(bucket: string, key: string): Promise<Buffer | null>;
 }
 
 /** Resolve bucket/key inside the uploads root, rejecting traversal attempts. */
@@ -47,6 +50,14 @@ const localDriver: StorageDriver = {
             if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
         }
     },
+    async get(bucket, key) {
+        try {
+            return await fs.readFile(resolveLocalPath(bucket, key));
+        } catch (err) {
+            if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
+            throw err;
+        }
+    },
 };
 
 let supabase: SupabaseClient | undefined;
@@ -61,6 +72,17 @@ const supabaseDriver: StorageDriver = {
         const { error } = await supabase.storage.from(bucket).remove([key]);
         if (error) throw new Error(`Storage deletion failed: ${error.message}`);
     },
+    async get(bucket, key) {
+        supabase ??= createClient(config.storage.supabaseUrl!, config.storage.supabaseServiceRoleKey!);
+        const { data, error } = await supabase.storage.from(bucket).download(key);
+        if (error) {
+            // A missing object surfaces as a 400/404 StorageError.
+            const status = (error as { status?: number; statusCode?: string }).status;
+            if (status === 400 || status === 404 || /not found/i.test(error.message)) return null;
+            throw new Error(`Storage download failed: ${error.message}`);
+        }
+        return Buffer.from(await data.arrayBuffer());
+    },
 };
 
 export const storage: StorageDriver = config.storage.driver === 'supabase' ? supabaseDriver : localDriver;
@@ -69,14 +91,28 @@ export const storage: StorageDriver = config.storage.driver === 'supabase' ? sup
 export const toPublicImageUrl = (key: string, bucket: string): string =>
     `${config.storage.publicUrl}/${bucket}/${key}`;
 
-/** Delete without failing the request; used after the DB change has committed. */
+/** Key of an image's card-size copy: "Bali/Bali_<uuid>.webp" → "Bali/Bali_<uuid>_card.webp". */
+export const toCardKey = (key: string): string => `${key.replace(/\.[a-z0-9]+$/i, '')}_card.webp`;
+
+/** `image` (full size) and `image_card` (for cards and thumbnails) URLs, or nulls. */
+export const toImageUrls = (key: string | null | undefined, bucket: string) =>
+    key
+        ? { image: toPublicImageUrl(key, bucket), image_card: toPublicImageUrl(toCardKey(key), bucket) }
+        : { image: null, image_card: null };
+
+/**
+ * Delete images (and their card copies) without failing the request; used after
+ * the DB change has committed.
+ */
 export const removeQuietly = async (bucket: string, keys: Array<string | null | undefined>) => {
     for (const key of keys) {
         if (!key) continue;
-        try {
-            await storage.remove(bucket, key);
-        } catch (err) {
-            logger.warn('Could not delete stored file', { bucket, key, err });
+        for (const file of [key, toCardKey(key)]) {
+            try {
+                await storage.remove(bucket, file);
+            } catch (err) {
+                logger.warn('Could not delete stored file', { bucket, key: file, err });
+            }
         }
     }
 };

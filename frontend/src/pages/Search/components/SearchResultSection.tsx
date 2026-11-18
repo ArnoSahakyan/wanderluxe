@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { FC } from 'react';
+import { SmartImage } from '../../../components/SmartImage/SmartImage';
 
 type IconType = typeof CalendarIcon;
 
@@ -8,6 +9,7 @@ interface SearchResultItem {
   id: number;
   name: string;
   image: string;
+  image_card?: string | null;
   description?: string;
   excerpt?: string;
   slug?: string;
@@ -50,8 +52,9 @@ export const SearchResultSection: FC<SearchResultProps> = ({
         >
           <div className='flex flex-col md:flex-row'>
             <div className='lg:w-1/5 md:w-1/4'>
-              <img
-                src={item.image}
+              <SmartImage
+                src={item.image_card || item.image}
+                fallbackSrc={item.image}
                 alt={item.name}
                 className='w-full h-40 md:h-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-tr-none'
               />

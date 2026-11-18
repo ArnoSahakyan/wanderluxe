@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { Link } from 'react-router-dom';
 import { IBooking, ROUTES } from '../../shared';
 import { formatDate } from '../../utils';
+import { SmartImage } from '../SmartImage/SmartImage';
 import {
   ArrowUturnLeftIcon,
   CheckCircleIcon,
@@ -71,14 +72,11 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
     >
       {/* Image Section (25% width) */}
       <div className='relative w-1/4 min-w-[120px]'>
-        <img
-          src={booking.image}
+        <SmartImage
+          src={booking.image_card || booking.image}
+          fallbackSrc={booking.image}
           alt={booking.tour_name}
           className={`h-full w-full object-cover ${isCancelled ? 'grayscale' : ''}`}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              'https://via.placeholder.com/300x160?text=WanderLuxe';
-          }}
         />
         <span
           className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset shadow-xs backdrop-blur-md ${config.color}`}

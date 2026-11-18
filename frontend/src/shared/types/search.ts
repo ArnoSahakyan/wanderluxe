@@ -4,6 +4,7 @@ export interface ISearchResponse {
     name: string;
     description: string;
     image: string;
+    image_card?: string | null;
     type: string;
   }[];
   destinations: {
@@ -11,6 +12,7 @@ export interface ISearchResponse {
     name: string;
     description: string;
     image: string;
+    image_card?: string | null;
     type: string;
   }[];
   posts: {
@@ -18,6 +20,7 @@ export interface ISearchResponse {
     name: string;
     excerpt: string;
     image: string;
+    image_card?: string | null;
     type: string;
     slug: string;
   }[];

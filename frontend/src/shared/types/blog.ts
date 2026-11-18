@@ -6,6 +6,8 @@ export interface ISingleBlog {
   content: string;
   is_published: boolean;
   image: string;
+  /** Card-size copy (800px) for lists; may be missing for old images until it is generated. */
+  image_card?: string | null;
   createdAt: string;
   updatedAt: string;
 }

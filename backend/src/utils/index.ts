@@ -8,4 +8,4 @@ export * from './security';
 export * from './sendEmail';
 export * from './serializers';
 export * from './typedRoute';
-export { toPublicImageUrl } from '../lib/storage';
+export { toImageUrls, toPublicImageUrl } from '../lib/storage';

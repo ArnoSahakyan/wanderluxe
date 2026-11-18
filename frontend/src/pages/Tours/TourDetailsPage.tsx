@@ -10,7 +10,7 @@ import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { ReviewGate, ReviewModal } from './components';
 import { StarIcon } from '@heroicons/react/20/solid';
-import { LoadingState, ErrorState, EmptyState } from '../../components';
+import { LoadingState, ErrorState, EmptyState, SmartImage } from '../../components';
 
 const TourDetailsPage = () => {
   const { tourId } = useParams<{ tourId: string }>();
@@ -124,10 +124,10 @@ const TourDetailsPage = () => {
               >
                 {tour.images.map((image, index) => (
                   <SwiperSlide key={image.image_id}>
-                    <img
-                      src={image.image_url}
+                    <SmartImage
+                      src={image.card_url || image.image_url}
+                      fallbackSrc={image.image_url}
                       alt={`Show photo ${index + 1}`}
-                      loading='lazy'
                       className='h-20 w-full object-cover rounded-md cursor-pointer border border-gray-200 dark:border-gray-600'
                     />
                   </SwiperSlide>

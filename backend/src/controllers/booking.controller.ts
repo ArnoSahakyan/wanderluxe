@@ -20,7 +20,7 @@ import {
     ForbiddenError,
     NotFoundError,
     getPagination,
-    toPublicImageUrl,
+    toImageUrls,
     totalPages,
 } from '../utils';
 import type * as v from '../validators';
@@ -109,10 +109,9 @@ export const cancelBooking = async (
     res.status(200).json({ message: 'Booking cancelled successfully', booking });
 };
 
-const coverImageUrl = (tour?: Tour) => {
-    const cover = tour?.TourImages?.find((img) => img.is_cover);
-    return cover ? toPublicImageUrl(cover.image_url, TOURS_BUCKET) : null;
-};
+/** `image` and `image_card` of the tour's cover photo. */
+const coverImageUrls = (tour?: Tour) =>
+    toImageUrls(tour?.TourImages?.find((img) => img.is_cover)?.image_url, TOURS_BUCKET);
 
 const VIEW_ORDER: Record<BookingView, OrderItem[]> = {
     upcoming: [[Tour, 'start_date', 'ASC']],
@@ -175,7 +174,7 @@ export const getUsersBookings = async (
             end_date: tour?.end_date,
             destination_name: tour?.Destination?.name || null,
             category_name: tour?.Category?.name || null,
-            image: coverImageUrl(tour),
+            ...coverImageUrls(tour),
         };
     });
 
@@ -228,7 +227,7 @@ export const getBookingById = async (req: AuthenticatedRequest<BookingIdParams>,
         end_date: tour?.end_date,
         destination_name: tour?.Destination?.name || null,
         category_name: tour?.Category?.name || null,
-        image: coverImageUrl(tour),
+        ...coverImageUrls(tour),
         user: isAdmin
             ? {
                   user_id: booking.User?.user_id,

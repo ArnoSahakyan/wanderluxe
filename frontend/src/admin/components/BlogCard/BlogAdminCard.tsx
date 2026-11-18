@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { formatDate } from '../../../utils';
 import { IBlog, ROUTES } from '../../../shared';
 import { Link } from 'react-router-dom';
+import { SmartImage } from '../../../components/SmartImage/SmartImage';
 
 interface BlogAdminCardProps {
   post: IBlog;
@@ -13,7 +14,12 @@ export const BlogAdminCard: FC<BlogAdminCardProps> = ({ post }) => {
       {/* Image */}
       {post.image && (
         <div className='relative h-40 overflow-hidden'>
-          <img src={post.image} alt={post.title} className='w-full h-full object-cover' />
+          <SmartImage
+            src={post.image_card || post.image}
+            fallbackSrc={post.image}
+            alt={post.title}
+            className='w-full h-full object-cover'
+          />
           <div className='absolute top-4 right-4 bg-primary-light dark:bg-primary-dark text-background-light px-3 py-1 rounded-full font-bold text-sm shadow-md'>
             {post.is_published ? 'Published' : 'Draft'}
           </div>

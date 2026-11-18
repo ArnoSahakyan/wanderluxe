@@ -148,6 +148,14 @@ In the existing project → **Settings → Git** → connect `ArnoSahakyan/wande
   - Render applies `render.yaml` changes only to services created from the Blueprint. If the service was created by hand, set the same thing in the dashboard: Settings → Build & Deploy → Auto-Deploy → **After CI Checks Pass**.
   - **Vercel still deploys every push.** A failing frontend build stops that deploy; a failing test does not.
 - **Schema changes:** new migrations are **not** run automatically. Run step 2b against Supabase *before* pushing code that depends on them. For example, the booking lifecycle (2026-11-19) needs `20261119000001-add-booking-cancellation-fields` and `20261119000002-create-booking-status-history` applied before the API that uses them is deployed; both are additive, so the old API keeps working against the new schema.
+- **Card images:** uploads store a small card copy next to each image. For images uploaded before 2026-11-18, create the copies once (it skips images that already have one, never changes the originals, and `--dry-run` only lists them):
+  ```
+  DATABASE_URL="<app or owner URL>" DB_SSL=true DB_SSL_CA="$(cat <ca file>)" \
+  STORAGE_DRIVER=supabase SUPABASE_URL="https://<ref>.supabase.co" SUPABASE_SERVICE_ROLE_KEY="<service-role key>" \
+  STORAGE_PUBLIC_URL="https://<ref>.supabase.co/storage/v1/object/public" \
+  npm run images:cards -w backend
+  ```
+  Until then the site shows the full images, so the order relative to a deploy doesn't matter.
 - **Rollback:** see DATABASE_AUDIT.md §6. Supabase's daily backups (paid plans) or a `pg_dump` before each migration give you a way back.
 
 ## Troubleshooting

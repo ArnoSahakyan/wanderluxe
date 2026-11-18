@@ -10,6 +10,7 @@ export const TourCard: FC<ITourCardProps> = ({
   title,
   description,
   imageUrl,
+  imageCardUrl,
   price,
   duration,
   mode = 'public',
@@ -21,7 +22,8 @@ export const TourCard: FC<ITourCardProps> = ({
       {/* Image with price tag */}
       <div className='relative h-48 overflow-hidden'>
         <SmartImage
-          src={imageUrl ?? undefined}
+          src={imageCardUrl || imageUrl || undefined}
+          fallbackSrc={imageUrl}
           alt={title}
           className='w-full h-full object-cover'
           {...(priority ? { loading: 'eager', fetchPriority: 'high' } : {})}

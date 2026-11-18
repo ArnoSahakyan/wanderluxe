@@ -29,6 +29,25 @@ describe('SmartImage', () => {
     expect(placeholder.tagName).toBe('DIV');
   });
 
+  it('falls back from the card copy to the full image, then to the placeholder', () => {
+    render(
+      <SmartImage
+        src='https://cdn.test/bali_card.webp'
+        fallbackSrc='https://cdn.test/bali.webp'
+        alt='Bali'
+      />,
+    );
+    const card = screen.getByRole('img', { name: 'Bali' });
+    expect(card).toHaveAttribute('src', 'https://cdn.test/bali_card.webp');
+
+    fireEvent.error(card);
+    const full = screen.getByRole('img', { name: 'Bali' });
+    expect(full).toHaveAttribute('src', 'https://cdn.test/bali.webp');
+
+    fireEvent.error(full);
+    expect(screen.getByRole('img', { name: 'Bali' }).tagName).toBe('DIV');
+  });
+
   it('renders the placeholder when there is no source', () => {
     render(<SmartImage src={undefined} alt='No photo' />);
     expect(screen.getByRole('img', { name: 'No photo' }).tagName).toBe('DIV');
