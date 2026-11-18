@@ -77,6 +77,7 @@ So every constraint below could be added **without changing any row**.
 | `20261117000003-add-indexes.cjs` | FK indexes on bookings, favorites, reviews, tours and tour_images; partial index on `users(reset_password_token)`; `newsletter_verifications(email)`. | D-04, D-09, D-10 |
 | `20261117000004-add-integrity-constraints.cjs` | Unique (user, tour) on favorites and reviews; CHECK constraints; partial unique "one cover per tour"; unique `lower(email)`. **Pre-flight:** counts violating rows first and aborts with a clear message rather than deleting anything. | D-05 – D-08 |
 | `20261117000005-add-password-changed-at.cjs` | Nullable `users.password_changed_at timestamptz`, used to invalidate refresh tokens after a password change. | S-04 |
+| `20261118000001-create-refresh-tokens.cjs` | New `refresh_tokens` table (hashed session tokens, `session_id`, `expires_at`, `rotated_at`, `revoked_at`; FK to `users` with `ON DELETE CASCADE`; indexes on `user_id` and `session_id`). Additive only. Sessions are now revoked through this table; `password_changed_at` is still recorded. | S-20 |
 
 ## 5. Index verification (EXPLAIN)
 

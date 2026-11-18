@@ -102,13 +102,14 @@ All variables are declared and validated in `backend/src/config/env.ts`.
 | `PORT` | 3000 | `src/index.ts` |
 | `APP_URL` | first CORS origin | links in password-reset and newsletter e-mails (`src/emails`) |
 | `CORS_ORIGIN` | – | comma-separated allow-list (`src/app.ts`). Legacy name: `CORS`. |
-| `TRUST_PROXY` | false | client IP for rate limiting behind a proxy |
+| `TRUST_PROXY` | false | number of proxies in front of the API, for the client IP used by rate limiting (`2` on Vercel → Render) |
 | `DATABASE_URL` or `DB_HOST/PORT/NAME/USER/PASSWORD` | – | `src/db/models/index.ts` (app role) |
 | `DB_MIGRATION_USER/PASSWORD` (or `DB_MIGRATION_URL`) | app creds | `src/db/config/config.cjs` (sequelize-cli) |
 | `DB_SSL`, `DB_SSL_CA`, `DB_SSL_REJECT_UNAUTHORIZED` | false, –, true | TLS to remote databases (Supabase). Also honoured by sequelize-cli. |
 | `DB_POOL_MAX`, `DB_LOG_SQL` | 10, false | Sequelize options |
-| `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | – | token signing. Must differ; ≥ 32 chars in production. Legacy names: `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`. |
-| `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN` | 15m, 7d | `src/utils/generateTokens.ts` |
+| `JWT_ACCESS_SECRET` | – | access-token signing; ≥ 32 chars in production. Legacy name: `ACCESS_TOKEN_SECRET`. `JWT_REFRESH_SECRET` is accepted but no longer used. |
+| `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN` | 15m, 7d | access-token lifetime; session lifetime, extended on every refresh (`src/lib/sessions.ts`) |
+| `COOKIE_SECURE` | true in production | `Secure` flag on the `wl_session` cookie. Off in development so it works over `http://localhost`. |
 | `BCRYPT_ROUNDS` | 12 | password hashing |
 | `RATE_LIMIT_*` | on, 15 min, 20 auth / 10 forms | `src/middlewares/rateLimit.middleware.ts` |
 | `SMTP_HOST/PORT/SECURE/USER/PASS`, `MAIL_FROM` | Mailpit | `src/utils/sendEmail.ts`. With no `SMTP_HOST`, e-mails are logged instead of sent. |
@@ -124,7 +125,7 @@ All variables are declared and validated in `backend/src/config/env.ts`.
 
 | Variable | Where | Notes |
 |---|---|---|
-| `VITE_API_URL` | bundled into the client | `/api` in development. The absolute API URL in production. Legacy name: `VITE_BACK_BASE_URL`. |
+| `VITE_API_URL` | bundled into the client | `/api` everywhere (the default): the Vite proxy in development, the `vercel.json` rewrite on Vercel. Must stay same-origin for the session cookie. Legacy name: `VITE_BACK_BASE_URL`. |
 | `API_PROXY_TARGET` | `vite.config.ts` only (not bundled) | where the dev server forwards `/api` and `/uploads` |
 
 ### Production configuration

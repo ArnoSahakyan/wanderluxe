@@ -36,12 +36,15 @@ helmet → cors (allow-list) → json/urlencoded (size-limited) → request log
 
 | Step | Detail |
 |---|---|
-| Sign-in | `POST /auth/signin`. Case-insensitive e-mail lookup. bcrypt compare, with a dummy hash for unknown users so timing is constant. Returns `{token, refreshToken, user}`. |
+| Sign-in | `POST /auth/signin`. Case-insensitive e-mail lookup. bcrypt compare, with a dummy hash for unknown users so timing is constant. Returns `{token, user}` and sets the session cookie. |
 | Access token | HS256 JWT `{user_id, role}`, 15 min, `JWT_ACCESS_SECRET` |
-| Refresh token | HS256 JWT `{user_id}`, 7 days, separate `JWT_REFRESH_SECRET`. Rejected if issued before `users.password_changed_at`, so every session ends after a password change or reset. |
+| Session cookie | `wl_session`: an opaque 256-bit random token, `HttpOnly; SameSite=Strict; Path=/api/auth` (+ `Secure` in production), 7 days sliding (`JWT_REFRESH_EXPIRES_IN`). Only its SHA-256 is stored, in `refresh_tokens` (`src/lib/sessions.ts`). |
+| Refresh | `POST /auth/refresh` (no body). Rotates the token on every call and returns `{token, user}`. A rotated token presented again more than 30 s later is treated as stolen and revokes the whole session; within 30 s (two tabs refreshing together) it just gets an access token. |
+| Logout & revocation | `POST /auth/logout` revokes this browser's session and clears the cookie. A password reset or an admin deleting the account revokes every session; a password change revokes the others and starts a new one for the current browser. |
+| Same origin | The browser only talks to its own origin: `/api` is proxied by Vite in development and forwarded to Render by the rewrite in `frontend/vercel.json` in production. That keeps the cookie first-party, so `SameSite=Strict` blocks cross-site use (CSRF) and no CORS is involved. |
 | Password reset | 256-bit random token e-mailed to the user. Only its SHA-256 is stored. Valid 1 h, single use. Same response whether or not the e-mail exists. |
 | Authorization | `isAdmin` for admin routes. Resource ownership is checked in controllers (bookings, reviews, favourites) against `req.user_id` from the token. |
-| SPA | Tokens are stored in `localStorage` (zustand persist). The axios interceptor refreshes once on 401: a single in-flight refresh, sent through a client without the interceptor. If that fails, the user is logged out and the query cache is cleared. Route guards are UX only; the API enforces everything. |
+| SPA | The access token is kept in memory only; `localStorage` holds just the profile and a signed-in flag for the first paint. After a reload the first API call (or `useRehydrateAuth`) exchanges the cookie for a new access token. The axios interceptor refreshes once on 401: a single in-flight refresh, sent through a client without the interceptor. A rejected session signs the user out and clears the query cache; a network error does not. Sign-out calls `/auth/logout` first. Route guards are UX only; the API enforces everything. |
 
 ## Frontend structure
 
