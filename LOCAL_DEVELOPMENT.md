@@ -112,6 +112,8 @@ All variables are declared and validated in `backend/src/config/env.ts`.
 | `COOKIE_SECURE` | true in production | `Secure` flag on the `wl_session` cookie. Off in development so it works over `http://localhost`. |
 | `BCRYPT_ROUNDS` | 12 | password hashing |
 | `RATE_LIMIT_*` | on, 15 min, 20 auth / 10 forms | `src/middlewares/rateLimit.middleware.ts` |
+| `DEMO_MODE` | false | enables *Try as customer / admin* (`POST /api/auth/demo`). Create the accounts with `npm run db:demo-users`. |
+| `DEMO_CUSTOMER_EMAIL`, `DEMO_ADMIN_EMAIL` | `demo-customer@example.com`, `demo-admin@example.com` | the demo accounts; restricted whenever they sign in (`src/lib/demo.ts`) |
 | `SMTP_HOST/PORT/SECURE/USER/PASS`, `MAIL_FROM` | Mailpit | `src/utils/sendEmail.ts`. With no `SMTP_HOST`, e-mails are logged instead of sent. |
 | `CONTACT_RECIPIENT_EMAIL` | `SMTP_USER` | inbox for contact-form notifications |
 | `STORAGE_DRIVER` | local (dev) / supabase (prod) | `src/lib/storage.ts` |

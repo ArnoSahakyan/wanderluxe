@@ -238,3 +238,28 @@ Follow-up cleanup, also 2026-11-17:
 - The tour gallery's thumbnails didn't switch slides in development: React StrictMode mounts the thumbs Swiper twice. Fixed. Production had always worked.
 - Render deploys the API only after CI passes (`autoDeployTrigger: checksPass`).
 
+
+## 9. Portfolio polish and code quality (2026-11-18)
+
+- **Demo accounts.** *Try as customer* / *Try as admin*, enabled with `DEMO_MODE`. The demo admin is read-only and gets real customers' personal data masked. The demo customer can only touch their own trips, which are cleaned up after 24 h.
+- **Bugs fixed.** Each now has a regression test.
+  - "Booked on Invalid Date" on the profile dashboard.
+  - Review dates showing "Invalid Date". The *My Reviews* page crashed once a user had a review, because the frontend read `created_at` while the API sends `createdAt`.
+  - A blank error toast on sign-in/sign-up network errors.
+  - The password form clearing itself even when the server rejected the change.
+  - The favourite-status request firing for signed-out visitors.
+  - Browser validation pre-empting the contact form's own messages.
+- **Error handling.** A route-level error page and an app-level error boundary. A stale tab after a deploy reloads itself once instead of showing a blank page.
+- **Accessibility and SEO.**
+  - Lighthouse gives the main pages 100 for accessibility, best practices and SEO (was 98–100 / 100 / 91–92).
+  - Fixes behind that: per-page titles, a meta description and social tags, one `h1` per page, ordered headings, and better gallery alt text.
+  - Guarded in CI by `e2e/tests/quality.spec.ts` (axe-core).
+- **Performance.**
+  - Public images resized: the hero from 495 to 265 KiB, the About image from 1.4 MB to 199 KiB.
+  - The first card and the gallery's first photo load eagerly at high priority. Font CSS no longer blocks the first paint.
+  - Home page LCP under throttling went from 14.6 s to 7.5 s. Tours and destinations still wait on full-size storage images; see docs/FEATURE_PLANS.md.
+- **Tests and CI.**
+  - 52 API tests, up from 45.
+  - 66 frontend tests, up from 21.
+  - 18 Playwright tests, up from 6, now also run in CI as a second job.
+- **README** rewritten for visitors, with screenshots and an architecture diagram. Feature plans are in docs/FEATURE_PLANS.md.

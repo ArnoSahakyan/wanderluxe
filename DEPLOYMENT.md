@@ -97,6 +97,11 @@ You are prompted for each value marked below. Afterwards, delete the old service
 | `SUPABASE_BUCKET_TOURS/DESTINATIONS/BLOGS` | your bucket names |
 | `TRUST_PROXY` | `2`: browser traffic arrives through two proxies (Vercel's `/api` rewrite, then Render's load balancer), so the client IP is the second entry from the right in `X-Forwarded-For`. With `1`, every visitor would share Vercel's address and one rate limit. |
 
+**Demo accounts (optional, recommended for a portfolio).** "Try as customer / admin" on the sign-in page:
+1. Create the two accounts once. Run `npm run db:demo-users` with the backend pointed at Supabase: `DATABASE_URL` set to the `wanderluxe_app` pooler URL, plus `DB_SSL=true` and `DB_SSL_CA`. It only creates or updates `demo-customer@example.com` and `demo-admin@example.com`, with random passwords that are never shown.
+2. On Render, set `DEMO_MODE=true`. The buttons appear as soon as the API answers `GET /api/auth/demo` with `{"enabled":true}`.
+3. To turn the demo off, set `DEMO_MODE=false`. The accounts stay restricted even then.
+
 The old variable names (`ACCESS_TOKEN_SECRET`, `CORS`, `SUPABASE_PUBLIC_URL`, …) still work, but the new names are clearer. New JWT secrets sign everyone out once; that's expected.
 
 The original production values are in `.backup/env/travel-back.env` on your machine, for reference.
