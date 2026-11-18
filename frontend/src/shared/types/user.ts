@@ -10,10 +10,12 @@ interface User {
 
 export interface AuthState {
   user: User | null;
+  /** In memory only; never persisted. */
   accessToken: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
-  login: (payload: { user: User; token: string | null; refreshToken: string | null }) => void;
+  login: (payload: { user: User; token: string | null }) => void;
   setAccessToken: (token: string) => void;
+  setUser: (user: User) => void;
+  /** Clears the local session only. Use `signOut()` to end the server session too. */
   logout: () => void;
 }

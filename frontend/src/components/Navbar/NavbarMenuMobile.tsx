@@ -2,6 +2,7 @@ import { DisclosurePanel, DisclosureButton } from '@headlessui/react';
 import { NavLink, Link } from 'react-router-dom';
 import { NavItem, ROUTES } from '../../shared';
 import { useAuthStore } from '../../store';
+import { signOut } from '../../api';
 import { ThemeToggle } from '../ThemeToggle';
 
 interface NavbarMobileMenuProps {
@@ -9,7 +10,7 @@ interface NavbarMobileMenuProps {
 }
 
 export const NavbarMobileMenu = ({ navigation }: NavbarMobileMenuProps) => {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   return (
     <DisclosurePanel className='lg:hidden'>
@@ -55,7 +56,7 @@ export const NavbarMobileMenu = ({ navigation }: NavbarMobileMenuProps) => {
               </DisclosureButton>
               <DisclosureButton
                 as='button'
-                onClick={logout}
+                onClick={signOut}
                 className='block w-full rounded-md px-3 py-2 text-base font-medium text-background-light hover:bg-gray-100 hover:text-primary-light dark:text-secondary-dark dark:hover:bg-gray-700 dark:hover:text-primary-dark'
               >
                 Sign Out

@@ -10,7 +10,7 @@ import {
   Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import { Outlet } from 'react-router-dom';
-import { useAuthStore } from '../../store';
+import { signOut } from '../../api';
 import { SidebarContent } from './components';
 import { ROUTES } from '../../shared';
 import { GlobalNavigateSetup } from '../../components';
@@ -26,7 +26,6 @@ const navigation = [
 
 const ProfileLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { logout } = useAuthStore();
 
   return (
     <div className='min-h-full'>
@@ -44,7 +43,7 @@ const ProfileLayout = () => {
           >
             <SidebarContent
               navigation={navigation}
-              logout={logout}
+              logout={signOut}
               onLinkClick={() => setSidebarOpen(false)}
             />
           </DialogPanel>
@@ -53,7 +52,7 @@ const ProfileLayout = () => {
 
       {/* Desktop sidebar */}
       <div className='hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col'>
-        <SidebarContent navigation={navigation} logout={logout} />
+        <SidebarContent navigation={navigation} logout={signOut} />
       </div>
 
       {/* Mobile top bar */}

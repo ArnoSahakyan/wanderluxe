@@ -72,8 +72,6 @@ export const signInBody = z.object({
     password: z.string().min(1, 'is required').max(128),
 });
 
-export const refreshBody = z.object({ refreshToken: z.string().min(1, 'Refresh token is required.') });
-
 export const emailBody = z.object({ email });
 
 export const resetPasswordQuery = z.object({ token: z.string().min(1, 'Reset token is required.').max(200) });

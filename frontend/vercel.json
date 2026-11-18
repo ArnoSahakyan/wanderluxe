@@ -4,7 +4,10 @@
   "installCommand": "cd .. && npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/((?!api/|uploads/).*)", "destination": "/" }],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://wanderluxe-api.onrender.com/api/:path*" },
+    { "source": "/((?!api/|uploads/).*)", "destination": "/" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

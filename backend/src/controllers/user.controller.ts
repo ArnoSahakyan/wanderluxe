@@ -4,6 +4,7 @@ import { Op } from 'sequelize';
 import type { z } from 'zod';
 import { config } from '../config/env';
 import { Booking, Favorite, Review, Role, Tour, User } from '../db/models';
+import { revokeAllSessions, startSession } from '../lib/sessions';
 import type { AuthenticatedRequest, IPaginationQuery, TypedRequest } from '../types';
 import { AppError, BadRequestError, NotFoundError, getPagination, toPublicUser, totalPages } from '../utils';
 import type * as v from '../validators';
@@ -67,6 +68,10 @@ export const changePassword = async (
     user.password = await bcrypt.hash(new_password, config.bcryptRounds);
     user.password_changed_at = new Date();
     await user.save();
+
+    // Sign out every other device; this browser continues with a fresh session.
+    await revokeAllSessions(user.user_id);
+    await startSession(res, user.user_id);
 
     res.json({ message: 'Password changed successfully' });
 };
@@ -177,6 +182,7 @@ export const deleteUser = async (req: AuthenticatedRequest<UserIdParams>, res: R
     if (!deleted) {
         throw new NotFoundError('User not found');
     }
+    await revokeAllSessions(req.params.user_id);
 
     res.status(200).json({ message: 'User deleted successfully' });
 };

@@ -51,7 +51,6 @@ if (!existsSync(backendEnv)) {
   text = set(text, 'DB_MIGRATION_USER', db.POSTGRES_USER ?? 'wanderluxe_owner');
   text = set(text, 'DB_MIGRATION_PASSWORD', db.POSTGRES_PASSWORD ?? '');
   text = set(text, 'JWT_ACCESS_SECRET', secret(32));
-  text = set(text, 'JWT_REFRESH_SECRET', secret(32));
   text = set(text, 'SMTP_PORT', db.MAILPIT_SMTP_PORT ?? '1025');
   write(backendEnv, text);
 } else console.log('• backend/.env exists — left unchanged');

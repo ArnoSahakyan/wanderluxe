@@ -63,11 +63,19 @@ const schema = z
         DB_LOG_SQL: bool(false),
 
         JWT_ACCESS_SECRET: optionalString,
-        JWT_REFRESH_SECRET: optionalString,
         ACCESS_TOKEN_SECRET: optionalString, // legacy
+        // Refresh tokens are opaque and stored hashed in refresh_tokens, so they need
+        // no signing secret any more. Still accepted so an existing .env keeps working.
+        JWT_REFRESH_SECRET: optionalString,
         REFRESH_TOKEN_SECRET: optionalString, // legacy
         JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
-        JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+        /** How long a sign-in lasts without activity; every refresh extends it. */
+        JWT_REFRESH_EXPIRES_IN: z
+            .string()
+            .regex(/^\d+[smhd]$/, 'use a number plus s, m, h or d (e.g. 7d)')
+            .default('7d'),
+        /** Secure flag on the session cookie. Defaults to true in production (HTTPS only). */
+        COOKIE_SECURE: z.enum(['true', 'false', '1', '0', '']).optional(),
         BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
 
         RATE_LIMIT_ENABLED: bool(true),
@@ -98,22 +106,13 @@ const schema = z
     })
     .superRefine((env, ctx) => {
         const access = env.JWT_ACCESS_SECRET ?? env.ACCESS_TOKEN_SECRET;
-        const refresh = env.JWT_REFRESH_SECRET ?? env.REFRESH_TOKEN_SECRET;
         const minLength = env.NODE_ENV === 'production' ? 32 : 16;
-        for (const [name, value] of [
-            ['JWT_ACCESS_SECRET', access],
-            ['JWT_REFRESH_SECRET', refresh],
-        ] as const) {
-            if (!value || value.length < minLength) {
-                ctx.addIssue({
-                    code: 'custom',
-                    path: [name],
-                    message: `must be set and at least ${minLength} characters`,
-                });
-            }
-        }
-        if (access && refresh && access === refresh) {
-            ctx.addIssue({ code: 'custom', path: ['JWT_REFRESH_SECRET'], message: 'must differ from the access secret' });
+        if (!access || access.length < minLength) {
+            ctx.addIssue({
+                code: 'custom',
+                path: ['JWT_ACCESS_SECRET'],
+                message: `must be set and at least ${minLength} characters`,
+            });
         }
         if (!env.DATABASE_URL && (!env.DB_NAME || !env.DB_USER)) {
             ctx.addIssue({ code: 'custom', path: ['DB_NAME'], message: 'set DATABASE_URL or DB_NAME + DB_USER (+ DB_PASSWORD)' });
@@ -156,6 +155,12 @@ const corsOrigins = [
     ...new Set((env.CORS_ORIGIN.length ? env.CORS_ORIGIN : env.CORS ? [env.CORS] : []).map(normaliseOrigin)),
 ];
 
+/** "45s" | "15m" | "12h" | "7d" → milliseconds (format checked by the schema). */
+const durationMs = (value: string): number => {
+    const unit = { s: 1_000, m: 60_000, h: 3_600_000, d: 86_400_000 }[value.slice(-1) as 's' | 'm' | 'h' | 'd'];
+    return Number(value.slice(0, -1)) * unit;
+};
+
 const parseTrustProxy = (value?: string): boolean | number | string => {
     if (value === undefined || value === '' || value === 'false') return false;
     if (value === 'true') return true;
@@ -191,9 +196,12 @@ export const config = {
     },
     jwt: {
         accessSecret: (env.JWT_ACCESS_SECRET ?? env.ACCESS_TOKEN_SECRET) as string,
-        refreshSecret: (env.JWT_REFRESH_SECRET ?? env.REFRESH_TOKEN_SECRET) as string,
         accessExpiresIn: env.JWT_ACCESS_EXPIRES_IN,
-        refreshExpiresIn: env.JWT_REFRESH_EXPIRES_IN,
+    },
+    session: {
+        /** Sliding lifetime of a refresh token, in milliseconds. */
+        ttlMs: durationMs(env.JWT_REFRESH_EXPIRES_IN),
+        cookieSecure: env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' || env.COOKIE_SECURE === '1' : isProduction,
     },
     bcryptRounds: env.BCRYPT_ROUNDS,
     rateLimit: {

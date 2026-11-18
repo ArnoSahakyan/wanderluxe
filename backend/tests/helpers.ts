@@ -3,7 +3,7 @@ import request from 'supertest';
 import sharp from 'sharp';
 import app from '../src/app';
 import { Role, User } from '../src/db/models';
-import { generateRefreshToken, generateToken } from '../src/utils/generateTokens';
+import { generateToken } from '../src/utils/generateTokens';
 
 export const api = () => request(app);
 
@@ -12,7 +12,7 @@ export const STRONG_PASSWORD = 'Str0ng!Passw0rd';
 let counter = 0;
 export const uniqueEmail = (prefix = 'user') => `${prefix}.${Date.now()}.${++counter}@example.test`;
 
-/** Creates a user directly in the DB and returns bearer tokens for it. */
+/** Creates a user directly in the DB and returns a bearer token for it. */
 export const createUser = async (role: 'admin' | 'customer' = 'customer') => {
     const roleRow = await Role.findOne({ where: { name: role } });
     const user = await User.create({
@@ -25,7 +25,6 @@ export const createUser = async (role: 'admin' | 'customer' = 'customer') => {
     return {
         user,
         token: generateToken(user),
-        refreshToken: generateRefreshToken(user),
         auth: { Authorization: `Bearer ${generateToken(user)}` },
     };
 };
@@ -53,4 +52,19 @@ export const createTour = async (adminAuth: Record<string, string>, opts: { days
         .attach('images', await pngBuffer(), { filename: 'cover.png', contentType: 'image/png' });
     if (res.status !== 201) throw new Error(`createTour failed: ${res.status} ${JSON.stringify(res.body)}`);
     return res.body as { tour_id: number; available_spots: number };
+};
+
+/** The `wl_session=<value>` pair from a response's Set-Cookie header, if any. */
+export const sessionCookie = (res: { headers: Record<string, unknown> }): string | undefined => {
+    const header = res.headers['set-cookie'];
+    const cookies = Array.isArray(header) ? (header as string[]) : [];
+    const pair = cookies.find((c) => c.startsWith('wl_session='))?.split(';')[0];
+    return pair && pair !== 'wl_session=' ? pair : undefined;
+};
+
+/** Signs in through the API and returns the session cookie the browser would keep. */
+export const signInSession = async (email: string, password = STRONG_PASSWORD) => {
+    const res = await api().post('/api/auth/signin').send({ email, password });
+    if (res.status !== 200) throw new Error(`sign-in failed: ${res.status}`);
+    return sessionCookie(res)!;
 };

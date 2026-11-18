@@ -10,7 +10,8 @@ import {
     Tour,
     TourImage,
     User,
-    Contact
+    Contact,
+    RefreshToken,
 } from "../db/models";
 
 export interface DbModels {
@@ -27,4 +28,5 @@ export interface DbModels {
     NewsletterSubscriber: typeof NewsletterSubscriber;
     NewsletterVerification: typeof NewsletterVerification;
     Contact: typeof Contact;
+    RefreshToken: typeof RefreshToken;
 }

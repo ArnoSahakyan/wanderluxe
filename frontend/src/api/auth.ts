@@ -1,4 +1,5 @@
 import { api, public_api } from './axios.ts';
+import { useAuthStore } from '../store';
 import { ForgotPasswordFormData, SignInFormData, SignUpFormData } from '../shared';
 
 interface ResetPasswordRequest {
@@ -14,6 +15,20 @@ export const signIn = async (credentials: SignInFormData) => {
 export const signUp = async (payload: SignUpFormData) => {
   const response = await public_api.post('/auth/signup', payload);
   return response.data;
+};
+
+/**
+ * Ends the session on the server (revokes it and clears the httpOnly cookie),
+ * then locally. The local sign-out happens even if the server cannot be reached.
+ */
+export const signOut = async () => {
+  try {
+    await public_api.post('/auth/logout');
+  } catch {
+    // Offline or API asleep: the cookie expires on its own; still sign out here.
+  } finally {
+    useAuthStore.getState().logout();
+  }
 };
 
 export const fetchCurrentUser = async () => {

@@ -16,6 +16,7 @@ import initPostModel, { Post } from './post.model';
 import initNewsletterSubscriberModel, { NewsletterSubscriber } from './newsletterSubscriber.model';
 import initNewsletterVerificationModel, { NewsletterVerification } from './newsletterVerification.model';
 import initContactModel, { Contact } from './contact.model';
+import initRefreshTokenModel, { RefreshToken } from './refreshToken.model';
 import {DbModels} from "../../types";
 
 // Setup Sequelize instance
@@ -52,6 +53,7 @@ initPostModel(sequelize);
 initNewsletterSubscriberModel(sequelize);
 initNewsletterVerificationModel(sequelize);
 initContactModel(sequelize);
+initRefreshTokenModel(sequelize);
 
 // Collect models into an object to pass to associate methods
 const models: DbModels = {
@@ -68,6 +70,7 @@ const models: DbModels = {
   NewsletterSubscriber,
   NewsletterVerification,
   Contact,
+  RefreshToken,
 };
 
 // Run associations
@@ -93,4 +96,5 @@ export {
   NewsletterSubscriber,
   NewsletterVerification,
   Contact,
+  RefreshToken,
 };

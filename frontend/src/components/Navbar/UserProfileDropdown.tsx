@@ -3,9 +3,10 @@ import { UserIcon, Squares2X2Icon, ShieldCheckIcon } from '@heroicons/react/24/o
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../shared';
 import { useAuthStore } from '../../store';
+import { signOut } from '../../api';
 
 export const UserProfileDropdown = () => {
-  const { logout, user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -51,7 +52,7 @@ export const UserProfileDropdown = () => {
         )}
         <MenuItem>
           <button
-            onClick={logout}
+            onClick={signOut}
             className='block w-full text-left px-4 py-2 text-sm hover:bg-background-light hover:text-primary-light dark:hover:bg-secondary-light text-background-light dark:text-primary-dark'
           >
             Sign Out

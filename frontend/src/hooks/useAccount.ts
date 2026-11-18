@@ -6,7 +6,7 @@ import { formatAxiosError } from '../utils';
 
 export const useAccount = () => {
   const { showSuccess, showError } = useToast();
-  const { login } = useAuthStore();
+  const setUser = useAuthStore((state) => state.setUser);
 
   const personalInfoMutation = useMutation({
     mutationFn: updatePersonalInfo,
@@ -16,17 +16,13 @@ export const useAccount = () => {
       // The API returns a sanitised user (no password data) including the role.
       const current = useAuthStore.getState();
       const updated = response.data.user;
-      login({
-        user: {
-          ...current.user!,
-          full_name: updated.full_name,
-          email: updated.email,
-          phone_number: updated.phone_number ?? null,
-          phone: updated.phone_number ?? null,
-          role: updated.role ?? current.user?.role ?? 'customer',
-        },
-        token: current.accessToken,
-        refreshToken: current.refreshToken,
+      setUser({
+        ...current.user!,
+        full_name: updated.full_name,
+        email: updated.email,
+        phone_number: updated.phone_number ?? null,
+        phone: updated.phone_number ?? null,
+        role: updated.role ?? current.user?.role ?? 'customer',
       });
     },
 
