@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { Op } from 'sequelize';
 import { TypedRequest } from '../types';
 import { User, Booking, Tour, Destination, Category, Review, Contact } from '../db/models';
 
@@ -14,16 +15,20 @@ export const getAdminStats = async (
         totalCategories,
         totalReviews,
         unreadMessages,
-        revenueResult
+        revenueResult,
+        cancelledLast30Days,
     ] = await Promise.all([
         User.count(),
-        Booking.count(),
+        Booking.count({ where: { status: { [Op.ne]: 'cancelled' } } }),
         Tour.count(),
         Destination.count(),
         Category.count(),
         Review.count(),
         Contact.count({ where: { status: 'unread' } }),
-        Booking.sum('total_price', { where: { status: 'completed' } })
+        Booking.sum('total_price', { where: { status: 'completed' } }),
+        Booking.count({
+            where: { status: 'cancelled', cancelled_at: { [Op.gte]: new Date(Date.now() - 30 * 86_400_000) } },
+        }),
     ]);
 
     const recentBookings = await Booking.findAll({
@@ -44,7 +49,8 @@ export const getAdminStats = async (
             totalCategories,
             totalReviews,
             unreadMessages,
-            totalRevenue: revenueResult || 0
+            totalRevenue: revenueResult || 0,
+            cancelledLast30Days,
         },
         recentBookings
     });

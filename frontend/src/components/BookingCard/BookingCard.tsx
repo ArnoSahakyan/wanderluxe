@@ -1,23 +1,17 @@
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
-import { ROUTES } from '../../shared';
+import { IBooking, ROUTES } from '../../shared';
 import { formatDate } from '../../utils';
-import { CheckCircleIcon, ClockIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowUturnLeftIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  NoSymbolIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 
 interface BookingCardProps {
-  booking: {
-    booking_id: number;
-    booking_date: string;
-    number_of_people: number;
-    total_price: string;
-    status: string;
-    tour_name: string;
-    start_date: string;
-    end_date: string;
-    destination_name: string;
-    category_name: string;
-    image: string;
-  };
+  booking: IBooking;
 }
 
 export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
@@ -46,7 +40,20 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
       icon: CheckCircleIcon,
       label: 'Completed',
     },
+    no_show: {
+      color:
+        'bg-gray-50/95 text-gray-700 ring-gray-500/20 dark:bg-gray-800/80 dark:text-gray-300 dark:ring-gray-700',
+      icon: NoSymbolIcon,
+      label: 'No-show',
+    },
+    refunded: {
+      color:
+        'bg-purple-50/95 text-purple-700 ring-purple-600/20 dark:bg-purple-900/40 dark:text-purple-300 dark:ring-purple-900/50',
+      icon: ArrowUturnLeftIcon,
+      label: 'Refunded',
+    },
   };
+  const isCancelled = booking.status === 'cancelled';
 
   const status = booking.status as keyof typeof statusConfig;
   const config = statusConfig[status] || {
@@ -59,13 +66,15 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
   const StatusIcon = config.icon;
 
   return (
-    <div className='flex h-40 w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xs transition-all hover:shadow-md'>
+    <div
+      className={`flex h-40 w-full overflow-hidden rounded-lg border ${isCancelled ? 'opacity-75' : ''} border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xs transition-all hover:shadow-md`}
+    >
       {/* Image Section (25% width) */}
       <div className='relative w-1/4 min-w-[120px]'>
         <img
           src={booking.image}
           alt={booking.tour_name}
-          className='h-full w-full object-cover'
+          className={`h-full w-full object-cover ${isCancelled ? 'grayscale' : ''}`}
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               'https://via.placeholder.com/300x160?text=WanderLuxe';
@@ -105,7 +114,9 @@ export const BookingCard: FC<BookingCardProps> = ({ booking }) => {
         {/* Bottom Row - Action Button */}
         <div className='flex items-center justify-between'>
           <div className='text-sm text-secondary-light dark:text-secondary-dark'>
-            Booked on {new Date(booking.booking_date).toLocaleDateString()}
+            {isCancelled && booking.cancelled_at
+              ? `Cancelled on ${new Date(booking.cancelled_at).toLocaleDateString()}`
+              : `Booked on ${new Date(booking.booking_date).toLocaleDateString()}`}
           </div>
           <Link
             to={`${ROUTES.PROFILE_BOOKINGS}/${booking.booking_id}`}

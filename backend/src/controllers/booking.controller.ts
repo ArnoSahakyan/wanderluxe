@@ -1,9 +1,10 @@
 import type { Response } from 'express';
-import { literal, Op } from 'sequelize';
+import { literal, Op, type OrderItem } from 'sequelize';
 import type { z } from 'zod';
 import { CANCELLATION_MIN_DAYS, TOURS_BUCKET } from '../constants';
 import { Booking, Category, Destination, Tour, TourImage, User, sequelize } from '../db/models';
-import type { AuthenticatedRequest, IPaginationQuery, TypedRequest } from '../types';
+import { type BookingView, bookingViewWhere, cancelBookingRow } from '../lib/bookings';
+import type { AuthenticatedRequest, TypedRequest } from '../types';
 import {
     BadRequestError,
     ForbiddenError,
@@ -56,14 +57,18 @@ export const createBooking = async (
 };
 
 /**
- * Cancels (deletes) a booking and releases its seats. Customers may cancel
- * their own bookings up to CANCELLATION_MIN_DAYS before the start; admins any time.
+ * Cancels a booking and releases its seats. The row is kept as history with
+ * status 'cancelled'. Customers may cancel their own bookings up to
+ * CANCELLATION_MIN_DAYS before the start; admins any time.
  */
-export const cancelBooking = async (req: AuthenticatedRequest<BookingIdParams>, res: Response) => {
-    const user_id = req.user_id;
+export const cancelBooking = async (
+    req: AuthenticatedRequest<BookingIdParams, {}, z.infer<typeof v.cancelBookingBody>>,
+    res: Response,
+) => {
+    const user_id = req.user_id!;
     const isAdmin = req.user_role === 'admin';
 
-    await sequelize.transaction(async (transaction) => {
+    const booking = await sequelize.transaction(async (transaction) => {
         const booking = await Booking.findByPk(req.params.booking_id, { transaction, lock: transaction.LOCK.UPDATE });
         if (!booking) {
             throw new NotFoundError('Booking not found');
@@ -78,17 +83,16 @@ export const cancelBooking = async (req: AuthenticatedRequest<BookingIdParams>, 
         }
 
         const daysUntilStart = (new Date(tour.start_date).getTime() - Date.now()) / DAY_MS;
-        if (!isAdmin && daysUntilStart < CANCELLATION_MIN_DAYS) {
+        if (!isAdmin && booking.status !== 'cancelled' && daysUntilStart < CANCELLATION_MIN_DAYS) {
             throw new BadRequestError(
                 `Bookings can only be cancelled at least ${CANCELLATION_MIN_DAYS} days before the tour starts.`,
             );
         }
 
-        await tour.increment('available_spots', { by: booking.number_of_people, transaction });
-        await booking.destroy({ transaction });
+        return cancelBookingRow(booking, { actorId: user_id, reason: req.body?.reason, transaction });
     });
 
-    res.status(200).json({ message: 'Booking cancelled successfully' });
+    res.status(200).json({ message: 'Booking cancelled successfully', booking });
 };
 
 const coverImageUrl = (tour?: Tour) => {
@@ -96,17 +100,35 @@ const coverImageUrl = (tour?: Tour) => {
     return cover ? toPublicImageUrl(cover.image_url, TOURS_BUCKET) : null;
 };
 
+const VIEW_ORDER: Record<BookingView, OrderItem[]> = {
+    upcoming: [[Tour, 'start_date', 'ASC']],
+    past: [[Tour, 'start_date', 'DESC']],
+    cancelled: [['cancelled_at', 'DESC']],
+};
+
+/** Cancellation details as the customer and admin pages show them. */
+const cancellationInfo = (booking: Booking) =>
+    booking.status === 'cancelled'
+        ? {
+              cancelled_at: booking.cancelled_at,
+              cancellation_reason: booking.cancellation_reason,
+              cancelled_by_customer: booking.cancelled_by === booking.user_id,
+          }
+        : {};
+
 export const getUsersBookings = async (
-    req: AuthenticatedRequest<{}, {}, {}, IPaginationQuery>,
+    req: AuthenticatedRequest<{}, {}, {}, z.infer<typeof v.myBookingsQuery>>,
     res: Response,
 ) => {
     const { page, limit, offset } = getPagination(req.query);
+    const view: BookingView = req.query.view ?? 'upcoming';
 
     const { count, rows } = await Booking.findAndCountAll({
-        where: { user_id: req.user_id },
+        where: { user_id: req.user_id, ...bookingViewWhere(view) },
         include: [
             {
                 model: Tour,
+                required: true,
                 include: [
                     { model: Destination, attributes: ['name'] },
                     { model: Category, attributes: ['name'] },
@@ -114,10 +136,13 @@ export const getUsersBookings = async (
                 ],
             },
         ],
-        order: [['booking_date', 'DESC']],
+        order: [...VIEW_ORDER[view], ['booking_id', 'DESC']],
         limit,
         offset,
         distinct: true,
+        // The view filters on the tour's dates; a tour has at most one cover image,
+        // so a flat join paginates correctly.
+        subQuery: false,
     });
 
     const bookings = rows.map((booking) => {
@@ -128,6 +153,8 @@ export const getUsersBookings = async (
             number_of_people: booking.number_of_people,
             total_price: booking.total_price,
             status: booking.status,
+            ...cancellationInfo(booking),
+            tour_id: tour?.tour_id,
             tour_name: tour?.name,
             start_date: tour?.start_date,
             end_date: tour?.end_date,
@@ -179,6 +206,7 @@ export const getBookingById = async (req: AuthenticatedRequest<BookingIdParams>,
         number_of_people: booking.number_of_people,
         total_price: booking.total_price,
         status: booking.status,
+        ...cancellationInfo(booking),
         tour_id: tour?.tour_id,
         tour_name: tour?.name,
         start_date: tour?.start_date,
@@ -196,10 +224,15 @@ export const getBookingById = async (req: AuthenticatedRequest<BookingIdParams>,
     });
 };
 
-export const getAllBookings = async (req: TypedRequest<{}, {}, {}, IPaginationQuery>, res: Response) => {
+export const getAllBookings = async (
+    req: TypedRequest<{}, {}, {}, z.infer<typeof v.adminBookingsQuery>>,
+    res: Response,
+) => {
     const { page, limit, offset } = getPagination(req.query);
+    const { status } = req.query;
 
     const { count, rows } = await Booking.findAndCountAll({
+        where: status ? { status } : {},
         include: [
             {
                 model: Tour,
@@ -208,6 +241,11 @@ export const getAllBookings = async (req: TypedRequest<{}, {}, {}, IPaginationQu
             {
                 model: User,
                 attributes: ['user_id', 'full_name', 'email'],
+            },
+            {
+                model: User,
+                as: 'CancelledBy',
+                attributes: ['user_id', 'full_name'],
             },
         ],
         order: [['booking_date', 'DESC']],

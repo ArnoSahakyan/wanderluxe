@@ -5,7 +5,7 @@ import { createTour, getTour, signIn, signInViaUi, signUp, uniqueEmail } from '.
 /** The "Available Spots: N" line on the tour page. */
 const availableSpots = (page: Page) => page.getByText('Available Spots:').locator('..');
 
-test('a customer books a future tour, finds it in My Bookings and cancels it', async ({ page, request }) => {
+test('a customer books a future tour, cancels it and finds it under Cancelled', async ({ page, request }) => {
     const admin = await signIn(request, ADMIN);
     const tour = await createTour(request, admin, { startInDays: 45, spots: 8, price: 120 });
     const customer = await signUp(request, { full_name: 'Booking Tester', email: uniqueEmail('booker') });
@@ -43,11 +43,23 @@ test('a customer books a future tour, finds it in My Bookings and cancels it', a
     await dialog.getByRole('button', { name: 'Keep booking' }).click();
     await expect(dialog).toHaveCount(0);
     await page.getByRole('button', { name: 'Cancel Booking' }).click();
+    await dialog.getByLabel('Reason (optional)').fill('Plans changed');
     await dialog.getByRole('button', { name: 'Cancel booking', exact: true }).click();
 
+    // The booking is kept as history under the Cancelled tab, not deleted.
     await expect(page.getByText('Booking cancelled successfully!')).toBeVisible();
-    await expect(page).toHaveURL(/\/profile\/bookings$/);
-    await expect(page.getByText('No bookings available')).toBeVisible();
+    await expect(page).toHaveURL(/\/profile\/bookings\?view=cancelled$/);
+    await expect(page.getByRole('tab', { name: 'Cancelled' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('heading', { name: tour.name })).toBeVisible();
+    await expect(page.getByText(/^Cancelled on /)).toBeVisible();
+    await page.getByRole('tab', { name: 'Upcoming' }).click();
+    await expect(page.getByText('No upcoming bookings')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Cancelled' }).click();
+    await page.getByRole('link', { name: 'View Details' }).click();
+    await expect(page.getByText('You cancelled this booking', { exact: false })).toBeVisible();
+    await expect(page.getByText('Reason: Plans changed')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Cancel Booking' })).toHaveCount(0);
 
     // The seats are released.
     expect((await getTour(request, tour.tour_id)).available_spots).toBe(8);

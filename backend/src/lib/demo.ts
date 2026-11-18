@@ -8,13 +8,15 @@
  *   the demo admin is read-only and sees other people's personal data masked;
  *   the demo customer may book, cancel, favourite and review, but cannot change
  *   the account itself.
- * - The demo customer's bookings, reviews and favourites are removed 24 h after
- *   they were made (on the next demo sign-in), so seats go back on sale.
+ * - The demo customer's bookings (cancelled ones too), reviews and favourites are
+ *   deleted 24 h after they were made (on the next demo sign-in), so seats go back
+ *   on sale. Real customers' cancelled bookings are kept as history instead.
  * The restrictions follow the e-mail address, so they also apply with DEMO_MODE off.
  */
 import { Op, col, where } from 'sequelize';
 import { Booking, Favorite, Review, Tour, sequelize } from '../db/models';
 import { type DemoRole, isDemoEmail } from '../utils/demoAccounts';
+import { ACTIVE_STATUSES } from './bookings';
 import { logger } from './logger';
 
 export { type DemoRole, demoEmail, isDemoEmail } from '../utils/demoAccounts';
@@ -90,11 +92,14 @@ export const cleanUpDemoCustomer = async (userId: number) => {
                 lock: transaction.LOCK.UPDATE,
             });
             for (const booking of bookings) {
-                await Tour.increment('available_spots', {
-                    by: booking.number_of_people,
-                    where: { tour_id: booking.tour_id },
-                    transaction,
-                });
+                // Cancelled bookings already gave their seats back.
+                if (ACTIVE_STATUSES.includes(booking.status)) {
+                    await Tour.increment('available_spots', {
+                        by: booking.number_of_people,
+                        where: { tour_id: booking.tour_id },
+                        transaction,
+                    });
+                }
                 await booking.destroy({ transaction });
             }
             await Review.destroy({ where: olderThanCutoff, transaction });

@@ -202,8 +202,8 @@ describe('admin Bookings page', () => {
       if (req.method === 'GET') {
         return { data: { bookings: [booking(2, 'confirmed')], total: 1, page: 1, totalPages: 1 } };
       }
-      if (req.method === 'DELETE') {
-        return { status: 400, data: { message: 'Tour already departed' } };
+      if (req.method === 'PATCH' && req.url === '/booking/2/cancel') {
+        return { status: 409, data: { message: 'This booking is already cancelled.' } };
       }
       return undefined;
     });
@@ -214,6 +214,62 @@ describe('admin Bookings page', () => {
       within(await screen.findByRole('dialog')).getByRole('button', { name: 'Cancel Booking' }),
     );
 
-    expect(await screen.findByText('Tour already departed')).toBeInTheDocument();
+    expect(await screen.findByText('This booking is already cancelled.')).toBeInTheDocument();
+  });
+
+  it('cancels with a reason and filters the list by status', async () => {
+    signInAs(admin);
+    const calls = mockApi((req) => {
+      if (req.method === 'GET') {
+        return { data: { bookings: [booking(2, 'confirmed')], total: 1, page: 1, totalPages: 1 } };
+      }
+      if (req.method === 'PATCH' && req.url === '/booking/2/cancel') return { data: {} };
+      return undefined;
+    });
+    renderWithProviders(<AdminBookingsPage />);
+
+    await userEvent.click(await screen.findByTitle('Cancel Booking'));
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.type(within(dialog).getByLabelText(/Reason/), 'Guide unavailable');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel Booking' }));
+    expect(await screen.findByText('Booking cancelled successfully')).toBeInTheDocument();
+    expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ reason: 'Guide unavailable' });
+
+    await userEvent.selectOptions(screen.getByLabelText('Filter by status'), 'cancelled');
+    await waitFor(() =>
+      expect(calls[calls.length - 1]).toMatchObject({
+        method: 'GET',
+        url: '/booking',
+        params: { page: 1, status: 'cancelled' },
+      }),
+    );
+  });
+
+  it('shows who cancelled a booking and why', async () => {
+    signInAs(admin);
+    mockApi((req) =>
+      req.method === 'GET'
+        ? {
+            data: {
+              bookings: [
+                {
+                  ...booking(3, 'cancelled'),
+                  cancelled_at: '2026-05-12T09:00:00Z',
+                  cancellation_reason: 'Plans changed',
+                  CancelledBy: { user_id: 7, full_name: 'Jane Traveller' },
+                },
+              ],
+              total: 1,
+              page: 1,
+              totalPages: 1,
+            },
+          }
+        : undefined,
+    );
+    renderWithProviders(<AdminBookingsPage />);
+
+    const row = (await screen.findByText('Tour 3')).closest('tr')!;
+    expect(within(row).getByText(/May 12 by Jane Traveller/)).toBeInTheDocument();
+    expect(within(row).getByText(/Plans changed/)).toBeInTheDocument();
   });
 });

@@ -28,7 +28,7 @@ export const globalErrorHandler = (err: unknown, req: Request, res: Response, _n
     if (res.headersSent) return;
 
     if (err instanceof AppError) {
-        res.status(err.statusCode).json({ message: err.message });
+        res.status(err.statusCode).json({ message: err.message, ...err.details });
         return;
     }
     if (err instanceof multer.MulterError) {

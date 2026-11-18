@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Loader, Pagination, ConfirmModal, ErrorState } from '../../../components';
 import { useAdminBookings, useAdminCancelBooking, useAdminConfirmBooking } from '../../../hooks';
 import { formatAxiosError } from '../../../utils';
+import type { AdminBookingStatus } from '../../../api';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 import {
@@ -11,12 +12,24 @@ import {
   CheckIcon,
 } from '@heroicons/react/24/outline';
 
+const STATUS_FILTERS: { value: AdminBookingStatus | ''; label: string }[] = [
+  { value: '', label: 'All statuses' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'no_show', label: 'No-show' },
+  { value: 'refunded', label: 'Refunded' },
+];
+
 const AdminBookingsPage = () => {
   const [page, setPage] = useState(1);
+  const [status, setStatus] = useState<AdminBookingStatus | ''>('');
   const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
   const [confirmBookingId, setConfirmBookingId] = useState<number | null>(null);
 
-  const { data, isLoading, isError } = useAdminBookings(page);
+  const { data, isLoading, isError } = useAdminBookings(page, status || undefined);
   const cancelMutation = useAdminCancelBooking();
   const confirmMutation = useAdminConfirmBooking();
 
@@ -30,12 +43,13 @@ const AdminBookingsPage = () => {
   const confirmCancelBooking = async () => {
     if (!cancelBookingId) return;
     try {
-      await cancelMutation.mutateAsync(cancelBookingId);
+      await cancelMutation.mutateAsync({ booking_id: cancelBookingId, reason: cancelReason });
       toast.success('Booking cancelled successfully');
     } catch (err) {
       toast.error(formatAxiosError(err) || 'Failed to cancel booking');
     } finally {
       setCancelBookingId(null);
+      setCancelReason('');
     }
   };
 
@@ -70,6 +84,26 @@ const AdminBookingsPage = () => {
           <p className='mt-2 text-sm text-secondary-light dark:text-secondary-dark'>
             View and manage all customer bookings, track revenue, and monitor tour occupancy.
           </p>
+        </div>
+        <div className='mt-4 sm:mt-0 sm:ml-16 sm:flex-none'>
+          <label htmlFor='booking-status-filter' className='sr-only'>
+            Filter by status
+          </label>
+          <select
+            id='booking-status-filter'
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value as AdminBookingStatus | '');
+              setPage(1);
+            }}
+            className='form-input'
+          >
+            {STATUS_FILTERS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -117,7 +151,10 @@ const AdminBookingsPage = () => {
                 </thead>
                 <tbody className='divide-y divide-gray-200 dark:divide-gray-700 bg-background-light dark:bg-background-dark'>
                   {bookings.map((booking) => (
-                    <tr key={booking.booking_id}>
+                    <tr
+                      key={booking.booking_id}
+                      className={booking.status === 'cancelled' ? 'opacity-70' : undefined}
+                    >
                       <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6 text-secondary-light dark:text-secondary-dark'>
                         <div className='font-mono'>#{booking.booking_id}</div>
                         <div className='text-xs text-gray-500 mt-1'>
@@ -160,8 +197,22 @@ const AdminBookingsPage = () => {
                                   : 'bg-gray-50 text-gray-600 ring-gray-500/10'
                           }`}
                         >
-                          {booking.status.toUpperCase()}
+                          {booking.status.replace('_', '-').toUpperCase()}
                         </span>
+                        {booking.status === 'cancelled' && (
+                          <div className='mt-1 max-w-48 truncate text-xs text-gray-500 dark:text-gray-400'>
+                            {booking.cancelled_at &&
+                              format(new Date(booking.cancelled_at), 'MMM dd')}
+                            {booking.CancelledBy?.full_name &&
+                              ` by ${booking.CancelledBy.full_name}`}
+                            {booking.cancellation_reason && (
+                              <span title={booking.cancellation_reason}>
+                                {' '}
+                                · {booking.cancellation_reason}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
                         <div className='flex justify-end gap-3'>
@@ -218,10 +269,22 @@ const AdminBookingsPage = () => {
         onClose={() => setCancelBookingId(null)}
         onConfirm={confirmCancelBooking}
         title='Cancel Booking'
-        message='Are you sure you want to cancel this booking? This action cannot be undone.'
+        message='The seats go back on sale and the booking stays in the list as cancelled. This cannot be undone.'
         confirmText='Cancel Booking'
         isLoading={cancelMutation.isPending}
-      />
+      >
+        <label htmlFor='admin-cancel-reason' className='form-label'>
+          Reason (shown to the customer)
+        </label>
+        <textarea
+          id='admin-cancel-reason'
+          rows={2}
+          maxLength={255}
+          value={cancelReason}
+          onChange={(e) => setCancelReason(e.target.value)}
+          className='form-input'
+        />
+      </ConfirmModal>
 
       <ConfirmModal
         isOpen={!!confirmBookingId}

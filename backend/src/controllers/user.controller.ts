@@ -191,7 +191,8 @@ export const getUserStats = async (req: AuthenticatedRequest, res: Response): Pr
     const user_id = req.user_id;
 
     const [totalBookings, totalReviews, totalFavorites, recentBookings] = await Promise.all([
-        Booking.count({ where: { user_id } }),
+        // Cancelled bookings stay as history but don't count towards the member rank.
+        Booking.count({ where: { user_id, status: { [Op.ne]: 'cancelled' } } }),
         Review.count({ where: { user_id } }),
         Favorite.count({ where: { user_id } }),
         Booking.findAll({

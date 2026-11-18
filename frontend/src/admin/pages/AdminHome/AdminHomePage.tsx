@@ -10,6 +10,7 @@ import {
   EnvelopeIcon,
   CurrencyDollarIcon,
   BriefcaseIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 
 const AdminHomePage = () => {
@@ -25,6 +26,11 @@ const AdminHomePage = () => {
   const cards = [
     { name: 'Total Users', stat: stats.metrics.totalUsers, icon: UsersIcon },
     { name: 'Total Bookings', stat: stats.metrics.totalBookings, icon: BriefcaseIcon },
+    {
+      name: 'Cancelled (30 days)',
+      stat: stats.metrics.cancelledLast30Days ?? 0,
+      icon: XCircleIcon,
+    },
     {
       name: 'Total Revenue',
       stat: `$${Number(stats.metrics.totalRevenue || 0).toFixed(2)}`,

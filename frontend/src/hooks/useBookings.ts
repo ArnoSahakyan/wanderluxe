@@ -1,15 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BOOKINGS_LIMIT, IFetchFilters, ROUTES } from '../shared';
+import { BOOKINGS_LIMIT, BookingView, IFetchFilters, ROUTES } from '../shared';
 import { bookingKeys, tourKeys } from '../queries';
-import { cancelBooking, createBooking, fetchBooking, fetchUserBookings } from '../api';
+import {
+  cancelBooking,
+  createBooking,
+  fetchBooking,
+  fetchUserBookings,
+  type CancelBookingInput,
+} from '../api';
 import { useMergedFilters } from '../utils';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { useToast } from './useToast.ts';
 import { formatAxiosError } from '../utils';
 
-export const useBookings = (externalFilters?: Partial<IFetchFilters>) => {
-  const filters = useMergedFilters(externalFilters, BOOKINGS_LIMIT);
+export const useBookings = (
+  externalFilters?: Partial<IFetchFilters>,
+  view: BookingView = 'upcoming',
+) => {
+  const filters = { ...useMergedFilters(externalFilters, BOOKINGS_LIMIT), view };
 
   return useQuery({
     queryKey: bookingKeys.list(filters),
@@ -65,7 +74,7 @@ export const useCancelBooking = () => {
   const { showSuccess, showError } = useToast();
 
   return useMutation({
-    mutationFn: (booking_id: number) => cancelBooking(booking_id),
+    mutationFn: (input: CancelBookingInput) => cancelBooking(input),
     onSuccess: () => {
       showSuccess('Booking cancelled successfully!');
       queryClient.invalidateQueries({ queryKey: bookingKeys.all });

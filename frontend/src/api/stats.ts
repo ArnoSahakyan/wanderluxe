@@ -10,6 +10,7 @@ export interface AdminStats {
     totalReviews: number;
     unreadMessages: number;
     totalRevenue: number | string;
+    cancelledLast30Days?: number;
   };
   recentBookings: {
     booking_id: number;

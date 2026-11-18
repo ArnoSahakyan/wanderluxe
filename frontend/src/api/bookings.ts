@@ -1,7 +1,7 @@
 import { api } from './axios.ts';
-import { ITourFilters } from '../shared';
+import type { BookingStatus, BookingView, ITourFilters } from '../shared';
 
-export const fetchUserBookings = async (filters: ITourFilters) => {
+export const fetchUserBookings = async (filters: ITourFilters & { view?: BookingView }) => {
   const response = await api.get(`/booking/my`, {
     params: filters,
   });
@@ -18,8 +18,16 @@ export const createBooking = async (tour_id: number, number_of_people: number) =
   return response.data;
 };
 
-export const cancelBooking = async (booking_id: number) => {
-  const response = await api.delete(`/booking/${booking_id}`);
+export interface CancelBookingInput {
+  booking_id: number;
+  reason?: string;
+}
+
+/** Cancels a booking; it stays in the history with status "cancelled". */
+export const cancelBooking = async ({ booking_id, reason }: CancelBookingInput) => {
+  const response = await api.patch(`/booking/${booking_id}/cancel`, {
+    reason: reason?.trim() || undefined,
+  });
   return response.data;
 };
 
@@ -28,8 +36,7 @@ export const confirmBooking = async (booking_id: number) => {
   return response.data;
 };
 
-export type AdminBookingStatus =
-  'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show' | 'refunded';
+export type AdminBookingStatus = BookingStatus;
 
 /** Booking as returned by the admin list (GET /booking): nested User and Tour. */
 export interface AdminBooking {
@@ -38,6 +45,9 @@ export interface AdminBooking {
   number_of_people: number;
   total_price: string;
   status: AdminBookingStatus;
+  cancelled_at?: string | null;
+  cancellation_reason?: string | null;
+  CancelledBy?: { user_id: number; full_name: string } | null;
   User: {
     user_id: number;
     full_name: string;
@@ -58,7 +68,11 @@ export interface AdminBookingsResponse {
   bookings: AdminBooking[];
 }
 
-export const fetchAllBookings = async (page = 1, limit = 10): Promise<AdminBookingsResponse> => {
-  const response = await api.get(`/booking?page=${page}&limit=${limit}`);
+export const fetchAllBookings = async (
+  page = 1,
+  limit = 10,
+  status?: AdminBookingStatus,
+): Promise<AdminBookingsResponse> => {
+  const response = await api.get('/booking', { params: { page, limit, status } });
   return response.data;
 };

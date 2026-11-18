@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AdminBookingStatus,
   AdminBookingsResponse,
   AdminStats,
   ContactMessagesResponse,
@@ -65,10 +66,14 @@ export const useDeleteAdminUser = () => {
 };
 
 // ── Bookings ──────────────────────────────────────────────────────────────────
-export const useAdminBookings = (page: number, limit = ADMIN_PAGE_SIZE) =>
+export const useAdminBookings = (
+  page: number,
+  status?: AdminBookingStatus,
+  limit = ADMIN_PAGE_SIZE,
+) =>
   useQuery<AdminBookingsResponse>({
-    queryKey: adminKeys.bookings(page, limit),
-    queryFn: () => fetchAllBookings(page, limit),
+    queryKey: adminKeys.bookings(page, limit, status),
+    queryFn: () => fetchAllBookings(page, limit, status),
     placeholderData: (prev) => prev,
   });
 
