@@ -6,7 +6,7 @@ npm test         # both workspaces
 npm run check    # lint + typecheck + tests + production builds
 ```
 
-## Backend — `backend/tests` (Vitest + Supertest, 80 tests)
+## Backend — `backend/tests` (Vitest + Supertest, 83 tests)
 
 - **Real database, hermetic.** `tests/globalSetup.ts` connects as the owner role and:
   1. drops the `wanderluxe_test` schema;
@@ -27,9 +27,9 @@ npm run check    # lint + typecheck + tests + production builds
 | `bookingStatus.test.ts` | the transition table; pending → confirmed → completed → refunded with a history row per step (who, note); a disallowed move is 409 with the allowed next states; cancelling via status releases seats exactly once under concurrency; admin only; `next_statuses` in the admin list; finished tours complete confirmed bookings automatically (not pending ones) and revenue splits into completed and booked |
 | `bookingEmails.test.ts` | "booking received" e-mail with reference, total, link and escaped name; confirmed and company-cancelled e-mails (escaped reason); customer-cancelled wording; completion asks for a review; nothing to example.com; a failing e-mail never fails the booking |
 | `reviews.test.ts` | no booking, a future confirmed booking or a cancelled booking → 403; a completed booking → one review, then 409; a confirmed booking whose tour has ended counts; the eligibility endpoint for each case, sign-in and 404 |
-| `demo.test.ts` | demo accounts: off unless `DEMO_MODE`; unknown role 400, missing account 503; the demo customer signs in without a password, may book and favourite, can't edit the account or password (403 with a clear message); refreshed tokens stay demo tokens; the demo admin is read-only and gets other users' e-mails and names masked; bookings older than 24 h are removed and seats released on the next demo sign-in; `maskPersonalData` masks contact messages but not status messages |
+| `demo.test.ts` | demo accounts: off unless `DEMO_MODE`; unknown role 400, missing account 503; the demo customer signs in without a password, may book and favourite, can't edit the account or password (403 with a clear message); refreshed tokens stay demo tokens; the demo admin is read-only and gets other users' e-mails and names masked; bookings older than 24 h are removed and seats released on the next demo sign-in; each sign-in leaves exactly one completed booking on the most recently ended tour (no seats taken, reviewable); demo reviews are shown only to the demo account, not in public lists or the admin stats; `maskPersonalData` masks contact messages but not status messages |
 | `cardImages.test.ts` | every upload also stores an 800px card copy (never enlarged) at `<key>_card.webp`; list, details and gallery responses carry `image_card` / `card_url`; deleting a destination or a tour photo removes both files |
-| `content.test.ts` | catalogue pagination and image URLs; id/limit validation; literal `%` search; JSON 404; security headers; real vs fake image uploads; cover-image ownership; date order; reviews (range, duplicate, owner delete); favourites; contact e-mail HTML escaping; admin stats; newsletter double-confirm |
+| `content.test.ts` | catalogue pagination and image URLs; ended tours left out of the catalogue and search but listed with `include_ended=true`; id/limit validation; literal `%` search; JSON 404; security headers; real vs fake image uploads; cover-image ownership; date order; reviews (range, duplicate, owner delete); favourites; contact e-mail HTML escaping; admin stats; newsletter double-confirm |
 
 Run one file: `npx vitest run tests/bookings.test.ts` (inside `backend/`).
 

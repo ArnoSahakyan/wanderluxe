@@ -92,10 +92,12 @@ export const getFilteredTours = async (
     req: TypedRequest<{}, {}, {}, GetFilteredToursQuery>,
     res: Response
 ): Promise<void> => {
-    const { category_id, destination_id, search } = req.query;
+    const { category_id, destination_id, search, include_ended } = req.query;
     const { page, limit, offset } = getPagination(req.query);
 
-    const baseCondition: WhereOptions = {};
+    // Ended tours can't be booked, so the catalog leaves them out; customers
+    // still reach them from their past bookings, and admins list them all.
+    const baseCondition: WhereOptions = include_ended ? {} : { end_date: { [Op.gte]: new Date() } };
 
     if (category_id) {
         baseCondition.category_id = category_id;

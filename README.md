@@ -32,7 +32,7 @@
 - **Defence in depth.** zod validation on every request, role checks from the signed token, rate limiting on auth and forms, helmet headers, a least-privilege database role, image uploads re-encoded with sharp, and hashed reset tokens.
 - **No overselling.** Seats are taken with a single conditional `UPDATE`, which is tested with concurrent bookings.
 - **A real booking lifecycle.** One transition table decides which status changes are allowed; every change is recorded in the same transaction, seats are released exactly once, and finished trips complete themselves without a cron job. E-mails go out only after the database commits, so a mail outage can't break a booking.
-- **Demo accounts that can't do damage.** A server-side write allow-list blocks changes, responses are masked for the demo admin, and the demo customer's bookings are cleaned up automatically after 24 hours.
+- **Demo accounts that can't do damage.** A server-side write allow-list blocks changes, responses are masked for the demo admin, and the demo customer's bookings are cleaned up automatically after 24 hours. The demo customer always has a finished trip to review, and those reviews are only visible to the demo account.
 - **Tested at three levels.** API integration tests against a real PostgreSQL, React component tests, and Playwright end-to-end tests that include axe accessibility checks. CI runs all of them on every PR, and the API deploys only when CI is green.
 - **Accessible and findable.** Lighthouse gives the main pages 100 for accessibility, best practices and SEO. They have per-page titles, a meta description, social preview tags, a sitemap, ordered headings and a dark mode.
 
@@ -155,7 +155,7 @@ The full variable reference is in `backend/.env.example` and [LOCAL_DEVELOPMENT.
 
 ```bash
 npm run db:up      # tests need PostgreSQL
-npm test           # 80 API tests + 79 frontend tests (npm run test:e2e: 20 browser tests)
+npm test           # 83 API tests + 79 frontend tests (npm run test:e2e: 20 browser tests)
 ```
 
 The API suite rebuilds the dedicated `wanderluxe_test` database before every run, so it never touches your development data. See [docs/TESTING.md](docs/TESTING.md).

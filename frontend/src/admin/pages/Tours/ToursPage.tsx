@@ -18,7 +18,7 @@ const ToursPage = () => {
   const initialSearch = searchParams.get('search') || '';
 
   const { page, setSearch, goToNextPage, goToPrevPage } = usePagination();
-  const { data, isLoading, isError, error } = useTours({ limit: 20 });
+  const { data, isLoading, isError, error } = useTours({ limit: 20, include_ended: true });
 
   const totalPages = data?.totalPages || 1;
 

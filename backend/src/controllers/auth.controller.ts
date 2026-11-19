@@ -6,7 +6,7 @@ import { EXPIRATION_TIME } from '../constants';
 import { Role, User } from '../db/models';
 import { generateResetPasswordEmail } from '../emails';
 import { logger } from '../lib/logger';
-import { cleanUpDemoCustomer, demoEmail, isDemoEmail } from '../lib/demo';
+import { cleanUpDemoCustomer, demoEmail, ensureDemoFinishedTrip, isDemoEmail } from '../lib/demo';
 import { endSession, revokeAllSessions, rotateSession, startSession } from '../lib/sessions';
 import type { AuthenticatedRequest, TypedRequest } from '../types';
 import {
@@ -101,7 +101,10 @@ export const demoSignIn = async (req: TypedRequest<{}, {}, z.infer<typeof v.demo
         throw new AppError(503, 'The demo is not available right now.');
     }
 
-    if (req.body.role === 'customer') await cleanUpDemoCustomer(user.user_id);
+    if (req.body.role === 'customer') {
+        await cleanUpDemoCustomer(user.user_id);
+        await ensureDemoFinishedTrip(user.user_id);
+    }
     await startSession(res, user.user_id);
     res.json({ token: generateToken(user), user: toSessionUser(user) });
 };

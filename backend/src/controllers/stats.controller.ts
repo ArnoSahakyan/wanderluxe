@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import { TypedRequest } from '../types';
 import { User, Booking, Tour, Destination, Category, Review, Contact } from '../db/models';
 import { completeFinishedBookings } from '../lib/bookings';
+import { visibleReviewsWhere } from '../lib/reviews';
 
 export const getAdminStats = async (
     req: TypedRequest<{}>,
@@ -26,7 +27,7 @@ export const getAdminStats = async (
         Tour.count(),
         Destination.count(),
         Category.count(),
-        Review.count(),
+        visibleReviewsWhere().then((where) => Review.count({ where })),
         Contact.count({ where: { status: 'unread' } }),
         Booking.sum('total_price', { where: { status: 'completed' } }),
         Booking.count({

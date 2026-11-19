@@ -193,6 +193,8 @@ export const tourBody = tourFields.refine(datesInOrder, datesMessage);
 export const tourListQuery = searchablePagination.extend({
     category_id: optionalId,
     destination_id: optionalId,
+    /** Tours that have ended are left out unless this is true (the admin list). */
+    include_ended: formBoolean.optional(),
 });
 
 export const tourByIdQuery = z.object({ user_id: optionalId });

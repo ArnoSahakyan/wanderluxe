@@ -41,6 +41,7 @@ export const useTours = (externalFilters?: Partial<ITourFilters>) => {
         : undefined),
     sort: externalFilters?.sort ?? searchParams.get('sort') ?? undefined,
     search: externalFilters?.search ?? searchParams.get('search') ?? undefined,
+    include_ended: externalFilters?.include_ended,
   };
 
   return useQuery<ITourResponse>({

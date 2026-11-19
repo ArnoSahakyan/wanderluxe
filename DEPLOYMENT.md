@@ -101,6 +101,12 @@ You are prompted for each value marked below. Afterwards, delete the old service
 1. Create the two accounts once. Run `npm run db:demo-users` with the backend pointed at Supabase: `DATABASE_URL` set to the `wanderluxe_app` pooler URL, plus `DB_SSL=true` and `DB_SSL_CA`. It only creates or updates `demo-customer@example.com` and `demo-admin@example.com`, with random passwords that are never shown.
 2. On Render, set `DEMO_MODE=true`. The buttons appear as soon as the API answers `GET /api/auth/demo` with `{"enabled":true}`.
 3. To turn the demo off, set `DEMO_MODE=false`. The accounts stay restricted even then.
+4. Optional: a finished trip to review. Each demo customer sign-in gives the account a completed booking on the most recently ended tour, if there is one. If every tour is still to come, add an ended copy of one with the same settings as step 1, plus the storage variables from the card-images step below (it copies the photos):
+   ```
+   npm run db:demo-trip -w backend -- --from <tour_id> --dry-run
+   npm run db:demo-trip -w backend -- --from <tour_id>
+   ```
+   It does nothing if a tour has already ended. Ended tours are left out of the catalogue and search, and reviews written from the demo account are only shown to that account.
 
 The old variable names (`ACCESS_TOKEN_SECRET`, `CORS`, `SUPABASE_PUBLIC_URL`, …) still work, but the new names are clearer. New JWT secrets sign everyone out once; that's expected.
 
