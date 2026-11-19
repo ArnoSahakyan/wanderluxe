@@ -183,4 +183,5 @@ cancelled, no_show, refunded → (final)
 
 - **Smaller images for cards.** *Done:* every upload also stores an 800 px card copy (about 50–70 KiB instead of 250–400 KiB), used by all cards, search results and gallery thumbnails. `npm run images:cards -w backend` creates the copies for images uploaded earlier. Until it has run, cards fall back to the full image.
 - **Guest count above available seats.** *Done:* the limit now shows next to the Guests field and *Book* stays disabled until the count fits.
-- **Missing production images.** The Italy destination image and the "Family Fun in Gold Coast" cover are missing from the Supabase buckets. Re-upload them through the admin panel.
+- **Missing production images.** *Done:* the Italy destination image and the "Family Fun in Gold Coast" photos were re-uploaded.
+- **A finished trip for the demo customer.** *Done:* each demo sign-in adds a completed booking on the most recently ended tour (`npm run db:demo-trip` adds an ended copy of a tour when none exists). Ended tours are hidden from the catalogue and search, and demo reviews are visible only to the demo account.

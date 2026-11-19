@@ -197,7 +197,7 @@ None can be fixed without a major-version change of the parent package. See §6.
 
    See [DEPLOYMENT.md](DEPLOYMENT.md).
 4. **SQL dump:** decided to keep it out of git because it contains personal data. Share it privately with developers who need real data (database/README.md).
-5. **Missing production images:** the cover of "Family Fun in Gold Coast" (tour 4) and the Italy destination image no longer exist in the Supabase bucket. Re-upload them via the admin UI.
+5. ~~**Missing production images:** the cover of "Family Fun in Gold Coast" (tour 4) and the Italy destination image no longer exist in the Supabase bucket.~~ Done by 2026-11-19: both were re-uploaded through the admin UI and load live.
 
 **Known limitations, deliberately not changed:**
 - ~~**Tokens in `localStorage`** (S-20)~~ fixed on 2026-11-18: httpOnly session cookie, access token in memory (recommendation 1).
