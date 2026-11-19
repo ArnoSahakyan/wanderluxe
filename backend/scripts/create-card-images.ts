@@ -16,6 +16,7 @@ import { config } from '../src/config/env';
 import { Destination, Post, TourImage, sequelize } from '../src/db/models';
 import { storage, toCardKey } from '../src/lib/storage';
 import { toCardImage } from '../src/utils/imageUpload';
+import { loadOriginal } from './lib/loadOriginal';
 
 const dryRun = process.argv.includes('--dry-run');
 
@@ -30,14 +31,6 @@ const imageKeys = async (): Promise<Array<{ bucket: string; key: string }>> => {
         ...destinations.map((row) => ({ bucket: DESTINATIONS_BUCKET, key: row.image ?? '' })),
         ...posts.map((row) => ({ bucket: BLOGS_BUCKET, key: row.image ?? '' })),
     ].filter((item) => item.key);
-};
-
-/** The original image, from storage or (local driver only) the read-only fallback. */
-const loadOriginal = async (bucket: string, key: string): Promise<Buffer | null> => {
-    const stored = await storage.get(bucket, key);
-    if (stored || config.storage.driver !== 'local' || !config.storage.fallbackUrl) return stored;
-    const response = await fetch(`${config.storage.fallbackUrl}/${bucket}/${key}`);
-    return response.ok ? Buffer.from(await response.arrayBuffer()) : null;
 };
 
 const main = async () => {

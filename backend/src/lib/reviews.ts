@@ -3,8 +3,9 @@
  * for it that is completed, or confirmed with the tour already over (before the
  * automatic completion has run). One review per customer and tour.
  */
-import { Op } from 'sequelize';
-import { Booking, Review, Tour } from '../db/models';
+import { Op, type WhereOptions, col, fn, where } from 'sequelize';
+import { config } from '../config/env';
+import { Booking, Review, Tour, User } from '../db/models';
 
 export type ReviewEligibility =
     { canReview: true; reason: 'eligible' } | { canReview: false; reason: 'already_reviewed' | 'not_travelled' };
@@ -27,4 +28,19 @@ export const getReviewEligibility = async (user_id: number, tour_id: number): Pr
     if (review) return { canReview: false, reason: 'already_reviewed' };
     if (!booking) return { canReview: false, reason: 'not_travelled' };
     return { canReview: true, reason: 'eligible' };
+};
+
+/**
+ * Leaves out reviews written from the demo customer account, except for that
+ * account itself. Any visitor can write them, so they never reach the public
+ * pages or the stats; the demo clean-up deletes them after 24 h.
+ */
+export const visibleReviewsWhere = async (viewerId?: number): Promise<WhereOptions> => {
+    const demo = await User.findOne({
+        where: where(fn('lower', col('email')), config.demo.customerEmail),
+        attributes: ['user_id'],
+        paranoid: false,
+    });
+    if (!demo || demo.user_id === viewerId) return {};
+    return { user_id: { [Op.ne]: demo.user_id } };
 };

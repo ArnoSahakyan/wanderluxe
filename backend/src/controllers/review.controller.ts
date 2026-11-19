@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { AuthenticatedRequest, IPaginationQuery, TypedRequest } from '../types';
 import { Review, User, Tour, sequelize } from '../db/models';
 import { AppError, ForbiddenError, NotFoundError, getPagination, totalPages } from '../utils';
-import { NOT_TRAVELLED_MESSAGE, getReviewEligibility } from '../lib/reviews';
+import { NOT_TRAVELLED_MESSAGE, getReviewEligibility, visibleReviewsWhere } from '../lib/reviews';
 
 // --- Types ---
 type CreateReviewBody = {
@@ -56,6 +56,7 @@ export const getAllReviews = async (
     const { page, limit, offset } = getPagination(req.query, 4);
 
     const { count, rows } = await Review.findAndCountAll({
+        where: await visibleReviewsWhere(),
         include: [
             {
                 model: User,
@@ -91,7 +92,7 @@ export const getAllReviews = async (
 };
 
 export const getReviewsForTour = async (
-    req: TypedRequest<TourIdParam, {}, {}, IPaginationQuery>,
+    req: AuthenticatedRequest<TourIdParam, {}, {}, IPaginationQuery>,
     res: Response
 ): Promise<void> => {
     const tour_id = req.params.tour_id;
@@ -99,7 +100,7 @@ export const getReviewsForTour = async (
     const { page, limit, offset } = getPagination(req.query, 4);
 
     const { count, rows } = await Review.findAndCountAll({
-        where: { tour_id },
+        where: { ...(await visibleReviewsWhere(req.user_id)), tour_id },
         include: [
             {
                 model: User,

@@ -16,6 +16,7 @@
     "db:migrate:test": "NODE_ENV=test sequelize-cli db:migrate --env test",
     "db:dev-users": "tsx scripts/create-dev-users.ts",
     "db:demo-users": "tsx scripts/create-demo-users.ts",
+    "db:demo-trip": "tsx scripts/create-demo-trip.ts",
     "images:cards": "tsx scripts/create-card-images.ts"
   },
   "private": true,

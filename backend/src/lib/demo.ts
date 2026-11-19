@@ -11,17 +11,21 @@
  * - The demo customer's bookings (cancelled ones too), reviews and favourites are
  *   deleted 24 h after they were made (on the next demo sign-in), so seats go back
  *   on sale. Real customers' cancelled bookings are kept as history instead.
+ * - Every demo customer sign-in makes sure they have one finished trip (a completed
+ *   booking on the most recently ended tour), so visitors can try writing a review.
+ *   Their reviews are only shown to the demo account itself (lib/reviews.ts).
  * The restrictions follow the e-mail address, so they also apply with DEMO_MODE off.
  */
 import { Op, col, where } from 'sequelize';
 import { Booking, Favorite, Review, Tour, sequelize } from '../db/models';
 import { type DemoRole, isDemoEmail } from '../utils/demoAccounts';
-import { ACTIVE_STATUSES } from './bookings';
+import { ACTIVE_STATUSES, recordStatusChange } from './bookings';
 import { logger } from './logger';
 
 export { type DemoRole, demoEmail, isDemoEmail } from '../utils/demoAccounts';
 
-export const DEMO_READ_ONLY_MESSAGE = 'This is a demo account, so this change is turned off. Sign up to try it for real.';
+export const DEMO_READ_ONLY_MESSAGE =
+    'This is a demo account, so this change is turned off. Sign up to try it for real.';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 /** What the demo customer may change: only their own trip activity. */
@@ -111,5 +115,51 @@ export const cleanUpDemoCustomer = async (userId: number) => {
     } catch (err) {
         // Never block the demo sign-in because of housekeeping.
         logger.warn('Demo clean-up failed', { err });
+    }
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const FINISHED_TRIP_PEOPLE = 2;
+
+/**
+ * Gives the demo customer a completed booking on the most recently ended tour,
+ * unless they already have a booking on it. It is demo activity like any other,
+ * so the 24 h clean-up removes it and the next sign-in creates a fresh one.
+ * Completed bookings hold no seats, so the tour's available spots don't change.
+ */
+export const ensureDemoFinishedTrip = async (userId: number) => {
+    try {
+        const tour = await Tour.findOne({
+            where: { end_date: { [Op.lt]: new Date() } },
+            order: [['end_date', 'DESC']],
+        });
+        if (!tour) return;
+        if (await Booking.findOne({ where: { user_id: userId, tour_id: tour.tour_id }, attributes: ['booking_id'] })) {
+            return;
+        }
+        await sequelize.transaction(async (transaction) => {
+            const booking = await Booking.create(
+                {
+                    user_id: userId,
+                    tour_id: tour.tour_id,
+                    number_of_people: FINISHED_TRIP_PEOPLE,
+                    total_price: Number(tour.price) * FINISHED_TRIP_PEOPLE,
+                    status: 'completed',
+                    // Booked six weeks before the trip, like a real customer would.
+                    booking_date: new Date(new Date(tour.start_date).getTime() - 42 * DAY_MS),
+                },
+                { transaction },
+            );
+            const note = 'Sample trip for the demo account';
+            await recordStatusChange(booking.booking_id, null, 'confirmed', { actorId: null, note, transaction });
+            await recordStatusChange(booking.booking_id, 'confirmed', 'completed', {
+                actorId: null,
+                note,
+                transaction,
+            });
+        });
+    } catch (err) {
+        // Never block the demo sign-in because of the sample data.
+        logger.warn('Could not create the demo finished trip', { err });
     }
 };
