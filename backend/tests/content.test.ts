@@ -11,11 +11,25 @@ beforeAll(async () => {
 
 describe('public catalogue', () => {
     it('lists tours with pagination metadata and cover image URLs', async () => {
+        await createTour(admin.auth); // the seeded tours may all have ended
         const res = await api().get('/api/tours?page=1&limit=2');
         expect(res.status).toBe(200);
         expect(res.body).toMatchObject({ currentPage: 1, tours: expect.any(Array) });
         expect(res.body.tours.length).toBeLessThanOrEqual(2);
         expect(res.body.tours[0].image).toMatch(/^http:\/\/localhost:3000\/uploads\//);
+    });
+
+    it('leaves ended tours out of the catalogue and search, but not the admin list', async () => {
+        const ended = await createTour(admin.auth, { daysAhead: -10 });
+        const { name } = (await api().get(`/api/tours/${ended.tour_id}`)).body;
+        const ids = (res: { body: { tours: { tour_id: number }[] } }) => res.body.tours.map((t) => t.tour_id);
+
+        expect(ids(await api().get('/api/tours?limit=100'))).not.toContain(ended.tour_id);
+        expect(ids(await api().get('/api/tours?limit=100&include_ended=true'))).toContain(ended.tour_id);
+        const search = await api().get(`/api/search?query=${encodeURIComponent(name)}`);
+        expect(search.body.tours.map((t: { tour_id: number }) => t.tour_id)).not.toContain(ended.tour_id);
+        // Still reachable directly, e.g. from a past booking.
+        expect((await api().get(`/api/tours/${ended.tour_id}`)).status).toBe(200);
     });
 
     it('validates ids and pagination', async () => {
@@ -77,7 +91,10 @@ describe('uploads', () => {
         const b = await createTour(admin.auth);
         const imageOfB = await TourImage.findOne({ where: { tour_id: b.tour_id } });
 
-        const res = await api().patch('/api/tours/cover').set(admin.auth).send({ tour_id: a.tour_id, image_id: imageOfB!.image_id });
+        const res = await api()
+            .patch('/api/tours/cover')
+            .set(admin.auth)
+            .send({ tour_id: a.tour_id, image_id: imageOfB!.image_id });
         expect(res.status).toBe(404);
         expect(await TourImage.count({ where: { tour_id: b.tour_id, is_cover: true } })).toBe(1);
     });
@@ -98,11 +115,18 @@ describe('reviews and favourites', () => {
         const other = await createUser();
         await completeTrip(admin.auth, author.auth, tour.tour_id);
 
-        expect((await api().post('/api/review').set(author.auth).send({ tour_id: tour.tour_id, rating: 6 })).status).toBe(400);
+        expect(
+            (await api().post('/api/review').set(author.auth).send({ tour_id: tour.tour_id, rating: 6 })).status,
+        ).toBe(400);
 
-        const created = await api().post('/api/review').set(author.auth).send({ tour_id: tour.tour_id, rating: 5, comment: 'Great' });
+        const created = await api()
+            .post('/api/review')
+            .set(author.auth)
+            .send({ tour_id: tour.tour_id, rating: 5, comment: 'Great' });
         expect(created.status).toBe(201);
-        expect((await api().post('/api/review').set(author.auth).send({ tour_id: tour.tour_id, rating: 4 })).status).toBe(409);
+        expect(
+            (await api().post('/api/review').set(author.auth).send({ tour_id: tour.tour_id, rating: 4 })).status,
+        ).toBe(409);
 
         const detail = await api().get(`/api/tours/${tour.tour_id}`).set(author.auth);
         expect(detail.body.hasReviewed).toBe(true);
@@ -116,7 +140,9 @@ describe('reviews and favourites', () => {
         const user = await createUser();
         expect((await api().post('/api/favorite').set(user.auth).send({ tour_id: tour.tour_id })).status).toBe(201);
         expect((await api().post('/api/favorite').set(user.auth).send({ tour_id: tour.tour_id })).status).toBe(409);
-        expect((await api().get(`/api/favorite/check/${tour.tour_id}`).set(user.auth)).body).toEqual({ inFavorites: true });
+        expect((await api().get(`/api/favorite/check/${tour.tour_id}`).set(user.auth)).body).toEqual({
+            inFavorites: true,
+        });
         expect((await api().get(`/api/favorite/check/${tour.tour_id}`)).body).toEqual({ inFavorites: false });
         expect((await api().delete(`/api/favorite/${tour.tour_id}`).set(user.auth)).status).toBe(200);
     });

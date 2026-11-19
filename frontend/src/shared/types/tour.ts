@@ -27,6 +27,8 @@ export interface ITourFilters {
   destination_id?: number;
   sort?: string;
   search?: string;
+  /** Also list tours that have ended (the admin list); the catalog hides them. */
+  include_ended?: boolean;
 }
 
 export interface ITourImage {

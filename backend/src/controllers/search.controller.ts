@@ -27,6 +27,7 @@ export const globalSearch = async (req: TypedRequest<{}, {}, {}, GetFilteredTPos
         }),
         Tour.findAll({
             where: {
+                end_date: { [Op.gte]: new Date() },
                 [Op.or]: [
                     { name: { [Op.iLike]: pattern } },
                     { description: { [Op.iLike]: pattern } },
